@@ -10,6 +10,7 @@ using OpenTK.Platform;
 using Engine.Core;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using Engine.Processing;
 
 namespace VertexBenderCS
 {
@@ -19,8 +20,8 @@ namespace VertexBenderCS
         private CameraController _cameraController;
 
         private bool _isFirstMouse = true;
-        private int _mouseX;
-        private int _mouseY;
+        private float _mouseX;
+        private float _mouseY;
 
         private System.Timers.Timer _Timer;
         
@@ -28,7 +29,6 @@ namespace VertexBenderCS
         private MeshRenderer _mesh;
         private Shader _wiredShader;
         private Shader _shader;
-        private Shader _lineShader;
         private LineRenderer _lineRenderer;
 
 
@@ -60,13 +60,13 @@ namespace VertexBenderCS
             SetupTestScene();
 
             _Timer = new System.Timers.Timer(8.0f);
-            _Timer.Elapsed += _Timer_Elapsed;
+            _Timer.Elapsed += Update;
             _Timer.Start();
         }
 
-        private void _Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {
-            GLControl.Invalidate();
+            GLControl.Invalidate();           
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -88,14 +88,122 @@ namespace VertexBenderCS
             //Application.Idle += Application_Idle;
         }
 
+        private void SetupTestScene()
+        {
+
+            _camera = new Camera(GLControl.Width, GLControl.Height);
+            _cameraController = new CameraController(_camera);
+
+            int idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader);
+            int idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader);
+            _shader = ShaderBuilder.CreateShader("shaded", idv, idf);
+
+            idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader);
+            idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader);
+            _wiredShader = ShaderBuilder.CreateShader("wired", idv, idf);
+
+            //idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineVertex.glsl", ShaderType.VertexShader);
+            //idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineFragment.glsl", ShaderType.FragmentShader);
+            //_lineShader = ShaderBuilder.CreateShader("smoothLine", idv, idf);
+
+
+            var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\MyDemo\0.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\weirdSphere.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\man.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off");
+
+
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\cat.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\centaur.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\gorilla.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man2.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man3.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man4.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\neptune.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off");
+
+            //var lines = new List<Vector3>();
+            //int i = 0;
+            //var prime = mesh.Vertices[0];
+            //while (i < 100)
+            //{
+            //    prime = mesh.Vertices[prime.Verts[i % prime.Verts.Count]];
+            //    lines.Add(prime.Coord);
+            //    i++;
+            //}
+
+
+            //var mesh = Engine.Core.ObjectLoader.CreateCube(0.1f);
+            _mesh = new MeshRenderer(mesh);
+            //_mesh.Shader = _shader;
+
+            var a = Dijkstra.ConstructGraphFromMesh(mesh);
+
+            var b = Dijkstra.FindShortestPath(a, mesh.Vertices.Count,101, 491, out int[] path);
+
+            List<Vector3> lines = new List<Vector3>();
+
+            for (int i = 0; i < path.Length; i++)
+            {
+                lines.Add(mesh.Vertices[path[i]].Coord);
+            }
+
+            _lineRenderer = new LineRenderer(lines);
+
+        }
+
+        private void Render()
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.CullFace(CullFaceMode.Back);
+
+            Matrix4 model = Matrix4.Identity;
+
+            _mesh.Shader = _shader;
+            _mesh.Shader.Use();
+            _mesh.Shader.SetVec3("cameraPosition", _camera.Position);
+            _mesh.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, -0.0f);
+            _mesh.Shader.SetVec3("directLight.ambient", 0.15f, 0.15f, 0.15f);
+            _mesh.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.5f);
+            _mesh.Shader.SetVec3("directLight.specular", 0.5f, 0.5f, 0.5f);
+            _mesh.Shader.SetFloat("material.shineness", 32.0f);
+            _mesh.Shader.SetMat4("Model", model);
+            _mesh.Shader.SetMat4("View", _camera.View);
+            _mesh.Shader.SetMat4("Projection", _camera.Projection);
+            _mesh.Render(eRenderMode.shaded);
+
+            _mesh.Shader = _wiredShader;
+            _mesh.Shader.Use();
+            _mesh.Shader.SetMat4("Model", model);
+            _mesh.Shader.SetMat4("View", _camera.View);
+            _mesh.Shader.SetMat4("Projection", _camera.Projection);
+            _mesh.Shader.SetVec4("Color", new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+            _mesh.Render(eRenderMode.wireFrame);
+
+
+
+            _lineRenderer.Shader = _wiredShader;
+            _lineRenderer.Shader.Use();
+            _lineRenderer.Shader.SetMat4("Model", model);
+            _lineRenderer.Shader.SetMat4("View", _camera.View);
+            _lineRenderer.Shader.SetMat4("Projection", _camera.Projection);
+            _lineRenderer.Shader.SetVec4("Color", new Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+            _lineRenderer.Render();
+
+            //Matrix4 scale = Matrix4.CreateScale(1.1f);
+
+            
+
+
+            GL.Flush();
+            GLControl.SwapBuffers();
+        }
+
         private void ProcessMouseInput(int x, int y)
         {
-            if (_isFirstMouse)
-            {
-                _mouseX = x;
-                _mouseY = y;
-                _isFirstMouse = false;
-            }
+
         }
 
         private void GLControl_MouseWheel(object sender, MouseEventArgs e)
@@ -105,26 +213,30 @@ namespace VertexBenderCS
 
         private void GLControl_MouseMove(object sender, MouseEventArgs e)
         {
-
-            ProcessMouseInput(e.X, e.Y);
+            if (_isFirstMouse)
+            {
+                _mouseX = (float)e.X;
+                _mouseY = (float)e.Y;
+                _isFirstMouse = false;
+            }
 
             float offsetX = e.X - _mouseX;
-            float offsetY = e.Y - _mouseY;
+            float offsetY = _mouseY - e.Y;
+            _mouseX = e.X;
+            _mouseY = e.Y;
 
             if (e.Button == MouseButtons.Middle)
             {
                 _cameraController.Pan(offsetX, offsetY);
             }
-            if (e.Button == MouseButtons.Right && (KeyState & Keys.ControlKey) == Keys.ControlKey)
+            else if (e.Button == MouseButtons.Right && (KeyState & Keys.ControlKey) == Keys.ControlKey)
             {
-                _cameraController.OrbitAround(offsetX / Width, offsetY / Width, _mesh.Center);
+                _cameraController.OrbitAround(offsetX , offsetY , _mesh.Center + new Vector3(0, 0.1f,0));
             }
             else if(e.Button == MouseButtons.Right)
             {
-                _cameraController.Rotate(offsetX / Width, offsetY / Width);
+                _cameraController.Rotate(offsetX , offsetY);
             }
-            _mouseX = e.X;
-            _mouseY = e.Y;
 
             //statusBar.Text = "X: " + offsetX + "\n" + "Y: " + offsetY;
             //statusBar.Text = KeyState.ToString();
@@ -132,8 +244,6 @@ namespace VertexBenderCS
 
         private void GLControl_MouseDown(object sender, MouseEventArgs e)
         {
-            
-
         }
 
         //private void Application_Idle(object sender, EventArgs e)
@@ -164,6 +274,31 @@ namespace VertexBenderCS
         private void GLControl_KeyDown(object sender, KeyEventArgs e)
         {
             KeyState = e.KeyData;
+
+            if (e.KeyData == Keys.Q)
+            {
+                _cameraController.Navigate(eCameraMovement.up);
+            }
+            if (e.KeyData == Keys.E)
+            {
+                _cameraController.Navigate(eCameraMovement.down);
+            }
+            if (e.KeyData == Keys.W)
+            {
+                _cameraController.Navigate(eCameraMovement.forward);
+            }
+            if (e.KeyData== Keys.S)
+            {
+                _cameraController.Navigate(eCameraMovement.backward);
+            }
+            if (e.KeyData == Keys.A)
+            {
+                _cameraController.Navigate(eCameraMovement.left);
+            }
+            if (e.KeyData == Keys.D)
+            {
+                _cameraController.Navigate(eCameraMovement.right);
+            }
         }
 
         private void GLControl_KeyUp(object sender, KeyEventArgs e)
@@ -178,107 +313,6 @@ namespace VertexBenderCS
         private void GLControl_Paint(object sender, PaintEventArgs e)
         {
             Render();
-        }
-
-        private void SetupTestScene()
-        {
-
-            _camera = new Camera(GLControl.Width, GLControl.Height);
-            _cameraController = new CameraController(_camera);
-
-            int idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader);
-            int idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader);
-            _shader = ShaderBuilder.CreateShader("shaded", idv, idf);
-
-            idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader);
-            idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader);
-            _wiredShader = ShaderBuilder.CreateShader("wired", idv, idf);
-
-            //idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineVertex.glsl", ShaderType.VertexShader);
-            //idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineFragment.glsl", ShaderType.FragmentShader);
-            //_lineShader = ShaderBuilder.CreateShader("smoothLine", idv, idf);
-
-
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\MyDemo\0.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\weirdSphere.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\man.off");
-            var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off");
-
-
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\cat.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\centaur.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\gorilla.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man2.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man3.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man4.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\neptune.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off");
-
-            var lines = new List<Vector3>();
-            int i = 0;
-            var prime = mesh.Vertices[0];
-            while (i < 100)
-            {
-                prime = mesh.Vertices[prime.Verts[i % prime.Verts.Count]];
-                lines.Add(prime.Coord);
-                i++;
-            }
-            
-            _lineRenderer = new LineRenderer(lines);
-
-            //var mesh = Engine.Core.ObjectLoader.CreateCube(0.1f);
-            _mesh = new MeshRenderer(mesh);
-            //_mesh.Shader = _shader;
-        }
-
-        private void Render()
-        {
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.CullFace(CullFaceMode.Back);
-
-            Matrix4 model = Matrix4.Identity;
-
-            _mesh.Shader = _shader;
-            _mesh.Shader.Use();
-            _mesh.Shader.SetVec3("cameraPosition", _camera.Position);
-            _mesh.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, -0.0f);
-            _mesh.Shader.SetVec3("directLight.ambient", 0.15f, 0.15f, 0.15f);
-            _mesh.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.5f);
-            _mesh.Shader.SetVec3("directLight.specular", 0.5f, 0.5f, 0.5f);
-            _mesh.Shader.SetFloat("material.shineness", 32.0f);
-            _mesh.Shader.SetMat4("Model", model);
-            _mesh.Shader.SetMat4("View", _camera.View);
-            _mesh.Shader.SetMat4("Projection", _camera.Projection);
-            _mesh.Render();
-
-
-            _lineRenderer.Shader = _wiredShader;
-            _lineRenderer.Shader.Use();
-            _lineRenderer.Shader.SetMat4("Model", model);
-            _lineRenderer.Shader.SetMat4("View", _camera.View);
-            _lineRenderer.Shader.SetMat4("Projection", _camera.Projection);
-            //_lineRenderer.Shader.SetVec2("ViewPort", new Vector2(Width, Height));
-            //_lineRenderer.Shader.SetFloat("LineWidth", 5.0f);
-            //_lineRenderer.Shader.SetFloat("BlendFactor", 2.5f);
-            _lineRenderer.Shader.SetVec4("Color", new Vector4(0.0f, 0.0f, 1.0f, 1.0f));
-            _lineRenderer.Render();
-
-            //Matrix4 scale = Matrix4.CreateScale(1.1f);
-
-            _mesh.Shader = _wiredShader;
-            _mesh.Shader.Use();
-            _mesh.Shader.SetMat4("Model", model);
-            _mesh.Shader.SetMat4("View", _camera.View);
-            _mesh.Shader.SetMat4("Projection", _camera.Projection);
-            _lineRenderer.Shader.SetVec4("Color", new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-            _mesh.Render(eRenderMode.wireFrame);
-
-
-            GL.Flush();
-            GLControl.SwapBuffers();
-
         }
 
         Bitmap GrabScreenshot()

@@ -25,6 +25,15 @@ namespace Engine.Core
         }
     }
 
+    public enum eCameraMovement : byte
+    {
+        forward = 1,
+        backward = 2,
+        left = 4,
+        right = 8,
+        up = 16,
+        down = 32
+    }
 
     public class CameraController
     {
@@ -33,9 +42,13 @@ namespace Engine.Core
         public float MouseSensitivity = 0.001f;
         public float MouseSpeed;
 
+        private float _yaw;
+        private float _pitch;
+
         public CameraController(Camera cam)
         {
             Cam = cam;
+            _yaw = MathHelper.DegreesToRadians(-90.0f);
         }
 
         public void ProcessInput(CameraControlInput input)
@@ -68,19 +81,51 @@ namespace Engine.Core
 
         public void Rotate(float xoffset, float yoffset)
         {
-            Quaternion q1 = new Quaternion(yoffset, -xoffset, 0);
+            if (xoffset == 0 && yoffset == 0)
+            {
+                return;
+            }
+            xoffset *= MouseSensitivity;
+            yoffset *= MouseSensitivity;
 
-            Cam.Front = q1 * Cam.Front.Normalized();
+            _yaw += xoffset;
+            _pitch += yoffset;
+
+            if (_pitch > 89.0f)
+            {
+                _pitch = 89.0f;
+            }
+            if (_pitch < -89.0f)
+            {
+                _pitch = -89.0f;
+            }
+
+            Cam.Front = new Vector3
+            (
+                (float)(Math.Cos(_yaw) * Math.Cos(_pitch)),
+                (float)Math.Sin(_pitch),
+                (float)(Math.Sin(_yaw) * Math.Cos(_pitch))
+            ).Normalized();
+
             Cam.Right = Vector3.Cross(Cam.Front, Vector3.UnitY).Normalized();
             Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
+
+
+            //Quaternion q1 = new Quaternion(yoffset, -xoffset, 0);
+
+            //Cam.Front = q1 * Cam.Front.Normalized();
+
         }
 
         public void OrbitAround(float xoffset, float yoffset, Vector3 target)
         {
+            xoffset *= MouseSensitivity;
+            yoffset *= MouseSensitivity;
+
             float radius = (Cam.Position - target).Length;
 
-            float sinY = xoffset ;
-            float sinX = yoffset ;
+            float sinY = xoffset / radius;
+            float sinX = yoffset / radius;
 
             float angleX = (float)Math.Asin(sinX);
             float angleY = (float)Math.Asin(sinY);
@@ -93,6 +138,34 @@ namespace Engine.Core
             Cam.Right = Vector3.Cross(Cam.Front, Vector3.UnitY).Normalized();
             Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
 
+        }
+
+        public void Navigate(eCameraMovement movement, float delta = 0.1f)
+        {
+            if ((movement & eCameraMovement.forward) == eCameraMovement.forward)
+            {
+                Cam.Position += Cam.Front * delta;
+            }
+            if ((movement & eCameraMovement.backward) == eCameraMovement.backward)
+            {
+                Cam.Position -= Cam.Front * delta;
+            }
+            if ((movement & eCameraMovement.left) == eCameraMovement.left)
+            {
+                Cam.Position -= Cam.Right * delta;
+            }
+            if ((movement & eCameraMovement.right) == eCameraMovement.right)
+            {
+                Cam.Position += Cam.Right * delta;
+            }
+            if ((movement & eCameraMovement.up) == eCameraMovement.up)
+            {
+                Cam.Position += Vector3.UnitY * delta;
+            }
+            if ((movement & eCameraMovement.down) == eCameraMovement.down)
+            {
+                Cam.Position -= Vector3.UnitY * delta;
+            }
         }
     }
 }

@@ -11,9 +11,9 @@ namespace Engine.GLApi
 {
     public enum eRenderMode : byte
     {
-        shaded = 0,
-        wireFrame,
-        pointCloud
+        shaded = 1,
+        wireFrame = 2,
+        pointCloud = 4
     }
 
     public struct GpuVertex
@@ -109,21 +109,21 @@ namespace Engine.GLApi
         {
             GL.BindVertexArray(_VAO);
 
-            if (mode == eRenderMode.shaded)
+            if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
             {
-                GL.PolygonMode(MaterialFace.Back, PolygonMode.Fill);
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             }
-            else if(mode == eRenderMode.wireFrame)
+            if((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
-                GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
+                GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+                GL.PolygonOffset(1.0f, 1.0f);
                 GL.LineWidth(1.5f);
                 GL.Enable(EnableCap.LineSmooth);
             }
-            else if (mode == eRenderMode.pointCloud)
+            if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
             {
                 GL.PolygonMode(MaterialFace.Back, PolygonMode.Point);
             }
-
             GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
             GL.BindVertexArray(0);
 

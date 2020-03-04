@@ -11,11 +11,10 @@ namespace Engine.Core
     {
         public Camera(float width, float height, float fov = 45, float near = 0.1f, float far = 100.0f)
         {
-            //Position = Vector3.Zero;
-            //Front = -Vector3.UnitZ;
-
-            Position = new Vector3(-1, 2, -3);
-            Front = new Vector3(1, -2, 3);
+            Position = Vector3.Zero;
+            Front = -Vector3.UnitZ;
+            //Position = new Vector3(-1, 2, -3);
+            //Front = new Vector3(1, -2, 3);
 
             Up = Vector3.UnitY;
             Right = Vector3.UnitX;
