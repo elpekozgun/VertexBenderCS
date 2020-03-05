@@ -21,6 +21,8 @@ namespace Engine.GLApi
 
         private Vector3[] _vertices;
 
+        public Vector4 Color { get; set; }
+
         public LineRenderer(List<Vector3> vertices)
         {
             _vertices = vertices.ToArray();
@@ -29,10 +31,10 @@ namespace Engine.GLApi
 
         public void Render(eRenderMode mode = eRenderMode.shaded)
         {
-            if (!RenderWithDepth)
-            {
-                GL.Disable(EnableCap.DepthTest);
-            }
+            //if (!RenderWithDepth)
+            //{
+            //    GL.Disable(EnableCap.DepthTest);
+            //}
             GL.CullFace(CullFaceMode.FrontAndBack);
             GL.BindVertexArray(_VAO);
 
@@ -45,10 +47,10 @@ namespace Engine.GLApi
             //GL.DrawArrays(PrimitiveType.Points, 0, _vertices.Length);
 
             GL.BindVertexArray(0);
-            if (!RenderWithDepth)
-            {
-                GL.Enable(EnableCap.DepthTest);
-            }
+            //if (!RenderWithDepth)
+            //{
+            //    GL.Enable(EnableCap.DepthTest);
+            //}
         }
 
         public void Dispose()

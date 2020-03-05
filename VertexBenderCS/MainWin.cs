@@ -11,6 +11,7 @@ using Engine.Core;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Engine.Processing;
+using System.Diagnostics;
 
 namespace VertexBenderCS
 {
@@ -26,12 +27,11 @@ namespace VertexBenderCS
         private System.Timers.Timer _Timer;
         
         //TEST STUFF
-        private MeshRenderer _meshRenderer;
-        private Mesh _mesh;
         private Shader _wiredShader;
         private Shader _shader;
-        private LineRenderer _lineRenderer;
 
+        private List<MeshRenderer> _objects;
+        private List<LineRenderer> _lines;
 
         public MainWin()
         {
@@ -116,6 +116,8 @@ namespace VertexBenderCS
             GLControl.MouseWheel += GLControl_MouseWheel;
             //Application.Idle += Application_Idle;
 
+            menuImport.Click += MenuImport_Click;
+
 
             btnDijkstra.Click += BtnDijkstra_Click;
 
@@ -123,52 +125,58 @@ namespace VertexBenderCS
             txtTarget.TextChanged += TxtTarget_TextChanged;
         }
 
+        private void MenuImport_Click(object sender, EventArgs e)
+        {
+            var d = new OpenFileDialog();
+            d.ValidateNames = true;
+            d.Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* ";
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                var v = d.FileName.Substring(d.FileName.Length - 4);
+                if (v.ToLower() == ".off")
+                {
+                    var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName));
+                    _objects.Add(obj);
+                }
+            }
+        }
+
         private void Render()
         {
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.CullFace(CullFaceMode.Back);
 
-            Matrix4 model = Matrix4.CreateScale(50.0f);
+            //Matrix4 model = Matrix4.CreateScale(50.0f);
             //Matrix4 rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
             //model = model * rotation;
+            Matrix4 model = Matrix4.Identity;
 
-            //Matrix4 model = Matrix4.Identity;
+            foreach (var obj in _objects)
+            {
+                obj.Shader = _shader;
+                obj.Shader.Use();
+                obj.Shader.SetVec3("cameraPosition", _camera.Position);
+                obj.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, -0.0f);
+                obj.Shader.SetVec3("directLight.ambient", 0.15f, 0.15f, 0.15f);
+                obj.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.5f);
+                obj.Shader.SetVec3("directLight.specular", 0.5f, 0.5f, 0.5f);
+                obj.Shader.SetFloat("material.shineness", 32.0f);
+                obj.Shader.SetMat4("Model", model);
+                obj.Shader.SetMat4("View", _camera.View);
+                obj.Shader.SetMat4("Projection", _camera.Projection);
+                obj.Render(eRenderMode.shaded);
+            }
 
-
-            _meshRenderer.Shader = _shader;
-            _meshRenderer.Shader.Use();
-            _meshRenderer.Shader.SetVec3("cameraPosition", _camera.Position);
-            _meshRenderer.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, -0.0f);
-            _meshRenderer.Shader.SetVec3("directLight.ambient", 0.15f, 0.15f, 0.15f);
-            _meshRenderer.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.5f);
-            _meshRenderer.Shader.SetVec3("directLight.specular", 0.5f, 0.5f, 0.5f);
-            _meshRenderer.Shader.SetFloat("material.shineness", 32.0f);
-            _meshRenderer.Shader.SetMat4("Model", model);
-            _meshRenderer.Shader.SetMat4("View", _camera.View);
-            _meshRenderer.Shader.SetMat4("Projection", _camera.Projection);
-            _meshRenderer.Render(eRenderMode.shaded);
-
-            //_meshRenderer.Shader = _wiredShader;
-            //_meshRenderer.Shader.Use();
-            //_meshRenderer.Shader.SetMat4("Model", model);
-            //_meshRenderer.Shader.SetMat4("View", _camera.View);
-            //_meshRenderer.Shader.SetMat4("Projection", _camera.Projection);
-            //_meshRenderer.Shader.SetVec4("Color", new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-            //_meshRenderer.Render(eRenderMode.wireFrame);
-
-
-
-            _lineRenderer.Shader = _wiredShader;
-            _lineRenderer.Shader.Use();
-            _lineRenderer.Shader.SetMat4("Model", model);
-            _lineRenderer.Shader.SetMat4("View", _camera.View);
-            _lineRenderer.Shader.SetMat4("Projection", _camera.Projection);
-            _lineRenderer.Shader.SetVec4("Color", new Vector4(0.0f, 0.0f, 1.0f, 1.0f));
-            _lineRenderer.Render();
-
-            //Matrix4 scale = Matrix4.CreateScale(1.1f);
-
-            
+            foreach (var line in _lines)
+            {
+                line.Shader = _wiredShader;
+                line.Shader.Use();
+                line.Shader.SetMat4("Model", model);
+                line.Shader.SetMat4("View", _camera.View);
+                line.Shader.SetMat4("Projection", _camera.Projection);
+                line.Shader.SetVec4("Color", line.Color);
+                line.Render();
+            }
 
 
             GL.Flush();
@@ -199,7 +207,7 @@ namespace VertexBenderCS
             }
             else if (e.Button == MouseButtons.Right && (KeyState & Keys.ControlKey) == Keys.ControlKey)
             {
-                _cameraController.OrbitAround(offsetX , offsetY , _meshRenderer.Center + new Vector3(0, 0.1f,0));
+                _cameraController.OrbitAround(offsetX , offsetY , Vector3.Zero);
             }
             else if(e.Button == MouseButtons.Right)
             {
@@ -266,10 +274,11 @@ namespace VertexBenderCS
         }
 
         // TEST REGION
-
-
         private void SetupTestScene()
         {
+            _objects = new List<MeshRenderer>();
+            _lines = new List<LineRenderer>();
+
             _camera = new Camera(GLControl.Width, GLControl.Height);
             _cameraController = new CameraController(_camera);
 
@@ -280,6 +289,12 @@ namespace VertexBenderCS
             idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader);
             idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader);
             _wiredShader = ShaderBuilder.CreateShader("wired", idv, idf);
+
+
+            _objects.Clear();
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"));
+            _objects.Add(mesh);
 
             //idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineVertex.glsl", ShaderType.VertexShader);
             //idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineFragment.glsl", ShaderType.FragmentShader);
@@ -302,7 +317,7 @@ namespace VertexBenderCS
             //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man4.off");
             //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\neptune.off");
             //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off");
-            var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\examples\64.off");
+            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\examples\64.off");
 
 
 
@@ -316,23 +331,23 @@ namespace VertexBenderCS
             //    i++;
             //}
 
-            _mesh = mesh;
+            //_mesh = mesh;
             //var mesh = Engine.Core.ObjectLoader.CreateCube(0.1f);
-            _meshRenderer = new MeshRenderer(mesh);
+            //_meshRenderer = new MeshRenderer(mesh);
             //_mesh.Shader = _shader;
 
-            var a = Dijkstra.ConstructGraphFromMesh(mesh);
+            //var a = Dijkstra.ConstructGraphFromMesh(mesh);
 
-            Dijkstra.DijkstraArray(a, 0, 111, out int[] path);
+            //Dijkstra.DijkstraArray(a, 0, 111, out int[] path);
 
-            List<Vector3> lines = new List<Vector3>();
+            //List<Vector3> lines = new List<Vector3>();
 
-            for (int i = 0; i < path.Length; i++)
-            {
-                lines.Add(mesh.Vertices[path[i]].Coord);
-            }
+            //for (int i = 0; i < path.Length; i++)
+            //{
+            //    lines.Add(mesh.Vertices[path[i]].Coord);
+            //}
 
-            _lineRenderer = new LineRenderer(lines);
+            //_lineRenderer = new LineRenderer(lines);
         }
 
         private int? _src = null;
@@ -344,7 +359,7 @@ namespace VertexBenderCS
 
             if (text != string.Empty)
             {
-                _src = new int?(int.Parse(text));
+                _trg = new int?(int.Parse(text));
             }
 
         }
@@ -355,7 +370,7 @@ namespace VertexBenderCS
 
             if (text != string.Empty)
             {
-                _trg = new int?(int.Parse(text));
+                _src = new int?(int.Parse(text));
             }
         }
 
@@ -363,27 +378,54 @@ namespace VertexBenderCS
         {
             if (_src.HasValue && _trg.HasValue)
             {
-                var a = Dijkstra.ConstructGraphFromMesh(_mesh);
+                _lines.Clear();
+                Stopwatch watch = new Stopwatch();
+                var b = Dijkstra.ConstructGraphFromMesh(_objects[0].Mesh);
 
-                Dijkstra.DijkstraArray(a, _src.Value, _trg.Value, out int[] path);
+                Log.AppendText("starting\n");
 
-                List<Vector3> lines = new List<Vector3>();
+                watch.Start();
+                var d1 = Dijkstra.DijkstraArray(b, _src.Value, _trg.Value, out int[] path);
+                watch.Stop();
+                var a1 = watch.ElapsedMilliseconds;
 
-                if (path[0] == -1)
-                {
-                    return;
-                }
+                Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
+
+                watch.Reset();
+                
+                watch.Start();
+                var a = Dijkstra.DijkstraHeap(_objects[0].Mesh, _src.Value, _trg.Value, out int[] path2);
+                watch.Stop();
+                var a2 = watch.ElapsedMilliseconds;
+
+                Log.AppendText("Min Heap: " + a[0].Distance.ToString() + "   , elapsed: " + a2);
+                 
+                           
+
+                List <Vector3> lines1 = new List<Vector3>();
+                List<Vector3> lines2 = new List<Vector3>();
+
                 for (int i = 0; i < path.Length; i++)
                 {
-                    lines.Add(_mesh.Vertices[path[i]].Coord);
+                    lines1.Add(_objects[0].Mesh.Vertices[path[i]].Coord);
                 }
-                _lineRenderer = new LineRenderer(lines);
 
-                Dijkstra.CreateBitmap(a, path, @"C:\Users\ozgun\Desktop\" + _src.Value.ToString() + " -" + _trg.Value.ToString());
+                for (int i = 0; i < path2.Length; i++)
+                {
+                    lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
+                }
+
+
+                var r1 = new LineRenderer(lines1);
+                r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                var r2 = new LineRenderer(lines2);
+                r2.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                _lines.Add(r1);
+                _lines.Add(r2);
+
+                //Dijkstra.CreateBitmap(a, path, @"C:\Users\ozgun\Desktop\" + _src.Value.ToString() + " -" + _trg.Value.ToString());
             }
         }
-
-
 
 
 

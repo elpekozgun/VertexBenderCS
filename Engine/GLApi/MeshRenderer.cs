@@ -49,6 +49,9 @@ namespace Engine.GLApi
         private int _VBO;
         private int _EBO;
 
+        public Mesh Mesh { get; set; }
+
+
         private void ExtractVertices(Mesh mesh)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
@@ -77,6 +80,7 @@ namespace Engine.GLApi
             ExtractVertices(mesh);
             Setup();
             _initialized = true;
+            Mesh = mesh;
         }
 
         private void Setup()

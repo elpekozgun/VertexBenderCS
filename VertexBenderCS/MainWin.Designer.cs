@@ -167,7 +167,6 @@
             // txtSource
             // 
             this.txtSource.Location = new System.Drawing.Point(70, 1);
-            this.txtSource.Mask = "000000000";
             this.txtSource.Name = "txtSource";
             this.txtSource.Size = new System.Drawing.Size(36, 20);
             this.txtSource.TabIndex = 7;
@@ -176,7 +175,6 @@
             // txtTarget
             // 
             this.txtTarget.Location = new System.Drawing.Point(112, 1);
-            this.txtTarget.Mask = "000000000";
             this.txtTarget.Name = "txtTarget";
             this.txtTarget.Size = new System.Drawing.Size(41, 20);
             this.txtTarget.TabIndex = 8;

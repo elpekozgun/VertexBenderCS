@@ -65,7 +65,9 @@
     <Compile Include="GLApi\MeshRenderer.cs" />
     <Compile Include="GLApi\Shader.cs" />
     <Compile Include="GLApi\ShaderBuilder.cs" />
+    <Compile Include="Processing\BinaryHeap.cs" />
     <Compile Include="Processing\Dijkstra.cs" />
+    <Compile Include="Processing\MinHeap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
