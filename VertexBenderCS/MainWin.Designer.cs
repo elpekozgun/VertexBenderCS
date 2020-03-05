@@ -44,6 +44,9 @@
             this.Log = new System.Windows.Forms.TextBox();
             this.toolBar = new System.Windows.Forms.ToolBar();
             this.button1 = new System.Windows.Forms.Button();
+            this.txtSource = new System.Windows.Forms.MaskedTextBox();
+            this.txtTarget = new System.Windows.Forms.MaskedTextBox();
+            this.btnDijkstra = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // GLControl
@@ -161,6 +164,33 @@
             this.button1.TabIndex = 6;
             this.button1.UseVisualStyleBackColor = false;
             // 
+            // txtSource
+            // 
+            this.txtSource.Location = new System.Drawing.Point(70, 1);
+            this.txtSource.Mask = "000000000";
+            this.txtSource.Name = "txtSource";
+            this.txtSource.Size = new System.Drawing.Size(36, 20);
+            this.txtSource.TabIndex = 7;
+            this.txtSource.ValidatingType = typeof(int);
+            // 
+            // txtTarget
+            // 
+            this.txtTarget.Location = new System.Drawing.Point(112, 1);
+            this.txtTarget.Mask = "000000000";
+            this.txtTarget.Name = "txtTarget";
+            this.txtTarget.Size = new System.Drawing.Size(41, 20);
+            this.txtTarget.TabIndex = 8;
+            this.txtTarget.ValidatingType = typeof(int);
+            // 
+            // btnDijkstra
+            // 
+            this.btnDijkstra.Location = new System.Drawing.Point(159, -1);
+            this.btnDijkstra.Name = "btnDijkstra";
+            this.btnDijkstra.Size = new System.Drawing.Size(75, 23);
+            this.btnDijkstra.TabIndex = 9;
+            this.btnDijkstra.Text = "button2";
+            this.btnDijkstra.UseVisualStyleBackColor = true;
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -168,6 +198,9 @@
             this.BackColor = System.Drawing.Color.White;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1055, 797);
+            this.Controls.Add(this.btnDijkstra);
+            this.Controls.Add(this.txtTarget);
+            this.Controls.Add(this.txtSource);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.Log);
             this.Controls.Add(this.treeView1);
@@ -202,6 +235,9 @@
         private System.Windows.Forms.TextBox Log;
         private System.Windows.Forms.ToolBar toolBar;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.MaskedTextBox txtSource;
+        private System.Windows.Forms.MaskedTextBox txtTarget;
+        private System.Windows.Forms.Button btnDijkstra;
     }
 }
 

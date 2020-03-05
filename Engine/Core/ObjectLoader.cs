@@ -59,7 +59,7 @@ namespace Engine.Core
             }
 
             mesh.CalculateVertexNormals();
-
+            mesh.Center();
             return mesh;
         }
 

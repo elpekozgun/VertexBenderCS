@@ -111,11 +111,11 @@ namespace Engine.GLApi
 
             if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
             {
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                GL.PolygonMode(MaterialFace.Back, PolygonMode.Fill);
             }
             if((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
-                GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+                GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
                 GL.PolygonOffset(1.0f, 1.0f);
                 GL.LineWidth(1.5f);
                 GL.Enable(EnableCap.LineSmooth);

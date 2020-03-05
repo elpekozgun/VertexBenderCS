@@ -29,10 +29,10 @@ namespace Engine.GLApi
 
         public void Render(eRenderMode mode = eRenderMode.shaded)
         {
-            //if (!RenderWithDepth)
-            //{
-            //    GL.Disable(EnableCap.DepthTest);
-            //}
+            if (!RenderWithDepth)
+            {
+                GL.Disable(EnableCap.DepthTest);
+            }
             GL.CullFace(CullFaceMode.FrontAndBack);
             GL.BindVertexArray(_VAO);
 

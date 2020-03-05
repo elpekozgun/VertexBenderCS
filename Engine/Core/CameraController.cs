@@ -39,7 +39,7 @@ namespace Engine.Core
     {
         private readonly Camera Cam;
 
-        public float MouseSensitivity = 0.001f;
+        public float MouseSensitivity = 0.1f;
         public float MouseSpeed;
 
         private float _yaw;
@@ -48,7 +48,10 @@ namespace Engine.Core
         public CameraController(Camera cam)
         {
             Cam = cam;
-            _yaw = MathHelper.DegreesToRadians(-90.0f);
+            _yaw = -90.0f;
+            _pitch = 0.0f;
+
+            UpdateCameraVectors();
         }
 
         public void ProcessInput(CameraControlInput input)
@@ -66,7 +69,7 @@ namespace Engine.Core
 
         public void Zoom(int val)
         {
-            Cam.Position += (Cam.Front * val * MouseSensitivity);
+            Cam.Position += (Cam.Front * val * MouseSensitivity * 0.1f);
         }
 
         public void Pan(float xoffset, float yoffset)
@@ -81,40 +84,26 @@ namespace Engine.Core
 
         public void Rotate(float xoffset, float yoffset)
         {
-            if (xoffset == 0 && yoffset == 0)
-            {
-                return;
-            }
+
             xoffset *= MouseSensitivity;
             yoffset *= MouseSensitivity;
 
             _yaw += xoffset;
             _pitch += yoffset;
 
-            if (_pitch > 89.0f)
+            if (_pitch > 70.0f)
             {
-                _pitch = 89.0f;
+                _pitch = 70.0f;
             }
-            if (_pitch < -89.0f)
+            if (_pitch < -70.0f)
             {
-                _pitch = -89.0f;
+                _pitch = -70.0f;
             }
-
-            Cam.Front = new Vector3
-            (
-                (float)(Math.Cos(_yaw) * Math.Cos(_pitch)),
-                (float)Math.Sin(_pitch),
-                (float)(Math.Sin(_yaw) * Math.Cos(_pitch))
-            ).Normalized();
-
-            Cam.Right = Vector3.Cross(Cam.Front, Vector3.UnitY).Normalized();
-            Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
-
 
             //Quaternion q1 = new Quaternion(yoffset, -xoffset, 0);
 
             //Cam.Front = q1 * Cam.Front.Normalized();
-
+            UpdateCameraVectors();
         }
 
         public void OrbitAround(float xoffset, float yoffset, Vector3 target)
@@ -166,6 +155,20 @@ namespace Engine.Core
             {
                 Cam.Position -= Vector3.UnitY * delta;
             }
+        }
+
+        private void UpdateCameraVectors()
+        {
+            Cam.Front = new Vector3
+            (
+                (float)(Math.Cos(MathHelper.DegreesToRadians(_yaw)) * Math.Cos(MathHelper.DegreesToRadians(_pitch))),
+                (float)Math.Sin(MathHelper.DegreesToRadians(_pitch)),
+                (float)(Math.Sin(MathHelper.DegreesToRadians(_yaw)) * Math.Cos(MathHelper.DegreesToRadians(_pitch)))
+            ).Normalized();
+
+            Cam.Right = Vector3.Cross(Cam.Front, Vector3.UnitY).Normalized();
+            Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
+
         }
     }
 }

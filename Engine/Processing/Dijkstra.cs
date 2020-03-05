@@ -5,12 +5,44 @@ using System.Drawing;
 
 namespace Engine.Processing
 {
+    public class Node
+    {
+        public int Dest;
+        public float Value;
+        public Node Next;
+
+        public Node(int dest, float value, Node next)
+        {
+            Dest = dest;
+            Value = value;
+            Next = next;
+        }
+    }
+
+    public class NodeList
+    {
+        Node Head;
+    }
+
+    public class Graph
+    {
+        int Index;
+        NodeList List;
+    }
+
     public static class Dijkstra
     {
-        public static float[,] ConstructGraphFromMesh(Mesh mesh)
+        public static float[][] ConstructGraphFromMesh(Mesh mesh)
         {
+
+
             int n = mesh.Vertices.Count;
-            float[,] graph = new float[n, n];
+            float[][] graph = new float[n][];
+            for (int i = 0; i < n; i++)
+            {
+                var a = new float[n];
+                graph[i] = a; 
+            }
 
             for (int j = 0; j < mesh.Vertices.Count; j++)
             {
@@ -19,84 +51,118 @@ namespace Engine.Processing
                 for (int i = 0; i < verts.Count; i++)
                 {
                     var w = (mesh.Vertices[j].Coord - mesh.Vertices[verts[i]].Coord).Length;
-                    graph[j, verts[i]] = w;
+                    graph[j][verts[i]] = w;
                 }   
             }
             return graph;
         }
 
-        public static float FindShortestPath(float[,] graph, int n, int srcIndex, int target, out int[] path)
+        public static void DijkstraArray(float[][] graph, int src, int target, out int[] path)
         {
-            var p = new List<int>();
+            int n = graph.GetLength(0);
+            float[] shortestDists = new float[n];
+            bool[] added = new bool[n];
 
-            float[] dist = new float[n];
-            bool[] spt = new bool[n];
+            if (src >= n || src < 0 || target >= n || target < 0)
+            {
+                path = null;
+                return;
+            }
 
             for (int i = 0; i < n; i++)
             {
-                dist[i] = float.MaxValue;
-                spt[i] = false;
+                shortestDists[i] = float.MaxValue;
+                added[i] = false;
             }
+            int[] parents = new int[n];
 
-            dist[srcIndex] = 0;
+            shortestDists[src] = 0;
+            parents[src] = -1;
 
-            for (int i = 0; i < n - 1; i++)
+            for (int i = 0; i < n; i++)
             {
-                int u = MinDistance(dist, spt, n);
-                spt[u] = true;
+                int neighbor = -1;
+                float shortestDist = float.MaxValue;
 
                 for (int j = 0; j < n; j++)
                 {
-                    if (!spt[j] && graph[u,j] != 0 && dist[u] != float.MaxValue && dist[u] + graph[u,j] < dist[j])
+                    if (!added[j] && shortestDists[j] < shortestDist)
                     {
-                        dist[j] = dist[u] + graph[u, j];
-                        if (i == target)
-                        {
-                            p.Add(j);
-                        }
+                        neighbor = j;
+                        shortestDist = shortestDists[j];
+                    }
+                }
+
+                added[neighbor] = true;
+
+                for (int j = 0; j < n; j++)
+                {
+                    float edgeDist = graph[neighbor][j];
+
+                    if (edgeDist > 0 && (shortestDist + edgeDist) < shortestDists[j])
+                    {
+                        parents[j] = neighbor;
+                        shortestDists[j] = shortestDist + edgeDist;
                     }
                 }
             }
+            var a = new List<int>();
 
-            path = p.ToArray();
-            return dist[target];
+            int k = parents[target];
+            a.Add(k);
+            while (k != -1)
+            {
+                a.Add(k);
+                k = parents[k];
+            }
+
+            path = a.ToArray();
         }
 
-        public static int MinDistance(float[] distances, bool[] spt, int n)
+        public static void DijkstraHeap()
         {
-            float min = float.MaxValue;
-            int minIndex = -1;
 
+
+        }
+
+
+
+        public static void CreateBitmap(float[][] graph,int[] path, string file)
+        {
+            int n = graph.GetLength(0);
+            Bitmap bitmap = new Bitmap(n, n,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            float max = float.MinValue;
             for (int i = 0; i < n; i++)
             {
-                if (spt[i] == false && distances[i] <= min)
+                for (int j = 0; j < n; j++)
                 {
-                    min = distances[i];
-                    minIndex = i;
+                    max = max < graph[i][j] ? graph[i][j] : max;
                 }
             }
 
-            return minIndex;
-        }
-
-        public static void CreateBitmap(float[,] graph, int n ,string file)
-        {
-            Bitmap bitmap = new Bitmap(n, n);
-            for (int y = 0; y<bitmap.Height; y++)
+            for (int y = 0; y < n; y++)
             {
-                for (int x = 0; x<bitmap.Width; x++)
+                for (int x = 0; x < n; x++)
                 {
-                    if (graph[x, y] == 0)
+                    if (graph[y][x] == 0.0f)
                     {
-                        bitmap.SetPixel(x, y, Color.White);
+                        bitmap.SetPixel(x, y, Color.LightYellow);
                     }
                     else
                     {
-                        bitmap.SetPixel(x, y, (Color)(new Color4(0.0f, 0.0f, graph[x, y], 1.0f)));
+                        bitmap.SetPixel(x, y, Color.FromArgb(255, (int)(255 * graph[x][y] / max), 0, 0));
                     }
+                    for (int k = 0; k < path.Length; k++)
+                    {
+                        if (x == path[k] && y == path[k])
+                        {
+                            bitmap.SetPixel(x, y, Color.Blue);
+                        }
+                    }
+
                 }
             }
-            bitmap.Save(file);
+            bitmap.Save(file + ".bmp");
             bitmap.Dispose();
         }
     }
