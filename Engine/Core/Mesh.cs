@@ -12,7 +12,7 @@ namespace Engine.Core
             Normal = new Vector3(0, 0, 0);
                 
             Tris = new List<int>();
-            Verts = new List<int>();
+            Verts = new List<KeyValuePair<int,float>>();
             Edges = new List<int>();
         }
         public Vertex(int id, Vector3 coord)
@@ -23,7 +23,7 @@ namespace Engine.Core
 
 
             Tris = new List<int>();
-            Verts = new List<int>();
+            Verts = new List<KeyValuePair<int, float>>();
             Edges = new List<int>();
         }
 
@@ -32,7 +32,7 @@ namespace Engine.Core
         public int Id;
 
         public List<int> Tris { get; set; }
-        public List<int> Verts { get; set; }
+        public List<KeyValuePair<int, float>> Verts { get; set; }
         public List<int> Edges { get; set; }
 
     }
@@ -167,14 +167,16 @@ namespace Engine.Core
         {
             for (int i = 0; i < Vertices[v1].Verts.Count; i++)
             {
-                if (Vertices[v1].Verts[i] == v2)
+                if (Vertices[v1].Verts[i].Key == v2)
                 {
                     return true;
                 }
             }
 
-            Vertices[v1].Verts.Add(v2);
-            Vertices[v2].Verts.Add(v1);
+            float dist = (Vertices[v1].Coord - Vertices[v2].Coord).Length;
+
+            Vertices[v1].Verts.Add(new KeyValuePair<int, float>(v2, dist));
+            Vertices[v2].Verts.Add(new KeyValuePair<int, float>(v1, dist));
             return false;
         }
 

@@ -10,53 +10,6 @@ using FibonacciHeap;
 
 namespace Engine.Processing
 {
-    public class Tree<T> where T : QueueNode
-    { 
-        public QueueNode Head;
-        public QueueNode Parent;
-        public List<Tree<T>> Children;
-    }
-
-    public class FibonacciHeap2
-    {
-        public Dictionary<int,Tree<QueueNode>> Heaps;
-        private int _minIndex;
-
-        //public QueueNode PopMin()
-        //{
-        //    var minTree = Heaps[_minIndex];
-
-        //    foreach (var child in minTree.Children)
-        //    {
-                
-        //        UpdateMin(child);
-        //    }
-
-        //}
-        
-        public void Insert(Tree<QueueNode> tree)
-        {
-            Heaps.Add(Heaps.Count, tree);
-            UpdateMin();
-        }
-
-        private void UpdateMin()
-        {
-            int lastId = Heaps.Count - 1;
-            var lastAdded = Heaps[lastId];
-
-            if (Heaps[_minIndex].Head.Priority > lastAdded.Head.Priority)
-            {
-                _minIndex = lastId;
-            }
-        }
-
-        private void Regen()
-        {
-
-        }
-
-    }
 
     public static class Algorithm
     {
@@ -76,8 +29,7 @@ namespace Engine.Processing
 
                 for (int i = 0; i < verts.Count; i++)
                 {
-                    var w = (mesh.Vertices[j].Coord - mesh.Vertices[verts[i]].Coord).Length;
-                    graph[j][verts[i]] = w;
+                    graph[j][i] = verts[i].Value;
                 }
             }
             return graph;
@@ -176,13 +128,14 @@ namespace Engine.Processing
 
                 foreach (var neighbor in graph.Vertices[u.id].Verts)
                 {
-                    float val = distances[u.id] + (graph.Vertices[u.id].Coord - graph.Vertices[neighbor].Coord).Length;
-                    if (val < distances[neighbor])
+                    //float val = distances[u.id] + (graph.Vertices[u.id].Coord - graph.Vertices[neighbor].Coord).Length;
+                    float val = distances[u.id] + neighbor.Value;
+                    if (val < distances[neighbor.Key])
                     {
-                        nodeMap[neighbor].prevId = u.id;
-                        que.UpdatePriority(nodeMap[neighbor], val);
-                        distances[neighbor] = val;
-                        previouses[neighbor] = u;
+                        nodeMap[neighbor.Key].prevId = u.id;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        distances[neighbor.Key] = val;
+                        previouses[neighbor.Key] = u;
                     }
                 }
 
@@ -229,13 +182,13 @@ namespace Engine.Processing
 
                 foreach (var neighbor in graph.Vertices[u.Data.id].Verts)
                 {
-                    float val = distances[u.Data.id] + (graph.Vertices[u.Data.id].Coord - graph.Vertices[neighbor].Coord).Length;
-                    if (val < distances[neighbor])
+                    float val = distances[u.Data.id] + neighbor.Value;
+                    if (val < distances[neighbor.Key])
                     {
-                        nodeMap[neighbor].Data.prevId = u.Data.id;
-                        distances[neighbor] = val;
-                        que.DecreaseKey(nodeMap[neighbor], val);
-                        previouses[neighbor] = u;
+                        nodeMap[neighbor.Key].Data.prevId = u.Data.id;
+                        distances[neighbor.Key] = val;
+                        que.DecreaseKey(nodeMap[neighbor.Key], val);
+                        previouses[neighbor.Key] = u;
                     }
                 }
 
