@@ -39,12 +39,12 @@ namespace Engine.Core
 
     public struct Edge
     {
-        public Edge(int id, int v1, int v2)
+        public Edge(int id, int v1, int v2, float length)
         {
             Id = id;
             Start = v1;
             End = v2;
-            Length = 0;
+            Length = length;
         }
 
         public int Id;
@@ -94,23 +94,23 @@ namespace Engine.Core
 
             if (!AreNeighbors(v1,v2))
             {
-                AddEdge(v1, v2);
+                AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length);
             }
             if (!AreNeighbors(v2, v3))
             {
-                AddEdge(v2, v3);
+                AddEdge(v2, v3, (Vertices[v2].Coord - Vertices[v3].Coord).Length);
             }
             if (!AreNeighbors(v3, v1))
             {
-                AddEdge(v3, v1);
+                AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length);
             }
 
         }
-        internal void AddEdge(int v1, int v2)
+        internal void AddEdge(int v1, int v2, float length)
         {
             int id = Edges.Count;
 
-            Edges.Add(new Edge(id, v1, v2));
+            Edges.Add(new Edge(id, v1, v2, length));
 
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);

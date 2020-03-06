@@ -380,12 +380,12 @@ namespace VertexBenderCS
             {
                 _lines.Clear();
                 Stopwatch watch = new Stopwatch();
-                var b = Dijkstra.ConstructGraphFromMesh(_objects[0].Mesh);
+                var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
 
                 Log.AppendText("starting\n");
 
                 watch.Start();
-                var d1 = Dijkstra.DijkstraArray(b, _src.Value, _trg.Value, out int[] path);
+                var d1 = Algorithm.DijkstraArray(b, _src.Value, _trg.Value, out List<int> path);
                 watch.Stop();
                 var a1 = watch.ElapsedMilliseconds;
 
@@ -394,27 +394,25 @@ namespace VertexBenderCS
                 watch.Reset();
                 
                 watch.Start();
-                var a = Dijkstra.DijkstraHeap(_objects[0].Mesh, _src.Value, _trg.Value, out int[] path2);
+                Graph g = new Graph(_objects[0].Mesh);
+                var a = Algorithm.DijkstraMinHeap(g, _src.Value, _trg.Value, out List<int> path2);
                 watch.Stop();
                 var a2 = watch.ElapsedMilliseconds;
 
-                Log.AppendText("Min Heap: " + a[0].Distance.ToString() + "   , elapsed: " + a2);
-                 
-                           
+                Log.AppendText("Min Heap: " + a.ToString() + "   , elapsed: " + a2);
 
                 List <Vector3> lines1 = new List<Vector3>();
                 List<Vector3> lines2 = new List<Vector3>();
 
-                for (int i = 0; i < path.Length; i++)
+                for (int i = 0; i < path.Count; i++)
                 {
                     lines1.Add(_objects[0].Mesh.Vertices[path[i]].Coord);
                 }
 
-                for (int i = 0; i < path2.Length; i++)
+                for (int i = 0; i < path2.Count; i++)
                 {
                     lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
                 }
-
 
                 var r1 = new LineRenderer(lines1);
                 r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -423,7 +421,6 @@ namespace VertexBenderCS
                 _lines.Add(r1);
                 _lines.Add(r2);
 
-                //Dijkstra.CreateBitmap(a, path, @"C:\Users\ozgun\Desktop\" + _src.Value.ToString() + " -" + _trg.Value.ToString());
             }
         }
 
