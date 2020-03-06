@@ -7,17 +7,12 @@ namespace Engine.Processing
     {
         public List<Vertex> Vertices;
         public List<Edge> Edges;
+        public List<float> EdgeLengths;
 
         public Graph(Mesh mesh)
         {
             Edges = mesh.Edges;
             Vertices = mesh.Vertices;
-        }
-
-        public Graph(List<Vertex> vertices, List<Edge> edges)
-        {
-            Vertices = vertices;
-            Edges = edges;
         }
     }
 }

@@ -106,6 +106,12 @@ namespace Engine.Core
             UpdateCameraVectors();
         }
 
+        public void Reset()
+        {
+            Cam.Position = new Vector3(0, 0, 0);
+            UpdateCameraVectors();
+        }
+
         public void OrbitAround(float xoffset, float yoffset, Vector3 target)
         {
             xoffset *= MouseSensitivity;

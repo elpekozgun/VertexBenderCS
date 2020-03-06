@@ -222,6 +222,11 @@ namespace VertexBenderCS
 
         private void GLControl_MouseDown(object sender, MouseEventArgs e)
         {
+            if (e.Button == MouseButtons.Middle && e.Clicks > 1)
+            {
+                _cameraController.Reset();
+            }
+
         }
 
         private void GLControl_Resize(object sender, EventArgs e)
@@ -293,7 +298,8 @@ namespace VertexBenderCS
 
             _objects.Clear();
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"));
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"));
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off"));
             _objects.Add(mesh);
 
             //idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineVertex.glsl", ShaderType.VertexShader);
@@ -380,46 +386,63 @@ namespace VertexBenderCS
             {
                 _lines.Clear();
                 Stopwatch watch = new Stopwatch();
-                var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
+                //var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
+                Graph g = new Graph(_objects[0].Mesh);
 
-                Log.AppendText("starting\n");
+
+                Log.AppendText("\n starting: \n");
 
                 watch.Start();
-                var d1 = Algorithm.DijkstraArray(b, _src.Value, _trg.Value, out List<int> path);
+                //var d1 = Algorithm.DijkstraArray(b, _src.Value, _trg.Value, out List<int> path);
                 watch.Stop();
                 var a1 = watch.ElapsedMilliseconds;
-
-                Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
+                //Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
 
                 watch.Reset();
                 
                 watch.Start();
-                Graph g = new Graph(_objects[0].Mesh);
-                var a = Algorithm.DijkstraMinHeap(g, _src.Value, _trg.Value, out List<int> path2);
+                var d2 = Algorithm.DijkstraMinHeap(g, _src.Value, _trg.Value, out List<int> path2);
                 watch.Stop();
                 var a2 = watch.ElapsedMilliseconds;
+                Log.AppendText("Min Heap: " + d2.ToString() + "   , elapsed: " + a2 + "\n");
 
-                Log.AppendText("Min Heap: " + a.ToString() + "   , elapsed: " + a2);
+                watch.Reset();
 
-                List <Vector3> lines1 = new List<Vector3>();
+                watch.Start();
+                var d3 = Algorithm.DijkstraFibonacciHeap(g, _src.Value, _trg.Value, out List<int> path3);
+                watch.Stop();
+                var a3 = watch.ElapsedMilliseconds;
+                Log.AppendText("Fibonacci Heap: " + d3.ToString() + "   , elapsed: " + a3);
+
+                List<Vector3> lines1 = new List<Vector3>();
                 List<Vector3> lines2 = new List<Vector3>();
+                List<Vector3> lines3 = new List<Vector3>();
 
-                for (int i = 0; i < path.Count; i++)
-                {
-                    lines1.Add(_objects[0].Mesh.Vertices[path[i]].Coord);
-                }
+                //for (int i = 0; i < path.Count; i++)
+                //{
+                //    lines1.Add(_objects[0].Mesh.Vertices[path[i]].Coord);
+                //}
 
                 for (int i = 0; i < path2.Count; i++)
                 {
                     lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
                 }
 
+                for (int i = 0; i < path2.Count; i++)
+                {
+                    lines3.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
+                }
+
+
                 var r1 = new LineRenderer(lines1);
                 r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
                 var r2 = new LineRenderer(lines2);
                 r2.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                var r3 = new LineRenderer(lines3);
+                r3.Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
                 _lines.Add(r1);
                 _lines.Add(r2);
+                _lines.Add(r3);
 
             }
         }
