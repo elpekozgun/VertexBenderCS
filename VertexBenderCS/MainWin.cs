@@ -146,6 +146,7 @@ namespace VertexBenderCS
                 ////////// TEMP ///////
                 _objects.Clear();
                 _lines.Clear();
+                _samplePointRenderers.Clear();
                 ///////////////////////
                 var v = d.FileName.Substring(d.FileName.Length - 4);
                 if (v.ToLower() == ".off")
@@ -498,24 +499,17 @@ namespace VertexBenderCS
             var a4 = watch.ElapsedMilliseconds;
             Log.AppendText("output created" + ", elapsed: " + a4);
 
-
-            watch.Start();
-            var matrix2 = Algorithm.CreateLinearGeodesicDistanceMatrix(g);
-            //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
-            watch.Stop();
-            var a5 = watch.ElapsedMilliseconds;
-            Log.AppendText("output created" + ", elapsed: " + a5);
-
-
         }
 
         private void BtnFPS_Click(object sender, EventArgs e)
         {
             Stopwatch watch = new Stopwatch();
-            Graph g = new Graph(_objects[0].Mesh);
+            //Graph g = new Graph(_objects[0].Mesh);
+            UndirectedGraph g = new UndirectedGraph(_objects[0].Mesh);
+            _samplePointRenderers.Clear();
 
             watch.Start();
-            var samples = Algorithm.FarthestPointSampling(g,10);
+            var samples = Algorithm.FarthestPointSampling(g, 10);
             //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
@@ -525,7 +519,7 @@ namespace VertexBenderCS
             for (int i = 0; i < samples.Count ; i++)
             {
                 MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
-                _sampleCoords.Add(g.Vertices[samples[i]].Coord);
+                _sampleCoords.Add(samples[i]);
                 _samplePointRenderers.Add(obj);
             }
 

@@ -178,8 +178,15 @@ namespace Engine.Processing
 
                 foreach (var neighbor in graph.Vertices[u.id].Verts)
                 {
+                    if (!distances.ContainsKey(neighbor.Key))
+                    {
+                        continue;
+                    }
+                    
                     //float val = distances[u.id] + (graph.Vertices[u.id].Coord - graph.Vertices[neighbor].Coord).Length;
                     float val = distances[u.id] + neighbor.Value;
+                         
+                    
                     if (val < distances[neighbor.Key])
                     {
                         que.UpdatePriority(nodeMap[neighbor.Key], val);
@@ -284,92 +291,83 @@ namespace Engine.Processing
             return matrix;
         }
 
-        public static List<int> FarthestPointSampling(Graph graph, int sampleCount)
+        public static KeyValuePair<int, float> DijkstraReturnMaxPairNew(UndirectedGraph graph, int src)
         {
+            var que = new FastPriorityQueue<QueueNode>(graph.Nodes.Count);
 
-            List<int> samples = new List<int>();
+            var distances = new Dictionary<int, float>();
+            var previouses = new Dictionary<int, FastPriorityQueueNode>();
+            var nodeMap = new Dictionary<int, QueueNode>();
+
+            KeyValuePair<int, float> retVal = new KeyValuePair<int, float>();
+
+            foreach (var vert in graph.Nodes)
+            {
+                var id = vert.Key;
+
+                var dist = id == src ? 0 : float.MaxValue;
+                distances[id] = dist;
+                previouses[id] = null;
+                var n = new QueueNode(id, dist);
+                que.Enqueue(n, dist);
+                nodeMap[id] = n;
+            }
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                foreach (var neighbor in graph.Nodes[u.id].neighbors)
+                {
+                    if (!distances.ContainsKey(neighbor.Key))
+                    {
+                        continue;
+                    }
+
+                    float val = distances[u.id] + neighbor.Value;
+                    if (val < distances[neighbor.Key])
+                    {
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        distances[neighbor.Key] = val;
+                        previouses[neighbor.Key] = u;
+
+                        if (val > retVal.Value)
+                        {
+                            retVal = new KeyValuePair<int, float>(neighbor.Key, val);
+                        }
+
+                    }
+                }
+
+            }
+            return retVal;
+
+        }
+
+        public static List<OpenTK.Vector3> FarthestPointSampling(UndirectedGraph graph, int sampleCount)
+        {
+            List<OpenTK.Vector3> samples = new List<OpenTK.Vector3>();
 
             int currentSource = 0;
 
-            Graph copyGraph = new Graph(graph.Vertices);
-
             while (sampleCount > 0)
             {
-                var pair = DijkstraReturnMaxPair(copyGraph, currentSource);
+                var pair = DijkstraReturnMaxPairNew(graph, currentSource);
+                if (currentSource != 0)
+                {
+                    graph.DeleteNode(currentSource);
+                }
 
                 currentSource = pair.Key;
-                samples.Add(pair.Key);
 
-                for (int j = 0; j < graph.Vertices[currentSource].Verts.Count; j++)
-                {
-                    var a = graph.Vertices[currentSource].Verts[j].Key;
-                    copyGraph.Vertices.RemoveAt(a);
-                }
-                copyGraph.Vertices.RemoveAt(currentSource);
 
+                samples.Add(graph.Nodes[pair.Key].Coord);
 
                 sampleCount--;
             }
 
             return samples;
 
-
-
-
-
-
-
-
-
-
-
-            // ARE YOU AN IDIOT? THIS IS THE REASON YOU IMPLEMENT FPS.
-            // NOT TO DO THIS CRAP N2 thing...
-            // Pick a node, run dijkstra, go farthest do again etc.
-            //var matrix = CreateGeodesicDistanceMatrix(graph);
-
-            //List<int> localNeighbors = new List<int>();
-
-            //List<int> candidates = new List<int>();
-            //for (int i = 0; i < graph.Vertices.Count; i++)
-            //{
-            //    candidates.Add(i);
-            //}
-            //List<int> samples = new List<int>();
-
-            //var currentNode = 0;
-            //var nextNode = 0;
-
-            //while (sampleCount > 0)
-            //{
-            //    float max = 0.0f;
-
-            //    candidates.Remove(currentNode);
-            //    for (int i = 0; i < candidates.Count; i++)
-            //    {
-            //        var v = matrix[currentNode, candidates[i]];
-            //        if (v > max)
-            //        {
-            //            max = v;
-            //            nextNode = candidates[i];
-            //        }
-            //    }
-            //    currentNode = nextNode;
-            //    samples.Add(currentNode);
-                    
-            //    //candidates.AddRange(localNeighbors);
-            //    //localNeighbors.Clear();
-            //    for (int j = 0; j < graph.Vertices[currentNode].Verts.Count; j++)
-            //    {
-            //        var a = graph.Vertices[currentNode].Verts[j].Key;
-
-            //        localNeighbors.Add(a);
-            //        candidates.Remove(a);
-            //    }
-            //    sampleCount--;
-            //}
-
-            //return samples;
 
         }
     }
