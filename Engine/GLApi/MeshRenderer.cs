@@ -51,6 +51,22 @@ namespace Engine.GLApi
 
         public Mesh Mesh { get; set; }
 
+        private Vector3 _position;
+        public Vector3 Position
+        {
+            get
+            {
+                return _position;
+            }
+            set
+            {
+                _position = value;
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i].Coord += _position;
+                }
+            }
+        }
 
         private void ExtractVertices(Mesh mesh)
         {

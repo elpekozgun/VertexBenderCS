@@ -66,8 +66,6 @@
     <Compile Include="GLApi\Shader.cs" />
     <Compile Include="GLApi\ShaderBuilder.cs" />
     <Compile Include="Processing\Algorithm.cs" />
-    <Compile Include="Processing\BinaryHeap2.cs" />
-    <Compile Include="Processing\FiboHeap.cs" />
     <Compile Include="Processing\FibonacciHeap.cs" />
     <Compile Include="Processing\FibonacciNode.cs" />
     <Compile Include="Processing\Graph.cs" />

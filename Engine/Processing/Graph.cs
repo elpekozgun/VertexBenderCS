@@ -11,5 +11,11 @@ namespace Engine.Processing
         {
             Vertices = mesh.Vertices;
         }
+
+        public Graph(List<Vertex> vertices)
+        {
+            Vertices = vertices;
+        }
+
     }
 }

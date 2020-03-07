@@ -9,6 +9,29 @@ namespace Engine.Processing
 {
     public static class ProcessOutputHandler
     {
+        public static Color ColorPixel(float value, float max)
+        {
+            var ratio = value / max;
+
+            if (ratio < 0.25f)
+            {
+                return Color.FromArgb(0, (int)(ratio * 255), 255);
+            }
+            if (ratio < 0.5f)
+            {
+                return Color.FromArgb(0, 255, (int)((1 - ratio) * 255));
+            }
+            if (ratio < 0.75f)
+            {
+                return Color.FromArgb((int)(ratio * 255), 255, 0);
+            }
+            if (ratio <= 1.0f)
+            {
+                return Color.FromArgb(255, (int)((1 - ratio) * 255), 0);
+            }
+            return Color.FromArgb(255, 0, 0);
+        }
+
         public static void CreateBitmapForGraph(float[][] graph, int[] path, string file)
         {
             int n = graph.GetLength(0);
@@ -32,7 +55,7 @@ namespace Engine.Processing
                     }
                     else
                     {
-                        bitmap.SetPixel(x, y, Color.FromArgb(255, (int)(255 * graph[x][y] / max), 0, 0));
+                        bitmap.SetPixel(x, y, Color.FromArgb(255, (int)(255 * graph[y][x] / max), 0, 0));
                     }
                     for (int k = 0; k < path.Length; k++)
                     {
@@ -48,9 +71,30 @@ namespace Engine.Processing
             bitmap.Dispose();
         }
 
-        public static void CreateBitmapGeodesicDistance()
+        public static void CreateBitmapGeodesicDistance(float[,] matrix, string file)
         {
+            var n = matrix.GetLength(0);
+            Bitmap bitmap = new Bitmap(n, n, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
+            float max = 0;
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    max = max < matrix[i,j] ? matrix[i,j] : max;
+                }
+            }
+
+            for (int y = 0; y < n; y++)
+            {
+                for (int x = 0; x < n; x++)
+                {
+                    bitmap.SetPixel(x, y, ColorPixel(matrix[y,x], max));
+                }
+            }
+
+            bitmap.Save(file + ".bmp");
+            bitmap.Dispose();
         }
     }
 

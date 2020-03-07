@@ -47,6 +47,8 @@
             this.txtSource = new System.Windows.Forms.MaskedTextBox();
             this.txtTarget = new System.Windows.Forms.MaskedTextBox();
             this.btnDijkstra = new System.Windows.Forms.Button();
+            this.btnGeodesicMatrix = new System.Windows.Forms.Button();
+            this.btnFPS = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // GLControl
@@ -166,28 +168,48 @@
             // 
             // txtSource
             // 
-            this.txtSource.Location = new System.Drawing.Point(70, 1);
+            this.txtSource.Location = new System.Drawing.Point(70, 12);
             this.txtSource.Name = "txtSource";
             this.txtSource.Size = new System.Drawing.Size(36, 20);
             this.txtSource.TabIndex = 7;
+            this.txtSource.Text = "0";
             this.txtSource.ValidatingType = typeof(int);
             // 
             // txtTarget
             // 
-            this.txtTarget.Location = new System.Drawing.Point(112, 1);
+            this.txtTarget.Location = new System.Drawing.Point(112, 12);
             this.txtTarget.Name = "txtTarget";
             this.txtTarget.Size = new System.Drawing.Size(41, 20);
             this.txtTarget.TabIndex = 8;
+            this.txtTarget.Text = "1";
             this.txtTarget.ValidatingType = typeof(int);
             // 
             // btnDijkstra
             // 
-            this.btnDijkstra.Location = new System.Drawing.Point(159, -1);
+            this.btnDijkstra.Location = new System.Drawing.Point(159, 10);
             this.btnDijkstra.Name = "btnDijkstra";
             this.btnDijkstra.Size = new System.Drawing.Size(75, 23);
             this.btnDijkstra.TabIndex = 9;
-            this.btnDijkstra.Text = "button2";
+            this.btnDijkstra.Text = "Dijkstra";
             this.btnDijkstra.UseVisualStyleBackColor = true;
+            // 
+            // btnGeodesicMatrix
+            // 
+            this.btnGeodesicMatrix.Location = new System.Drawing.Point(251, 1);
+            this.btnGeodesicMatrix.Name = "btnGeodesicMatrix";
+            this.btnGeodesicMatrix.Size = new System.Drawing.Size(75, 34);
+            this.btnGeodesicMatrix.TabIndex = 10;
+            this.btnGeodesicMatrix.Text = "Geodesic Matrix";
+            this.btnGeodesicMatrix.UseVisualStyleBackColor = true;
+            // 
+            // btnFPS
+            // 
+            this.btnFPS.Location = new System.Drawing.Point(332, 0);
+            this.btnFPS.Name = "btnFPS";
+            this.btnFPS.Size = new System.Drawing.Size(82, 34);
+            this.btnFPS.TabIndex = 11;
+            this.btnFPS.Text = "Fathest Point Sample";
+            this.btnFPS.UseVisualStyleBackColor = true;
             // 
             // MainWin
             // 
@@ -196,6 +218,8 @@
             this.BackColor = System.Drawing.Color.White;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1055, 797);
+            this.Controls.Add(this.btnFPS);
+            this.Controls.Add(this.btnGeodesicMatrix);
             this.Controls.Add(this.btnDijkstra);
             this.Controls.Add(this.txtTarget);
             this.Controls.Add(this.txtSource);
@@ -236,6 +260,8 @@
         private System.Windows.Forms.MaskedTextBox txtSource;
         private System.Windows.Forms.MaskedTextBox txtTarget;
         private System.Windows.Forms.Button btnDijkstra;
+        private System.Windows.Forms.Button btnGeodesicMatrix;
+        private System.Windows.Forms.Button btnFPS;
     }
 }
 

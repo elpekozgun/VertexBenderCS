@@ -31,7 +31,10 @@ namespace VertexBenderCS
         private Shader _shader;
 
         private List<MeshRenderer> _objects;
+        private List<MeshRenderer> _samplePointRenderers;
         private List<LineRenderer> _lines;
+
+        private List<Vector3> _sampleCoords; 
 
         public MainWin()
         {
@@ -65,6 +68,10 @@ namespace VertexBenderCS
             SubscribeEvents();
             SetupTestScene();
 
+            _src = new int?(int.Parse(txtSource.Text));
+            _trg = new int?(int.Parse(txtTarget.Text));
+
+            
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -119,11 +126,15 @@ namespace VertexBenderCS
             menuImport.Click += MenuImport_Click;
 
 
+            btnGeodesicMatrix.Click += BtnGeodesicMatrix_Click;
             btnDijkstra.Click += BtnDijkstra_Click;
+            btnFPS.Click += BtnFPS_Click;
 
             txtSource.TextChanged += TxtSource_TextChanged;
             txtTarget.TextChanged += TxtTarget_TextChanged;
         }
+
+
 
         private void MenuImport_Click(object sender, EventArgs e)
         {
@@ -132,6 +143,10 @@ namespace VertexBenderCS
             d.Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* ";
             if (d.ShowDialog() == DialogResult.OK)
             {
+                ////////// TEMP ///////
+                _objects.Clear();
+                _lines.Clear();
+                ///////////////////////
                 var v = d.FileName.Substring(d.FileName.Length - 4);
                 if (v.ToLower() == ".off")
                 {
@@ -156,17 +171,37 @@ namespace VertexBenderCS
                 obj.Shader = _shader;
                 obj.Shader.Use();
                 obj.Shader.SetVec3("cameraPosition", _camera.Position);
-                obj.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, -0.0f);
-                obj.Shader.SetVec3("directLight.ambient", 0.15f, 0.15f, 0.15f);
-                obj.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.5f);
-                obj.Shader.SetVec3("directLight.specular", 0.5f, 0.5f, 0.5f);
-                obj.Shader.SetFloat("material.shineness", 32.0f);
+                obj.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, 0.0f);
+                obj.Shader.SetVec3("directLight.ambient", 0.25f, 0.25f, 0.25f);
+                obj.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.4f);
+                obj.Shader.SetVec3("directLight.specular", 0.1f, 0.1f, 0.1f);
+                obj.Shader.SetFloat("material.shineness", 2.0f);
                 obj.Shader.SetMat4("Model", model);
                 obj.Shader.SetMat4("View", _camera.View);
                 obj.Shader.SetMat4("Projection", _camera.Projection);
                 obj.Render(eRenderMode.shaded);
             }
 
+            for (int i = 0; i < _samplePointRenderers.Count; i++)
+            {
+                var obj = _samplePointRenderers[i];
+                model = Matrix4.CreateTranslation(_sampleCoords[i]);
+
+                var color = new Vector4(_sampleCoords[i]);
+
+                obj.Shader = _wiredShader;
+                obj.Shader.Use();
+                obj.Shader.SetMat4("Model", model);
+                obj.Shader.SetMat4("View", _camera.View);
+                obj.Shader.SetMat4("Projection", _camera.Projection);
+                obj.Shader.SetVec4("Color", color);
+                obj.Shader.SetMat4("Model", model);
+                obj.Shader.SetMat4("View", _camera.View);
+                obj.Shader.SetMat4("Projection", _camera.Projection);
+                obj.Render(eRenderMode.shaded);
+            }
+
+            model = Matrix4.Identity;
             foreach (var line in _lines)
             {
                 line.Shader = _wiredShader;
@@ -283,6 +318,8 @@ namespace VertexBenderCS
         {
             _objects = new List<MeshRenderer>();
             _lines = new List<LineRenderer>();
+            _samplePointRenderers = new List<MeshRenderer>();
+            _sampleCoords = new List<Vector3>();
 
             _camera = new Camera(GLControl.Width, GLControl.Height);
             _cameraController = new CameraController(_camera);
@@ -297,9 +334,10 @@ namespace VertexBenderCS
 
 
             _objects.Clear();
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"));
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"));
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off"));
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off"));
             _objects.Add(mesh);
 
             //idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineVertex.glsl", ShaderType.VertexShader);
@@ -386,12 +424,11 @@ namespace VertexBenderCS
             {
                 _lines.Clear();
                 Stopwatch watch = new Stopwatch();
-                //var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
                 Graph g = new Graph(_objects[0].Mesh);
-
 
                 Log.AppendText("\n starting: \n");
 
+                //var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
                 watch.Start();
                 //var d1 = Algorithm.DijkstraArray(b, _src.Value, _trg.Value, out List<int> path);
                 watch.Stop();
@@ -414,6 +451,8 @@ namespace VertexBenderCS
                 var a3 = watch.ElapsedMilliseconds;
                 Log.AppendText("Fibonacci Heap: " + d3.ToString() + "   , elapsed: " + a3);
 
+                watch.Reset();
+
                 List<Vector3> lines1 = new List<Vector3>();
                 List<Vector3> lines2 = new List<Vector3>();
                 List<Vector3> lines3 = new List<Vector3>();
@@ -428,10 +467,10 @@ namespace VertexBenderCS
                     lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
                 }
 
-                for (int i = 0; i < path2.Count; i++)
-                {
-                    lines3.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
-                }
+                //for (int i = 0; i < path2.Count; i++)
+                //{
+                //    lines3.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
+                //}
 
 
                 var r1 = new LineRenderer(lines1);
@@ -447,6 +486,50 @@ namespace VertexBenderCS
             }
         }
 
+        private void BtnGeodesicMatrix_Click(object sender, EventArgs e)
+        {
+            Stopwatch watch = new Stopwatch();
+            Graph g = new Graph(_objects[0].Mesh);
+
+            watch.Start();
+            var matrix = Algorithm.CreateGeodesicDistanceMatrix(g);
+            ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
+            watch.Stop();
+            var a4 = watch.ElapsedMilliseconds;
+            Log.AppendText("output created" + ", elapsed: " + a4);
+
+
+            watch.Start();
+            var matrix2 = Algorithm.CreateLinearGeodesicDistanceMatrix(g);
+            //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
+            watch.Stop();
+            var a5 = watch.ElapsedMilliseconds;
+            Log.AppendText("output created" + ", elapsed: " + a5);
+
+
+        }
+
+        private void BtnFPS_Click(object sender, EventArgs e)
+        {
+            Stopwatch watch = new Stopwatch();
+            Graph g = new Graph(_objects[0].Mesh);
+
+            watch.Start();
+            var samples = Algorithm.FarthestPointSampling(g,10);
+            //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
+            watch.Stop();
+            var a4 = watch.ElapsedMilliseconds;
+            Log.AppendText("output created" + ", elapsed: " + a4);
+
+
+            for (int i = 0; i < samples.Count ; i++)
+            {
+                MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
+                _sampleCoords.Add(g.Vertices[samples[i]].Coord);
+                _samplePointRenderers.Add(obj);
+            }
+
+        }
 
 
         [STAThread]
