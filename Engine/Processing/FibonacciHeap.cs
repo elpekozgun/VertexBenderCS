@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FibonacciHeap
 {
@@ -440,4 +442,5 @@ namespace FibonacciHeap
             newChild.Mark = false;
         }
     }
+
 }

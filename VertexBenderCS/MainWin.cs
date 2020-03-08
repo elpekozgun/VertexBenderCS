@@ -147,6 +147,7 @@ namespace VertexBenderCS
                 _objects.Clear();
                 _lines.Clear();
                 _samplePointRenderers.Clear();
+                _sampleCoords.Clear();
                 ///////////////////////
                 var v = d.FileName.Substring(d.FileName.Length - 4);
                 if (v.ToLower() == ".off")
@@ -162,10 +163,10 @@ namespace VertexBenderCS
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.CullFace(CullFaceMode.Back);
 
-            Matrix4 model = Matrix4.CreateScale(50.0f);
-            Matrix4 rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
-            model = model * rotation;
-            //Matrix4 model = Matrix4.Identity;
+            //Matrix4 model = Matrix4.CreateScale(50.0f);
+            //Matrix4 rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
+            //model = model * rotation;
+            Matrix4 model = Matrix4.Identity;
 
             foreach (var obj in _objects)
             {
@@ -186,9 +187,10 @@ namespace VertexBenderCS
             for (int i = 0; i < _samplePointRenderers.Count; i++)
             {
                 var obj = _samplePointRenderers[i];
-                model = Matrix4.CreateScale(50.0f);
-                rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
-                model = Matrix4.CreateTranslation(_sampleCoords[i]) * rotation * model;
+                //model = Matrix4.CreateScale(50.0f);
+                //rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
+                //model = Matrix4.CreateTranslation(_sampleCoords[i]) * rotation * model;
+                model = Matrix4.CreateTranslation(_sampleCoords[i]);
 
                 var color = new Vector4(_sampleCoords[i]);
 
@@ -495,7 +497,7 @@ namespace VertexBenderCS
             Graph g = new Graph(_objects[0].Mesh);
 
             watch.Start();
-            var matrix = Algorithm.CreateGeodesicDistanceMatrix(g);
+            var matrix = Algorithm.CreateLinearGeodesicDistanceMatrix(g);
             ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
@@ -516,7 +518,7 @@ namespace VertexBenderCS
             //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
-            Log.AppendText("output created" + ", elapsed: " + a4);
+            Log.AppendText("\n output created" + ", elapsed: " + a4);
 
             for (int i = 0; i < samples.Count ; i++)
             {

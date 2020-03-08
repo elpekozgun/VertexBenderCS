@@ -71,17 +71,17 @@ namespace Engine.Processing
             bitmap.Dispose();
         }
 
-        public static void CreateBitmapGeodesicDistance(float[,] matrix, string file)
+        public static void CreateBitmapGeodesicDistance(float[][] matrix, string file)
         {
             var n = matrix.GetLength(0);
             Bitmap bitmap = new Bitmap(n, n, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
             float max = 0;
-            for (int i = 0; i < n; i++)
+            for (int y = 0; y < n; y++)
             {
-                for (int j = 0; j < n; j++)
+                for (int x = 0; x < n; x++)
                 {
-                    max = max < matrix[i,j] ? matrix[i,j] : max;
+                    max = max < matrix[y][x] ? matrix[y][x] : max;
                 }
             }
 
@@ -89,7 +89,7 @@ namespace Engine.Processing
             {
                 for (int x = 0; x < n; x++)
                 {
-                    bitmap.SetPixel(x, y, ColorPixel(matrix[y,x], max));
+                    bitmap.SetPixel(x, y, ColorPixel(matrix[y][x], max));
                 }
             }
 
