@@ -388,6 +388,25 @@ namespace Engine.Processing
         }
     }
 
+
+    public struct SampleOutput
+    {
+
+        public List<GraphNode> SamplePoints;
+        public List<int> SampelIndices;
+
+        public SampleOutput(List<GraphNode> samplePoints, List<int> sampelIndices)
+        {
+            SamplePoints = samplePoints;
+            SampelIndices = sampelIndices;
+        }
+    }
+
+    public struct IsoCurveOutput
+    {
+
+    }
+
     public static class Algorithm
     {
 
@@ -645,7 +664,6 @@ namespace Engine.Processing
         public static float[] DijkstraMinHeap(ref Graph graph, int src)
         {
             var que = new FastPriorityQueue<QueueNode>(graph.Nodes.Count);
-            
             var nodeMap = new Dictionary<int, QueueNode>();
 
             for (int i = 0; i < graph.Nodes.Count; i++)
@@ -722,7 +740,6 @@ namespace Engine.Processing
             {
                 matrix.Add(null);
             }
-            
 
             if (isParallel)
             {
@@ -748,72 +765,124 @@ namespace Engine.Processing
             return matrix;
         }
 
-
-        public static List<GraphNode> FarthestPointSampling(Graph graph, int sampleCount)
+        public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount)
         {
-            List<GraphNode> samples = new List<GraphNode>();
-
-            var matrix = CreateLinearGeodesicDistances(graph, true);
-            //var matrix = CreateLinearGeodesicDistanceMatrix(graph, false);
-
-            int startIndex = 0;
-            
-            
-            int maxDistIndex = -1;
-            float maxVal = float.MinValue;
-            for (int i = 0; i < graph.Nodes.Count; ++i)
+            var distances = DijkstraMinHeap(ref graph, 0);
+            var allDistances = new HashSet<float[]>
             {
-                if (matrix[startIndex][i] > maxVal)
-                {
-                    maxVal = matrix[startIndex][i];
-                    maxDistIndex = i;
-                }
-            }
+                distances
+            };
 
-            samples.Add(graph.Nodes[maxDistIndex]);
-            while (samples.Count < sampleCount)
+            List<GraphNode> farthestPoints = new List<GraphNode>();
+            List<int> farthestIndices = new List<int>();
+
+            for (int i = 0; i < sampleCount; i++)
             {
-                List<KeyValuePair<int, int>> associations = new List<KeyValuePair<int, int>>();
+                var cluster = new FastPriorityQueue<QueueNode>(graph.Nodes.Count);
 
-                for (int i = 0; i < graph.Nodes.Count; i++)
+                foreach (var node in graph.Nodes)
                 {
                     float minDist = float.MaxValue;
-                    int minIndex = -1;
-                    for (int j = 0; j < samples.Count; j++)
+                    foreach (var distance in allDistances)
                     {
-                        if (i == samples[j].Id)
+                        var dist = distance[node.Id];
+                        if (dist < minDist)
                         {
-                            minIndex = -1;
-                            minDist = float.MaxValue;
-                            break;
-                        }
-                        if (matrix[i][samples[j].Id] < minDist)
-                        {
-                            minDist = matrix[i][ samples[j].Id];
-                            minIndex = samples[j].Id;
+                            minDist = dist;
                         }
                     }
-                    if (minIndex != -1)
-                    {
-                        associations.Add(new KeyValuePair<int, int>(i, minIndex));
-                    }
+                    cluster.Enqueue(new QueueNode(node.Id, node.Neighbors), -minDist);
                 }
 
-                float maxDist = float.MinValue;
-                int maxIndex = -1;
-                for (int i = 0; i < associations.Count; ++i)
+                var u = cluster.Dequeue();
+                if (i == 0)
                 {
-                    var assoc = associations[i];
-                    if (matrix[assoc.Key][ assoc.Value] > maxDist)
-                    {
-                        maxIndex = assoc.Key;
-                        maxDist = matrix[assoc.Key][ assoc.Value];
-                    }
+                    allDistances.Clear();
                 }
-                samples.Add(graph.Nodes[maxIndex]);
+                allDistances.Add(DijkstraMinHeap(ref graph, u.id));
+
+                farthestPoints.Add(graph.Nodes[u.id]);
+                farthestIndices.Add(graph.Nodes[u.id].Id);
             }
 
-            return samples;
+            return new SampleOutput(farthestPoints, farthestIndices);
+        }
+
+        public static List<float> GaussianCurvature(Mesh mesh)
+        {
+            List<float> Curvatures = new List<float>();
+
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                var vertex = mesh.Vertices[i];
+                float curvature = 2.0f * (float)Math.PI;
+                foreach (var triId in vertex.Tris)
+                {
+                    var ang = mesh.GetTriangleAngle(triId, vertex.Id);
+
+                    curvature -= ang;
+                }
+                Curvatures.Add(curvature);
+            }
+
+            return Curvatures;
+        }
+
+        public static List<float> AverageGeodesicDistance(Graph graph)
+        {
+            List<float> distances = new List<float>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                float sum = 0.0f;
+                var allDist = DijkstraMinHeap(ref graph, i);
+                for (int j = 0; j < allDist.Length; j++)
+                {
+                    sum += allDist[j];
+                }
+                sum /= allDist.Length;
+                distances.Add(sum);
+            }
+
+            return distances;
+        }
+
+        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source, float radius)
+        {
+            Graph graph = new Graph(mesh);
+
+            var distances = DijkstraMinHeap(ref graph, source);
+            var maxDist = distances.Max();
+
+            var isoCurves = new HashSet<KeyValuePair<float, List<float>>>();
+            for (float i = maxDist / 20.0f; i < maxDist; i+= maxDist / 20.0f)
+            {
+                isoCurves.Add(new KeyValuePair<float, List<float>>(i, new List<float>()));
+            }
+
+            for (int i = 0; i < mesh.Triangles.Count; i++)
+            {
+                var verts = new List<Vertex>()
+                {
+                    mesh.Vertices[mesh.Triangles[i].V1],
+                    mesh.Vertices[mesh.Triangles[i].V2],
+                    mesh.Vertices[mesh.Triangles[i].V3]
+                };
+
+                var edges = new List<KeyValuePair<List<Vertex>, bool>>()
+                {
+                    new KeyValuePair<List<Vertex>, bool>( new List<Vertex>(){verts[0], verts[1]}, false),
+                    new KeyValuePair<List<Vertex>, bool>( new List<Vertex>(){verts[1], verts[2]}, false),
+                    new KeyValuePair<List<Vertex>, bool>( new List<Vertex>(){verts[2], verts[0]}, false)
+                };
+
+            }
+
+            foreach (var curve in isoCurves)
+            {
+            }
+
+            return new IsoCurveOutput();
         }
     }
 }

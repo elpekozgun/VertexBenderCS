@@ -129,6 +129,9 @@ namespace VertexBenderCS
             btnGeodesicMatrix.Click += BtnGeodesicMatrix_Click;
             btnDijkstra.Click += BtnDijkstra_Click;
             btnFPS.Click += BtnFPS_Click;
+            btnGauss.Click += BtnGauss_Click;
+            btnAverageGeo.Click += BtnAverageGeo_Click;
+            btnIsoCurve.Click += BtnIsoCurve_Click;
 
             txtSource.TextChanged += TxtSource_TextChanged;
             txtTarget.TextChanged += TxtTarget_TextChanged;
@@ -516,9 +519,8 @@ namespace VertexBenderCS
             _samplePointRenderers.Clear();
 
             watch.Start();
+
             var samples = Algorithm.FarthestPointSampling(g, 10);
-
-
 
             //var samples = Algorithm.FarthestPointSampling(g, 10);
             //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
@@ -526,14 +528,69 @@ namespace VertexBenderCS
             var a4 = watch.ElapsedMilliseconds;
             Log.AppendText("\n output created" + ", elapsed: " + a4);
 
-            for (int i = 0; i < samples.Count; i++)
+            for (int i = 0; i < samples.SampelIndices.Count; i++)
             {
                 MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
-                _sampleCoords.Add(samples[i].Coord);
+                _sampleCoords.Add(samples.SamplePoints[i].Coord);
                 _samplePointRenderers.Add(obj);
             }
         }
 
+        private void BtnGauss_Click(object sender, EventArgs e)
+        {
+            var a = Algorithm.GaussianCurvature(_objects[0].Mesh);
+            var max = float.MinValue;
+            var min = float.MaxValue;
+            for (int i = 0; i < a.Count; i++)
+            {
+                max = max > a[i] ? max : a[i];
+                min = min < a[i] ? min : a[i];
+            }
+
+            var color = new Vector3[a.Count];
+            for (int i = 0; i < color.Length; i++)
+            {
+                if (a[i] < 0)
+                {
+                    color[i] = new Vector3(Math.Abs(a[i]), 0.0f, 0.0f);
+                }
+                else
+                {
+                    color[i] = new Vector3(0.0f, 0.0f, Math.Abs(a[i] ));
+                }
+
+            }
+
+            _objects[0].SetColorBuffer(color);
+        }
+
+        private void BtnAverageGeo_Click(object sender, EventArgs e)
+        {
+            Graph g = new Graph(_objects[0].Mesh);
+            var a = Algorithm.AverageGeodesicDistance(g);
+
+            float max = 0.0f;
+            for (int i = 0; i < a.Count; i++)
+            {
+                max = max > a[i] ? max : a[i];
+            }
+
+            var color = new Vector3[a.Count];
+            for (int i = 0; i < color.Length; i++)
+            {
+                color[i] = ProcessOutputHandler.ColorPixelVector(a[i], max);
+            }
+
+            _objects[0].SetColorBuffer(color);
+
+        }
+
+        private void BtnIsoCurve_Click(object sender, EventArgs e)
+        {
+            Graph g = new Graph(_objects[0].Mesh);
+
+
+        }
 
         [STAThread]
         public static void Main()

@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 
 namespace Engine.Core
@@ -146,6 +147,56 @@ namespace Engine.Core
 
                 Vertices[i] = v;
             }
+        }
+
+        /// <summary>
+        /// returns the angle in radians
+        /// </summary>
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        /// <param name="v3"></param>
+        /// <returns></returns>
+        private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
+        {
+
+            float num = (v2.X - v1.X) * (v3.X - v1.X) +
+                      (v2.Y - v1.Y) * (v3.Y - v1.Y) +
+                      (v2.Z - v1.Z) * (v3.Z - v1.Z);
+
+            double den = Math.Sqrt(Math.Pow((v2.X - v1.X), 2) +
+                                   Math.Pow((v2.Y - v1.Y), 2) +
+                                   Math.Pow((v2.Z - v1.Z), 2)) *
+                        Math.Sqrt(Math.Pow((v3.X - v1.X), 2) +
+                                   Math.Pow((v3.Y - v1.Y), 2) +
+                                   Math.Pow((v3.Z - v1.Z), 2));
+
+            double angle = Math.Acos(num / den);
+                           
+
+            return (float)angle;
+        }
+
+        internal float GetTriangleAngle(int triID, int vertexId)
+        {
+            Triangle tri = Triangles[triID];
+
+            var v1 = Vertices[tri.V1].Coord;
+            var v2 = Vertices[tri.V2].Coord;
+            var v3 = Vertices[tri.V3].Coord;
+            
+            if (vertexId == tri.V1)
+            {
+                return TriangleAngle(v1, v2, v3);
+            }
+            if (vertexId == tri.V2)
+            {
+                return TriangleAngle(v2, v3, v1);
+            }
+            if (vertexId == tri.V3)
+            {
+                return TriangleAngle(v3, v1, v2);
+            }
+            return 0;
         }
 
         public Vector3 Center()

@@ -49,6 +49,9 @@
             this.btnDijkstra = new System.Windows.Forms.Button();
             this.btnGeodesicMatrix = new System.Windows.Forms.Button();
             this.btnFPS = new System.Windows.Forms.Button();
+            this.btnGauss = new System.Windows.Forms.Button();
+            this.btnAverageGeo = new System.Windows.Forms.Button();
+            this.btnIsoCurve = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // GLControl
@@ -211,6 +214,33 @@
             this.btnFPS.Text = "Fathest Point Sample";
             this.btnFPS.UseVisualStyleBackColor = true;
             // 
+            // btnGauss
+            // 
+            this.btnGauss.Location = new System.Drawing.Point(420, 0);
+            this.btnGauss.Name = "btnGauss";
+            this.btnGauss.Size = new System.Drawing.Size(75, 34);
+            this.btnGauss.TabIndex = 12;
+            this.btnGauss.Text = "Gaussian Curvature";
+            this.btnGauss.UseVisualStyleBackColor = true;
+            // 
+            // btnAverageGeo
+            // 
+            this.btnAverageGeo.Location = new System.Drawing.Point(501, 0);
+            this.btnAverageGeo.Name = "btnAverageGeo";
+            this.btnAverageGeo.Size = new System.Drawing.Size(104, 34);
+            this.btnAverageGeo.TabIndex = 13;
+            this.btnAverageGeo.Text = "Average Geodesic Distance";
+            this.btnAverageGeo.UseVisualStyleBackColor = true;
+            // 
+            // btnIsoCurve
+            // 
+            this.btnIsoCurve.Location = new System.Drawing.Point(611, 0);
+            this.btnIsoCurve.Name = "btnIsoCurve";
+            this.btnIsoCurve.Size = new System.Drawing.Size(104, 34);
+            this.btnIsoCurve.TabIndex = 14;
+            this.btnIsoCurve.Text = "Iso-Curve Signature";
+            this.btnIsoCurve.UseVisualStyleBackColor = true;
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -218,6 +248,9 @@
             this.BackColor = System.Drawing.Color.White;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1055, 797);
+            this.Controls.Add(this.btnIsoCurve);
+            this.Controls.Add(this.btnAverageGeo);
+            this.Controls.Add(this.btnGauss);
             this.Controls.Add(this.btnFPS);
             this.Controls.Add(this.btnGeodesicMatrix);
             this.Controls.Add(this.btnDijkstra);
@@ -262,6 +295,9 @@
         private System.Windows.Forms.Button btnDijkstra;
         private System.Windows.Forms.Button btnGeodesicMatrix;
         private System.Windows.Forms.Button btnFPS;
+        private System.Windows.Forms.Button btnGauss;
+        private System.Windows.Forms.Button btnAverageGeo;
+        private System.Windows.Forms.Button btnIsoCurve;
     }
 }
 

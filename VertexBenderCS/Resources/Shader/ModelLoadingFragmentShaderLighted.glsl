@@ -3,6 +3,7 @@
 in vec2 TexCoord;
 in vec3 FragmentPosition;
 in vec3 FragmentNormal;
+in vec3 FragmentColor;
 
 struct Material
 {
@@ -98,6 +99,10 @@ vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir)
 //	vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse1,TexCoord));
 //	vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse1, TexCoord));
 //	vec3 specular = light.specular * spec * vec3(texture(material.texture_specular1,TexCoord));
+	if(FragmentColor.x != 0.0f || FragmentColor.y != 0.0f || FragmentColor.z != 0)
+	{
+		return (max(FragmentColor + specular,vec3(0.0f)));
+	}
 
 	return (max(ambient + diffuse + specular,vec3(0.0f)));
 }

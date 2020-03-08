@@ -20,12 +20,13 @@ namespace Engine.GLApi
     {
         public Vector3 Coord;
         public Vector3 Normal;
+        public Vector3 Color;
 
         public static int Size
         {
             get
             {
-                return Vector3.SizeInBytes * 2;
+                return Vector3.SizeInBytes * 3;
             }
         }
     }
@@ -76,7 +77,8 @@ namespace Engine.GLApi
                 vertices[i] = new GpuVertex()
                 {
                     Coord = mesh.Vertices[i].Coord,
-                    Normal = mesh.Vertices[i].Normal
+                    Normal = mesh.Vertices[i].Normal,
+                    Color = new Vector3(0.0f, 0.0f, 0.0f)
                 };
             }
 
@@ -121,8 +123,21 @@ namespace Engine.GLApi
             GL.EnableVertexAttribArray(1);
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 12);
 
+            //normal
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
+
             GL.BindVertexArray(0);
                         
+        }
+
+        public void SetColorBuffer(Vector3[] color)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].Color = color[i];
+            }
+            Setup();
         }
 
         public void Render(eRenderMode mode = eRenderMode.shaded)
