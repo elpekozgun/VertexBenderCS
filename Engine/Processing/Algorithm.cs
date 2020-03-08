@@ -391,31 +391,40 @@ namespace Engine.Processing
     public static class Algorithm
     {
 
-        public static float[][] ConstructArrayFromMesh(Mesh mesh)
+        public static List<List<KeyValuePair<int,float>>> ConstructGraphFromMesh(Mesh mesh)
         {
-            int n = mesh.Vertices.Count;
-            float[][] graph = new float[n][];
-            for (int i = 0; i < n; i++)
+            var graph = new List<List<KeyValuePair<int,float>>>();
+
+            for (int i = 0; i < mesh.Vertices.Count; i++)
             {
-                var a = new float[n];
-                graph[i] = a;
+                graph.Add(mesh.Vertices[i].Verts);
             }
 
-            for (int j = 0; j < mesh.Vertices.Count; j++)
-            {
-                var verts = mesh.Vertices[j].Verts;
-
-                for (int i = 0; i < verts.Count; i++)
-                {
-                    graph[j][i] = verts[i].Value;
-                }
-            }
             return graph;
-        }
+            //int n = mesh.Vertices.Count;
+            //float[][] graph = new float[n][];
+            //for (int i = 0; i < n; i++)
+            //{
+            //    var a = new float[n];
+            //    graph[i] = a;
+            //}
 
-        public static float DijkstraArray(float[][] graph, int src, int target, out List<int> path, bool earlyTerminate = false)
+            //for (int j = 0; j < mesh.Vertices.Count; j++)
+            //{
+            //    var verts = mesh.Vertices[j].Verts;
+
+            //    for (int i = 0; i < verts.Count; i++)
+            //    {
+            //        var w = (mesh.Vertices[j].Coord - mesh.Vertices[verts[i].Key].Coord).Length;
+            //        graph[j][verts[i].Key] = w;
+            //    }
+            //}
+            //return graph;
+        }
+      
+        public static float DijkstraArray(List<List<KeyValuePair<int,float>>> graph, int src, int target, out List<int> path, bool earlyTerminate = false)
         {
-            int n = graph.GetLength(0);
+            int n = graph.Count;
             float[] shortestDists = new float[n];
             bool[] added = new bool[n];
 
@@ -451,16 +460,20 @@ namespace Engine.Processing
 
                 added[neighbor] = true;
 
-                for (int j = 0; j < n; j++)
-                {
-                    float edgeDist = graph[neighbor][j];
 
-                    if (edgeDist > 0 && (shortestDist + edgeDist) < shortestDists[j])
+                for (int j = 0; j < graph[neighbor].Count; j++)
+                {
+                    var dist = graph[neighbor][j].Value;
+
+                    var index = graph[neighbor][j].Key;
+
+                    if (dist > 0 && (dist + shortestDist) < shortestDists[index])
                     {
-                        parents[j] = neighbor;
-                        shortestDists[j] = shortestDist + edgeDist;
+                        parents[index] = neighbor;
+                        shortestDists[index] = dist + shortestDist;
                     }
                 }
+
             }
 
             path = new List<int>
@@ -479,17 +492,17 @@ namespace Engine.Processing
 
         public static float DijkstraMinHeap(Graph graph, int src, int target, out List<int> path, bool earlyTerminate = false)
         {
-            var que = new FastPriorityQueue<QueueNode>(graph.Vertices.Count);
+            var que = new FastPriorityQueue<QueueNode>(graph.Nodes.Count);
 
             var nodeMap = new Dictionary<int, QueueNode>();
-            var previousMap = new Dictionary<int, QueueNode>();
+            //var previousMap = new Dictionary<int, QueueNode>();
 
-            for (int i = 0; i < graph.Vertices.Count; i++)
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 var dist = i == src ? 0 : float.MaxValue;
-                var n = new QueueNode(i, dist);
+                var n = new QueueNode(i, graph.Nodes[i].Neighbors);
                 que.Enqueue(n, dist);
-                previousMap[i] = null;
+                //previousMap[i] = null;
                 nodeMap[i] = n;
             }
 
@@ -502,13 +515,15 @@ namespace Engine.Processing
                     break;
                 }
 
-                foreach (var neighbor in graph.Vertices[u.id].Verts)
+                foreach (var neighbor in u.Neighbors)
+                //foreach (var neighbor in graph.Nodes[u.id].Neighbors)
                 {
                     float val = nodeMap[u.id].Priority + neighbor.Value;
                     if (val < nodeMap[neighbor.Key].Priority)
                     {
                         que.UpdatePriority(nodeMap[neighbor.Key], val);
-                        previousMap[neighbor.Key] = u;
+                        nodeMap[neighbor.Key].PrevId = u.id;
+                        //previousMap[neighbor.Key] = u;
                     }
                 }
 
@@ -519,7 +534,7 @@ namespace Engine.Processing
             path.Add(k);
             while (k != src)
             {
-                k = previousMap[k].id;
+                k = nodeMap[k].PrevId;
                 path.Add(k);
             }
 
@@ -576,63 +591,17 @@ namespace Engine.Processing
             //return distances[target];
         }
 
-        public static float[] DijkstraMinHeap(Graph graph, int src)
-        {
-            var que = new FastPriorityQueue<QueueNode>(graph.Vertices.Count);
-            
-            var distances = new Dictionary<int, float>();
-            var nodeMap = new Dictionary<int, QueueNode>();
-            var previousMap = new Dictionary<int, QueueNode>();
-
-            for (int i = 0; i < graph.Vertices.Count; i++)
-            {
-                var dist = i == src ? 0 : float.MaxValue;
-                var n = new QueueNode(i, dist);
-                que.Enqueue(n, dist);
-                distances[i] = dist;
-                previousMap[i] = null;
-                nodeMap[i] = n;
-            }
-
-            while (que.Count > 0)
-            {
-                var u = que.Dequeue();
-
-                foreach (var neighbor in graph.Vertices[u.id].Verts)
-                {
-                    float val = nodeMap[u.id].Priority + neighbor.Value;
-                    if (val < nodeMap[neighbor.Key].Priority)
-                    {
-                        que.UpdatePriority(nodeMap[neighbor.Key], val);
-                        previousMap[neighbor.Key] = u;
-                        distances[neighbor.Key] = val;
-                    }
-                }
-
-            }
-
-            var outPair = distances.ToArray();
-            var retVal = new float[outPair.Length];
-            for (int i = 0; i < retVal.Length; i++)
-            {
-                retVal[i] = outPair[i].Value;
-            }
-            return retVal;
-
-        }
-
-
         public static float DijkstraFibonacciHeap(Graph graph, int src, int target, out List<int> path, bool earlyTerminate = false)
         {
             FibonacciHeap<int, float> que = new FibonacciHeap<int, float>(src);
 
-            var previousMap = new Dictionary<int, FibonacciHeapNode<int, float>>();
+            //var previousMap = new Dictionary<int, FibonacciHeapNode<int, float>>();
             var nodeMap = new Dictionary<int, FibonacciHeapNode<int, float>>();
 
-            for (int i = 0; i < graph.Vertices.Count; i++)
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 var dist = i == src ? 0 : float.MaxValue;
-                previousMap[i] = null;
+                //previousMap[i] = null;
                 FibonacciHeapNode<int, float> n = new FibonacciHeapNode<int, float>(i, dist);
                 que.Insert(n);
                 nodeMap[i] = n;
@@ -647,13 +616,14 @@ namespace Engine.Processing
                     break;
                 }
 
-                foreach (var neighbor in graph.Vertices[u.Data].Verts)
+                foreach (var neighbor in graph.Nodes[u.Data].Neighbors)
                 {
                     float val = nodeMap[u.Data].Key + neighbor.Value;
                     if (val < nodeMap[neighbor.Key].Key)
                     {
                         que.DecreaseKey(nodeMap[neighbor.Key], val);
-                        previousMap[neighbor.Key] = u;
+                        nodeMap[neighbor.Key].PrevId = u.Data;
+                        //previousMap[neighbor.Key] = u;
                     }
                 }
 
@@ -664,29 +634,24 @@ namespace Engine.Processing
             path.Add(target);
             while (k != src)
             {
-                k = previousMap[k].Data;
+                //k = previousMap[k].Data;
+                k = nodeMap[k].PrevId;
                 path.Add(k);
             }
 
             return nodeMap[target].Key;
         }
 
-        public static KeyValuePair<int,float> DijkstraReturnMaxPair(Graph graph, int src)
+        public static float[] DijkstraMinHeap(ref Graph graph, int src)
         {
-            var que = new FastPriorityQueue<QueueNode>(graph.Vertices.Count);
-
-            var distances = new Dictionary<int, float>();
-            var previouses = new Dictionary<int, FastPriorityQueueNode>();
+            var que = new FastPriorityQueue<QueueNode>(graph.Nodes.Count);
+            
             var nodeMap = new Dictionary<int, QueueNode>();
 
-            KeyValuePair<int, float> retVal = new KeyValuePair<int, float>();
-
-            for (int i = 0; i < graph.Vertices.Count; i++)
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 var dist = i == src ? 0 : float.MaxValue;
-                distances[i] = dist;
-                previouses[i] = null;
-                var n = new QueueNode(i, dist);
+                var n = new QueueNode(i,graph.Nodes[i].Neighbors);
                 que.Enqueue(n, dist);
                 nodeMap[i] = n;
             }
@@ -695,125 +660,108 @@ namespace Engine.Processing
             {
                 var u = que.Dequeue();
 
-                foreach (var neighbor in graph.Vertices[u.id].Verts)
+                //foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                foreach (var neighbor in u.Neighbors)
                 {
-                    if (!distances.ContainsKey(neighbor.Key))
-                    {
-                        continue;
-                    }
-                    
-                    //float val = distances[u.id] + (graph.Vertices[u.id].Coord - graph.Vertices[neighbor].Coord).Length;
-                    float val = distances[u.id] + neighbor.Value;
-                         
-                    
-                    if (val < distances[neighbor.Key])
+                    float val = nodeMap[u.id].Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Priority)
                     {
                         que.UpdatePriority(nodeMap[neighbor.Key], val);
-                        distances[neighbor.Key] = val;
-                        previouses[neighbor.Key] = u;
-
-                        if (val > retVal.Value)
-                        {
-                            retVal = new KeyValuePair<int, float>(neighbor.Key, val);
-                        }
-
+                        nodeMap[neighbor.Key].PrevId = u.id;
                     }
                 }
 
             }
-            return retVal;
-            
-        }
-
-        public static float[,] CreateGeodesicDistanceMatrix(Graph graph)
-        {
-            int n = graph.Vertices.Count;
-
-            // Fix this suboptimal nonsense after making bottom thing work.
-            float[,] matrix = new float[n,n];
-
-            for(int y = 0; y < graph.Vertices.Count; y++)
+            var retVal = new float[nodeMap.Count];
+            for (int i = 0; i < retVal.Length; i++)
             {
-                for (int x = 0; x < graph.Vertices.Count; x++)
-                {
-                    if (matrix[x, y] == 0)
-                    {
-                        var dist = DijkstraMinHeap(graph, x, y, out List<int> path, true);
-                        matrix[y, x] = dist;
-                        matrix[x, y] = dist;
-                    }
-                }
+                retVal[i] = nodeMap[i].Priority;
             }
 
-            return matrix;
-        }
+            return retVal;
 
-        public static float[][] CreateLinearGeodesicDistanceMatrix(Graph graph)
+        }
+       
+        public static float[][] CreateLinearGeodesicDistanceMatrix(Graph graph, bool isParallel = true)
         {
-            int n = graph.Vertices.Count;
+            int n = graph.Nodes.Count;
 
             float[][] matrix = new float[n][];
-
-            Parallel.For
-            (
-                0,
-                n,
-                (i) =>
-                {
-                    matrix[i] = DijkstraMinHeap(graph, i);
-                }
-            );
-
-            //for (int i = 0; i < graph.Vertices.Count; i++)
-            //{
-            //    matrix[i] = DijkstraMinHeap(graph, i);
-            //}
-
-            return matrix;
-        }
-
-        public static float[,] CreateGeodesicDistanceMatrixParallel(Graph graph)
-        {
-            int n = graph.Vertices.Count;
-
-            // Fix this suboptimal nonsense after making bottom thing work.
-            float[,] matrix = new float[n, n];
-
-            Parallel.For
-            (
-                0, graph.Vertices.Count, 
-                (y) =>
-                {
-                    for (int x = 0; x < graph.Vertices.Count; x++)
+            int count = 0;
+            if (isParallel)
+            {
+                Parallel.For
+                (
+                    0,
+                    n,
+                    (i) =>
                     {
-                        if (matrix[x, y] == 0 && matrix[y,x] == 0)
-                        {
-                            // = DijkstraReturnMaxPairNew(graph, x).Value;
-                            //var dist = DijkstraMinHeap(graph, x, y, out List<int> path, true);
-                            var dist = DijkstraMinHeap(graph, x, y, out List<int> path, true);
-                            matrix[y, x] = dist;
-                            matrix[x, y] = dist;
-                        }
-                        //matrix[x, y] = DijkstraMinHeap(graph, x, y, out List<int> path, true);
-                    };
+                        matrix[i] = DijkstraMinHeap(ref graph, i);
+                        count++;
+                    }
+                );
+            }
+            else
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    matrix[i] = DijkstraMinHeap(ref graph, i);
                 }
-            );
-            
+            }
+
+
             return matrix;
         }
 
-        public static List<Vertex> FarthestPointSampling(Graph graph, int sampleCount)
+        public static List<float[]> CreateLinearGeodesicDistances(Graph graph, bool isParallel = true)
         {
-            List<Vertex> samples = new List<Vertex>();
+            int n = graph.Nodes.Count;
 
-            var matrix = CreateLinearGeodesicDistanceMatrix(graph);
+            var matrix = new List<float[]>();
+            for (int i = 0; i < n; i++)
+            {
+                matrix.Add(null);
+            }
+            
+
+            if (isParallel)
+            {
+                Parallel.For
+                (
+                    0,
+                    n,
+                    (i) =>
+                    {
+                        matrix[i] = DijkstraMinHeap(ref graph, i);
+                    }
+                );
+            }
+            else
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    matrix[i] = DijkstraMinHeap(ref graph, i);
+                }
+            }
+
+
+            return matrix;
+        }
+
+
+        public static List<GraphNode> FarthestPointSampling(Graph graph, int sampleCount)
+        {
+            List<GraphNode> samples = new List<GraphNode>();
+
+            var matrix = CreateLinearGeodesicDistances(graph, true);
+            //var matrix = CreateLinearGeodesicDistanceMatrix(graph, false);
 
             int startIndex = 0;
             
             
             int maxDistIndex = -1;
             float maxVal = float.MinValue;
-            for (int i = 0; i < graph.Vertices.Count; ++i)
+            for (int i = 0; i < graph.Nodes.Count; ++i)
             {
                 if (matrix[startIndex][i] > maxVal)
                 {
@@ -822,12 +770,12 @@ namespace Engine.Processing
                 }
             }
 
-            samples.Add(graph.Vertices[maxDistIndex]);
+            samples.Add(graph.Nodes[maxDistIndex]);
             while (samples.Count < sampleCount)
             {
                 List<KeyValuePair<int, int>> associations = new List<KeyValuePair<int, int>>();
 
-                for (int i = 0; i < graph.Vertices.Count; i++)
+                for (int i = 0; i < graph.Nodes.Count; i++)
                 {
                     float minDist = float.MaxValue;
                     int minIndex = -1;
@@ -862,7 +810,7 @@ namespace Engine.Processing
                         maxDist = matrix[assoc.Key][ assoc.Value];
                     }
                 }
-                samples.Add(graph.Vertices[maxIndex]);
+                samples.Add(graph.Nodes[maxIndex]);
             }
 
             return samples;

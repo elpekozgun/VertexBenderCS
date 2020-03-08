@@ -433,17 +433,20 @@ namespace VertexBenderCS
 
                 Log.AppendText("\n starting: \n");
 
-                //var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
+                var start = _src.Value;
+                var end = _trg.Value;
+
+                var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
                 watch.Start();
-                //var d1 = Algorithm.DijkstraArray(b, _src.Value, _trg.Value, out List<int> path);
+                var d1 = Algorithm.DijkstraArray(b, start, end, out List<int> path);
                 watch.Stop();
                 var a1 = watch.ElapsedMilliseconds;
-                //Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
+                Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
 
                 watch.Reset();
                 
                 watch.Start();
-                var d2 = Algorithm.DijkstraMinHeap(g, _src.Value, _trg.Value, out List<int> path2);
+                var d2 = Algorithm.DijkstraMinHeap(g, start, end, out List<int> path2);
                 watch.Stop();
                 var a2 = watch.ElapsedMilliseconds;
                 Log.AppendText("Min Heap: " + d2.ToString() + "   , elapsed: " + a2 + "\n");
@@ -451,7 +454,7 @@ namespace VertexBenderCS
                 watch.Reset();
 
                 watch.Start();
-                var d3 = Algorithm.DijkstraFibonacciHeap(g, _src.Value, _trg.Value, out List<int> path3);
+                var d3 = Algorithm.DijkstraFibonacciHeap(g, start, end, out List<int> path3);
                 watch.Stop();
                 var a3 = watch.ElapsedMilliseconds;
                 Log.AppendText("Fibonacci Heap: " + d3.ToString() + "   , elapsed: " + a3);
@@ -513,14 +516,17 @@ namespace VertexBenderCS
             _samplePointRenderers.Clear();
 
             watch.Start();
-            //var samples = Algorithm.FarthestPointSampling(g, 10);
             var samples = Algorithm.FarthestPointSampling(g, 10);
+
+
+
+            //var samples = Algorithm.FarthestPointSampling(g, 10);
             //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
             Log.AppendText("\n output created" + ", elapsed: " + a4);
 
-            for (int i = 0; i < samples.Count ; i++)
+            for (int i = 0; i < samples.Count; i++)
             {
                 MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
                 _sampleCoords.Add(samples[i].Coord);

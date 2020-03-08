@@ -1,4 +1,5 @@
 ﻿using Priority_Queue;
+using System.Collections.Generic;
 
 namespace Engine.Processing
 {
@@ -6,12 +7,14 @@ namespace Engine.Processing
     {
 
         public int id;
-        public float distance;
+        public int PrevId { get; set; }
+        public List<KeyValuePair<int, float>> Neighbors;
 
-        public QueueNode(int id, float distance)
+        public QueueNode(int id, List<KeyValuePair<int,float>> neighbors)
         {
             this.id = id;
-            this.distance = distance;
+            Neighbors = neighbors;
+
         }
     }
 }

@@ -18,6 +18,8 @@ namespace FibonacciHeap
             Key = key;
         }
 
+        public int PrevId { get; set; }
+
         /// <summary>
         /// Gets or sets the node data object.
         /// </summary>
