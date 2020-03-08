@@ -264,11 +264,17 @@ namespace Engine.Processing
 
             // Fix this suboptimal nonsense after making bottom thing work.
             float[,] matrix = new float[n,n];
-            for (int y = 0; y < graph.Vertices.Count; y++)
+
+            for(int y = 0; y < graph.Vertices.Count; y++)
             {
                 for (int x = 0; x < graph.Vertices.Count; x++)
                 {
-                    matrix[x,y] = DijkstraMinHeap(graph, x, y, out List<int> path, true);
+                    if (matrix[x, y] == 0)
+                    {
+                        var dist = DijkstraMinHeap(graph, x, y, out List<int> path, true);
+                        matrix[y, x] = dist;
+                        matrix[x, y] = dist;
+                    }
                 }
             }
 
@@ -291,9 +297,38 @@ namespace Engine.Processing
             return matrix;
         }
 
-        public static KeyValuePair<int, float> DijkstraReturnMaxPairNew(UndirectedGraph graph, int src)
+        public static float[,] CreateGeodesicDistanceMatrixParallel(Graph graph)
         {
-            var que = new FastPriorityQueue<QueueNode>(graph.Nodes.Count);
+            int n = graph.Vertices.Count;
+
+            // Fix this suboptimal nonsense after making bottom thing work.
+            float[,] matrix = new float[n, n];
+
+            Parallel.For
+            (
+                0, graph.Vertices.Count, 
+                (y) =>
+                {
+                    for (int x = 0; x < graph.Vertices.Count; x++)
+                    {
+                        if (matrix[x, y] == 0 && matrix[y,x] == 0)
+                        {
+                            //var dist = DijkstraReturnMaxPairNew(graph, x).Value;
+                            var dist = DijkstraMinHeap(graph, x, y, out List<int> path, true);
+                            matrix[y, x] = dist;
+                            matrix[x, y] = dist;
+                        }
+                        //matrix[x, y] = DijkstraMinHeap(graph, x, y, out List<int> path, true);
+                    };
+                }
+            );
+            
+            return matrix;
+        }
+
+        public static KeyValuePair<int, float> DijkstraReturnMaxPairNew(Graph graph, int src)
+        {
+            var que = new FastPriorityQueue<QueueNode>(graph.Vertices.Count);
 
             var distances = new Dictionary<int, float>();
             var previouses = new Dictionary<int, FastPriorityQueueNode>();
@@ -301,9 +336,9 @@ namespace Engine.Processing
 
             KeyValuePair<int, float> retVal = new KeyValuePair<int, float>();
 
-            foreach (var vert in graph.Nodes)
+            foreach (var vert in graph.Vertices)
             {
-                var id = vert.Key;
+                var id = vert.Id;
 
                 var dist = id == src ? 0 : float.MaxValue;
                 distances[id] = dist;
@@ -317,7 +352,7 @@ namespace Engine.Processing
             {
                 var u = que.Dequeue();
 
-                foreach (var neighbor in graph.Nodes[u.id].neighbors)
+                foreach (var neighbor in graph.Vertices[u.id].Verts)
                 {
                     if (!distances.ContainsKey(neighbor.Key))
                     {
@@ -344,31 +379,70 @@ namespace Engine.Processing
 
         }
 
-        public static List<OpenTK.Vector3> FarthestPointSampling(UndirectedGraph graph, int sampleCount)
+        public static List<Vertex> FarthestPointSampling(Graph graph, int sampleCount)
         {
-            List<OpenTK.Vector3> samples = new List<OpenTK.Vector3>();
+            List<Vertex> samples = new List<Vertex>();
 
-            int currentSource = 0;
+            var matrix = CreateGeodesicDistanceMatrixParallel(graph);
 
-            while (sampleCount > 0)
+            int startIndex = 0;
+            
+            
+            int maxDistIndex = -1;
+            float maxVal = float.MinValue;
+            for (int i = 0; i < graph.Vertices.Count; ++i)
             {
-                var pair = DijkstraReturnMaxPairNew(graph, currentSource);
-                if (currentSource != 0)
+                if (matrix[startIndex,i] > maxVal)
                 {
-                    graph.DeleteNode(currentSource);
+                    maxVal = matrix[startIndex, i];
+                    maxDistIndex = i;
+                }
+            }
+
+            samples.Add(graph.Vertices[maxDistIndex]);
+            while (samples.Count < sampleCount)
+            {
+                List<KeyValuePair<int, int>> associations = new List<KeyValuePair<int, int>>();
+
+                for (int i = 0; i < graph.Vertices.Count; i++)
+                {
+                    float minDist = float.MaxValue;
+                    int minIndex = -1;
+                    for (int j = 0; j < samples.Count; j++)
+                    {
+                        if (i == samples[j].Id)
+                        {
+                            minIndex = -1;
+                            minDist = float.MaxValue;
+                            break;
+                        }
+                        if (matrix[i, samples[j].Id] < minDist)
+                        {
+                            minDist = matrix[i, samples[j].Id];
+                            minIndex = samples[j].Id;
+                        }
+                    }
+                    if (minIndex != -1)
+                    {
+                        associations.Add(new KeyValuePair<int, int>(i, minIndex));
+                    }
                 }
 
-                currentSource = pair.Key;
-
-
-                samples.Add(graph.Nodes[pair.Key].Coord);
-
-                sampleCount--;
+                float maxDist = float.MinValue;
+                int maxIndex = -1;
+                for (int i = 0; i < associations.Count; ++i)
+                {
+                    var assoc = associations[i];
+                    if (matrix[assoc.Key, assoc.Value] > maxDist)
+                    {
+                        maxIndex = assoc.Key;
+                        maxDist = matrix[assoc.Key, assoc.Value];
+                    }
+                }
+                samples.Add(graph.Vertices[maxIndex]);
             }
 
             return samples;
-
-
         }
     }
 }

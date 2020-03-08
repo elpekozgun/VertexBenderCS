@@ -162,10 +162,10 @@ namespace VertexBenderCS
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.CullFace(CullFaceMode.Back);
 
-            //Matrix4 model = Matrix4.CreateScale(50.0f);
-            //Matrix4 rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
-            //model = model * rotation;
-            Matrix4 model = Matrix4.Identity;
+            Matrix4 model = Matrix4.CreateScale(50.0f);
+            Matrix4 rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
+            model = model * rotation;
+            //Matrix4 model = Matrix4.Identity;
 
             foreach (var obj in _objects)
             {
@@ -186,7 +186,9 @@ namespace VertexBenderCS
             for (int i = 0; i < _samplePointRenderers.Count; i++)
             {
                 var obj = _samplePointRenderers[i];
-                model = Matrix4.CreateTranslation(_sampleCoords[i]);
+                model = Matrix4.CreateScale(50.0f);
+                rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
+                model = Matrix4.CreateTranslation(_sampleCoords[i]) * rotation * model;
 
                 var color = new Vector4(_sampleCoords[i]);
 
@@ -292,7 +294,7 @@ namespace VertexBenderCS
             KeyState = Keys.None;
             if (e.KeyCode == Keys.F12)
             {
-                GrabScreenshot().Save("screenshot.png");
+                GrabScreenshot().Save(@"C:\users\ozgun\desktop\screenshot.png");
             }
         }
 
@@ -504,25 +506,24 @@ namespace VertexBenderCS
         private void BtnFPS_Click(object sender, EventArgs e)
         {
             Stopwatch watch = new Stopwatch();
-            //Graph g = new Graph(_objects[0].Mesh);
-            UndirectedGraph g = new UndirectedGraph(_objects[0].Mesh);
+            Graph g = new Graph(_objects[0].Mesh);
+            //UndirectedGraph g = new UndirectedGraph(_objects[0].Mesh);
             _samplePointRenderers.Clear();
 
             watch.Start();
+            //var samples = Algorithm.FarthestPointSampling(g, 10);
             var samples = Algorithm.FarthestPointSampling(g, 10);
             //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
             Log.AppendText("output created" + ", elapsed: " + a4);
 
-
             for (int i = 0; i < samples.Count ; i++)
             {
                 MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
-                _sampleCoords.Add(samples[i]);
+                _sampleCoords.Add(samples[i].Coord);
                 _samplePointRenderers.Add(obj);
             }
-
         }
 
 
