@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FibonacciHeap;
-
+using OpenTK;
 
 namespace Engine.Processing
 {
@@ -404,15 +404,23 @@ namespace Engine.Processing
 
     public struct IsoCurveOutput
     {
+        public List<List<OpenTK.Vector3>> IsoCurves;
+        //public List<List<Vector3>> IsoCurves;
+        public float[] IsoCurveDistances;
 
+        public IsoCurveOutput(List<List<OpenTK.Vector3>> isoCurves, float[] isoCurveDistances)
+        {
+            IsoCurves = isoCurves;
+            IsoCurveDistances = isoCurveDistances;
+        }
     }
 
     public static class Algorithm
     {
 
-        public static List<List<KeyValuePair<int,float>>> ConstructGraphFromMesh(Mesh mesh)
+        public static List<List<KeyValuePair<int, float>>> ConstructGraphFromMesh(Mesh mesh)
         {
-            var graph = new List<List<KeyValuePair<int,float>>>();
+            var graph = new List<List<KeyValuePair<int, float>>>();
 
             for (int i = 0; i < mesh.Vertices.Count; i++)
             {
@@ -440,8 +448,8 @@ namespace Engine.Processing
             //}
             //return graph;
         }
-      
-        public static float DijkstraArray(List<List<KeyValuePair<int,float>>> graph, int src, int target, out List<int> path, bool earlyTerminate = false)
+
+        public static float DijkstraArray(List<List<KeyValuePair<int, float>>> graph, int src, int target, out List<int> path, bool earlyTerminate = false)
         {
             int n = graph.Count;
             float[] shortestDists = new float[n];
@@ -669,7 +677,7 @@ namespace Engine.Processing
             for (int i = 0; i < graph.Nodes.Count; i++)
             {
                 var dist = i == src ? 0 : float.MaxValue;
-                var n = new QueueNode(i,graph.Nodes[i].Neighbors);
+                var n = new QueueNode(i, graph.Nodes[i].Neighbors);
                 que.Enqueue(n, dist);
                 nodeMap[i] = n;
             }
@@ -699,7 +707,7 @@ namespace Engine.Processing
             return retVal;
 
         }
-       
+
         public static float[][] CreateLinearGeodesicDistanceMatrix(Graph graph, bool isParallel = true)
         {
             int n = graph.Nodes.Count;
@@ -847,42 +855,176 @@ namespace Engine.Processing
             return distances;
         }
 
-        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source, float radius)
+        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source)
         {
             Graph graph = new Graph(mesh);
-
             var distances = DijkstraMinHeap(ref graph, source);
-            var maxDist = distances.Max();
 
-            var isoCurves = new HashSet<KeyValuePair<float, List<float>>>();
-            for (float i = maxDist / 20.0f; i < maxDist; i+= maxDist / 20.0f)
-            {
-                isoCurves.Add(new KeyValuePair<float, List<float>>(i, new List<float>()));
-            }
+            /*
 
-            for (int i = 0; i < mesh.Triangles.Count; i++)
+            Dx = { lx(r1), lx(r2),lx(r2),lx(r2),...,lx(rn)} ,      r1 < r2 < r3 < ... rn
+
+                  p1/  
+              v1---/--v2
+               \  /   /   
+                \/   /    lxT(ri) = |p1 - p2| , where
+              p2/\  /     pj = (1 - αj)*v0 + αj*vj,
+                  \/      and  αj = |ri - g0| / |gj - g0|
+                  v3
+
+             */
+
+            int k = 20;
+            float maxDist = distances.Max();
+
+            float[] isoCurveDistances = new float[k];
+            List<List<Vector3>> isoCurves = new List<List<Vector3>>();
+
+            var d = maxDist / k;
+
+            for (int i = 0; i < k; i++)
             {
-                var verts = new List<Vertex>()
+                float radius = i * d;
+                float isoCurveLength = 0;
+
+                var isoCurve = new List<Vector3>();
+
+                for (int j = 0; j < mesh.Triangles.Count; j++)
                 {
-                    mesh.Vertices[mesh.Triangles[i].V1],
-                    mesh.Vertices[mesh.Triangles[i].V2],
-                    mesh.Vertices[mesh.Triangles[i].V3]
-                };
+                    var tri = mesh.Triangles[j];
 
-                var edges = new List<KeyValuePair<List<Vertex>, bool>>()
+                    var v1Id = tri.V1;
+                    var v2Id = tri.V2;
+                    var v3Id = tri.V3;
+
+                    var distV1 = distances[v1Id];
+                    var distV2 = distances[v2Id];
+                    var distV3 = distances[v3Id];
+
+                    // no hit on triangle
+                    if (distV1 < radius && distV2 < radius && distV3 < radius ||
+                       distV1 > radius && distV2 > radius && distV3 > radius)
+                    {
+                        continue;
+                    }
+
+                    List<int> lower = new List<int>();
+                    List<int> greater = new List<int>();
+                    if (distV1 <= radius)
+                    {
+                        lower.Add(v1Id);
+                    }
+                    else
+                    {
+                        greater.Add(v1Id);
+                    }
+
+                    if (distV2 <= radius)
+                    {
+                        lower.Add(v2Id);
+                    }
+                    else
+                    {
+                        greater.Add(v2Id);
+                    }
+
+                    if (distV3 <= radius)
+                    {
+                        lower.Add(v3Id);
+                    }
+                    else
+                    {
+                        greater.Add(v3Id);
+                    }
+
+                    if (lower.Count == 0 || greater.Count == 0)
+                    {
+                        continue;
+                    }
+                    Vector3 p1 = new Vector3();
+                    Vector3 p2 = new Vector3();
+
+                    if (lower.Count < greater.Count)
+                    {
+                        var g0 = distances[lower[0]];
+                        var g1 = distances[greater[0]];
+                        var g2 = distances[greater[1]];
+                        var alpha1 = (float)(Math.Abs(radius - g0) / Math.Abs(g1 - g0));
+                        var alpha2 = (float)(Math.Abs(radius - g0) / Math.Abs(g2 - g0));
+                        var v0 = mesh.Vertices[lower[0]].Coord;
+                        var v1 = mesh.Vertices[greater[0]].Coord;
+                        var v2 = mesh.Vertices[greater[1]].Coord;
+
+                        p1 = (1.0f - alpha1) * v0 + alpha1 * v1;
+                        p2 = (1.0f - alpha2) * v0 + alpha2 * v2;
+
+                    }
+                    else if (lower.Count > greater.Count)
+                    {
+                        var g0 = distances[lower[0]];
+                        var g1 = distances[lower[1]];
+                        var g2 = distances[greater[0]];
+                        var alpha1 = Math.Abs(radius - g0) / Math.Abs(g2 - g0);
+                        var alpha2 = Math.Abs(radius - g1) / Math.Abs(g2 - g1);
+                        var v0 = mesh.Vertices[lower[0]].Coord;
+                        var v1 = mesh.Vertices[lower[1]].Coord;
+                        var v2 = mesh.Vertices[greater[0]].Coord;
+
+                        p1 = (1.0f - alpha1) * v0 + alpha1 * v2;
+                        p2 = (1.0f - alpha2) * v1 + alpha2 * v2;
+
+                    }
+                    isoCurveLength += (p1 - p2).Length;
+                    isoCurve.Add(p1);
+                    isoCurve.Add(p2);
+                }
+                isoCurveDistances[i] = isoCurveLength;
+
+                for (int j = 0; j < isoCurve.Count - 1; j++)
                 {
-                    new KeyValuePair<List<Vertex>, bool>( new List<Vertex>(){verts[0], verts[1]}, false),
-                    new KeyValuePair<List<Vertex>, bool>( new List<Vertex>(){verts[1], verts[2]}, false),
-                    new KeyValuePair<List<Vertex>, bool>( new List<Vertex>(){verts[2], verts[0]}, false)
-                };
+                    if ((isoCurve[j] - isoCurve[j + 1]).Length < 0.00005f)
+                    {
+                        Vector3 common = (isoCurve[j] + isoCurve[j + 1]) * 0.5f;
+                        isoCurve[j] = common;
+                        isoCurve[j + 1] = common;
+                    }
+                }
 
+                isoCurves.Add(isoCurve);
             }
-
-            foreach (var curve in isoCurves)
-            {
-            }
-
-            return new IsoCurveOutput();
+            return new IsoCurveOutput(isoCurves, isoCurveDistances);
         }
+
+        private static void SortCCW(ref List<Vector3> vectors)
+        {
+            var center = new Vector3();
+            foreach (var item in vectors)
+            {
+                center += item;
+            }
+            center /= vectors.Count;
+        }
+
+        private class CCWComparer : IComparer<Vector3>, IComparable<Vector3>
+        {
+
+            private Vector3 c;
+
+            public CCWComparer(Vector3 c)
+            {
+                this.c = c;
+            }
+
+            public int Compare(Vector3 v1, Vector3 v2)
+            {
+                return Math.Atan2(v1.X, v1.Z).CompareTo(Math.Atan2(v2.X, v2.X));
+            }
+
+            public int CompareTo(Vector3 other)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
     }
 }

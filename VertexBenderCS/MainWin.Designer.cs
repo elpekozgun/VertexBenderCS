@@ -29,6 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl();
             this.statusBar = new System.Windows.Forms.StatusBar();
@@ -52,6 +55,8 @@
             this.btnGauss = new System.Windows.Forms.Button();
             this.btnAverageGeo = new System.Windows.Forms.Button();
             this.btnIsoCurve = new System.Windows.Forms.Button();
+            this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -241,6 +246,36 @@
             this.btnIsoCurve.Text = "Iso-Curve Signature";
             this.btnIsoCurve.UseVisualStyleBackColor = true;
             // 
+            // chartIsoCurve
+            // 
+            this.chartIsoCurve.AccessibleRole = System.Windows.Forms.AccessibleRole.None;
+            this.chartIsoCurve.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.chartIsoCurve.BackImageWrapMode = System.Windows.Forms.DataVisualization.Charting.ChartImageWrapMode.Scaled;
+            this.chartIsoCurve.BorderSkin.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            chartArea1.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartIsoCurve.Legends.Add(legend1);
+            this.chartIsoCurve.Location = new System.Drawing.Point(728, 53);
+            this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
+            this.chartIsoCurve.Name = "chartIsoCurve";
+            this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series1.ChartArea = "isoCurve-Distances";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StackedColumn;
+            series1.CustomProperties = "PointWidth=0.3";
+            series1.IsVisibleInLegend = false;
+            series1.Legend = "Legend1";
+            series1.MarkerSize = 3;
+            series1.Name = "IsoCurve";
+            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series1);
+            this.chartIsoCurve.Size = new System.Drawing.Size(316, 200);
+            this.chartIsoCurve.TabIndex = 15;
+            this.chartIsoCurve.Text = "chart1";
+            this.chartIsoCurve.Visible = false;
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -248,6 +283,7 @@
             this.BackColor = System.Drawing.Color.White;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1055, 797);
+            this.Controls.Add(this.chartIsoCurve);
             this.Controls.Add(this.btnIsoCurve);
             this.Controls.Add(this.btnAverageGeo);
             this.Controls.Add(this.btnGauss);
@@ -269,6 +305,7 @@
             this.MinimumSize = new System.Drawing.Size(800, 600);
             this.Name = "MainWin";
             this.Text = "Vertex Bender Framework";
+            ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -298,6 +335,7 @@
         private System.Windows.Forms.Button btnGauss;
         private System.Windows.Forms.Button btnAverageGeo;
         private System.Windows.Forms.Button btnIsoCurve;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartIsoCurve;
     }
 }
 

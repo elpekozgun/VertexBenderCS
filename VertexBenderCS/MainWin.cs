@@ -12,6 +12,9 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Engine.Processing;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.IO;
 
 namespace VertexBenderCS
 {
@@ -124,7 +127,6 @@ namespace VertexBenderCS
             //Application.Idle += Application_Idle;
 
             menuImport.Click += MenuImport_Click;
-
 
             btnGeodesicMatrix.Click += BtnGeodesicMatrix_Click;
             btnDijkstra.Click += BtnDijkstra_Click;
@@ -468,21 +470,11 @@ namespace VertexBenderCS
                 List<Vector3> lines2 = new List<Vector3>();
                 List<Vector3> lines3 = new List<Vector3>();
 
-                //for (int i = 0; i < path.Count; i++)
-                //{
-                //    lines1.Add(_objects[0].Mesh.Vertices[path[i]].Coord);
-                //}
-
-                for (int i = 0; i < path2.Count; i++)
+                for (int i = 0; i < path2.Count - 1; i++)
                 {
                     lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
+                    lines2.Add(_objects[0].Mesh.Vertices[path2[i+1]].Coord);
                 }
-
-                //for (int i = 0; i < path2.Count; i++)
-                //{
-                //    lines3.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
-                //}
-
 
                 var r1 = new LineRenderer(lines1);
                 r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -520,7 +512,7 @@ namespace VertexBenderCS
 
             watch.Start();
 
-            var samples = Algorithm.FarthestPointSampling(g, 10);
+            var samples = Algorithm.FarthestPointSampling(g, 100);
 
             //var samples = Algorithm.FarthestPointSampling(g, 10);
             //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
@@ -587,9 +579,42 @@ namespace VertexBenderCS
 
         private void BtnIsoCurve_Click(object sender, EventArgs e)
         {
-            Graph g = new Graph(_objects[0].Mesh);
+            var graph = new Graph(_objects[0].Mesh);
+            var samples = Algorithm.FarthestPointSampling(graph, 1);
 
+            for (int i = 0; i < samples.SampelIndices.Count; i++)
+            {
+                MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
+                _sampleCoords.Add(samples.SamplePoints[i].Coord);
+                _samplePointRenderers.Add(obj);
+            }
 
+            var output = Algorithm.IsoCurveSignature(_objects[0].Mesh, samples.SampelIndices[0]);
+
+            chartIsoCurve.Series[0].Points.Clear();
+            _lines.Clear();
+
+            for (int i = 0; i < output.IsoCurveDistances.Length; i++)
+            {
+                var line = new LineRenderer(output.IsoCurves[i]);
+                line.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                _lines.Add(line);
+                chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
+            }
+
+            chartIsoCurve.Show();
+
+            //using (var w = new StreamWriter(@"C:\users\ozgun\desktop\asd.csv"))
+            //{
+            //    for (int i = 0; i < output.IsoCurveDistances.Length ; i++)
+            //    {
+            //        var first = i;
+            //        var second = output.IsoCurveDistances[i];
+            //        var line = string.Format("{0},{1}", first, second);
+            //        w.WriteLine(line);
+            //        w.Flush();
+            //    }
+            //}
         }
 
         [STAThread]
@@ -600,7 +625,6 @@ namespace VertexBenderCS
                 example.ShowDialog();
             }
         }
-
 
     }
 }

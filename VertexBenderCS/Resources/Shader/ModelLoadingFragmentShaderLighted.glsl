@@ -104,6 +104,7 @@ vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir)
 		return (max(FragmentColor + specular,vec3(0.0f)));
 	}
 
+
 	return (max(ambient + diffuse + specular,vec3(0.0f)));
 }
 

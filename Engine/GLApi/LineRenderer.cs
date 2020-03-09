@@ -39,11 +39,11 @@ namespace Engine.GLApi
             GL.BindVertexArray(_VAO);
 
             GL.LineWidth(4);
-            GL.DrawArrays(PrimitiveType.LineStrip, 0, _vertices.Length);
+            GL.DrawArrays(PrimitiveType.Lines, 0, _vertices.Length);
 
             //Shader.SetVec4("Color", new Vector4(1.0f,0.0f, 0.0f, 1.0f));
 
-            //GL.PointSize(10);
+            //GL.PointSize(5);
             //GL.DrawArrays(PrimitiveType.Points, 0, _vertices.Length);
 
             GL.BindVertexArray(0);
