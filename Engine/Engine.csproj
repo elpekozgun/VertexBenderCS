@@ -44,15 +44,20 @@
     <Reference Include="Priority Queue, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\OptimizedPriorityQueue.4.2.0\lib\net45\Priority Queue.dll</HintPath>
     </Reference>
+    <Reference Include="PriorityQueues, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PriorityQueues_boraaros.2.0.1\lib\netstandard2.0\PriorityQueues.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +76,7 @@
     <Compile Include="Processing\FibonacciHeap.cs" />
     <Compile Include="Processing\FibonacciNode.cs" />
     <Compile Include="Processing\Graph.cs" />
+    <Compile Include="Processing\PriorityQueue.cs" />
     <Compile Include="Processing\ProcessOutputHandler.cs" />
     <Compile Include="Processing\QueueNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

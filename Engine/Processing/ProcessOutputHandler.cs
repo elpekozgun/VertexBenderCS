@@ -119,7 +119,9 @@ namespace Engine.Processing
             bitmap.Save(file + ".bmp");
             bitmap.Dispose();
         }
+       
     }
+
 
 
 }

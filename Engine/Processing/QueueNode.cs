@@ -5,7 +5,6 @@ namespace Engine.Processing
 {
     public class QueueNode : FastPriorityQueueNode
     {
-
         public int id;
         public int PrevId { get; set; }
         public List<KeyValuePair<int, float>> Neighbors;
@@ -14,7 +13,6 @@ namespace Engine.Processing
         {
             this.id = id;
             Neighbors = neighbors;
-
         }
     }
 }

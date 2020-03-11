@@ -3,395 +3,30 @@ using Priority_Queue;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using FibonacciHeap;
 using OpenTK;
+using PriorityQueues;
 
 namespace Engine.Processing
 {
-    public interface IPriorityQueue<TItem, TPriority> : IEnumerable<TItem>
+
+    public struct DijkstraOutput
     {
-        int Count { get; }
-        TItem Peek { get; }
-        TPriority PeekPriority { get; }
-        IPriorityQueueEntry<TItem> Enqueue(TItem item, TPriority priority);
-        TItem Dequeue();
-        void UpdatePriority(IPriorityQueueEntry<TItem> entry, TPriority priority);
-        void Remove(IPriorityQueueEntry<TItem> entry);
-        void Clear();
-    }
-    public interface IPriorityQueueEntry<TItem>
-    {
-        TItem Item { get; }
-    }
+        public float[] AllDistances;
+        public float[] Path;
+        public float TargetDistance;
 
-    public enum PriorityQueueType
-    {
-        Minimum,
-        Maximum
-    }
-    public sealed class FibonacciHeap2<TItem, TPriority> : IPriorityQueue<TItem, TPriority>
-    {
-        private sealed class FibonacciNode : IPriorityQueueEntry<TItem>
+        public DijkstraOutput(float[] allDistances, float[] path, float targetDistance)
         {
-            public FibonacciNode Parent = null;
-            public FibonacciNode Left;
-            public FibonacciNode Right;
-            public FibonacciNode FirstChild = null;
-            public int Degree = 0;
-            public bool IsMarked = false;
-            public TItem Item { get; internal set; }
-            public TPriority Priority { get; internal set; }
-            public Guid HeapIdentifier { get; set; }
-
-            public FibonacciNode(TItem item, TPriority priority, Guid heapIdentifier)
-            {
-                Item = item;
-                Priority = priority;
-                HeapIdentifier = heapIdentifier;
-            }
-        }
-
-        private readonly Guid identifier;
-
-        private readonly Func<TPriority, TPriority, int> Compare;
-
-        private FibonacciNode head;
-
-        public TItem Peek
-        {
-            get
-            {
-                if (Count == 0)
-                {
-                    throw new InvalidOperationException("Heap contains no elements");
-                }
-                return head.Item;
-            }
-        }
-
-        public TPriority PeekPriority
-        {
-            get
-            {
-                if (Count == 0)
-                {
-                    throw new InvalidOperationException("Binary heap does not contain elements");
-                }
-                return head.Priority;
-            }
-        }
-
-        public int Count { get; private set; }
-
-        public FibonacciHeap2(PriorityQueueType type, IComparer<TPriority> comparer = null)
-        {
-            if (comparer == null)
-            {
-                throw new ArgumentNullException("comparer");
-            }
-            switch (type)
-            {
-                case PriorityQueueType.Minimum:
-                    Compare = (x, y) => comparer.Compare(x, y);
-                    break;
-                case PriorityQueueType.Maximum:
-                    Compare = (x, y) => comparer.Compare(y, x);
-                    break;
-                default: throw new ArgumentException(string.Format("Unknown priority queue type: {0}", type));
-            }
-            identifier = Guid.NewGuid();
-        }
-
-        public FibonacciHeap2(PriorityQueueType type)
-            : this(type, Comparer<TPriority>.Default)
-        {
-        }
-
-        public IEnumerator<TItem> GetEnumerator()
-        {
-            foreach (var entry in Enumerate())
-            {
-                yield return entry.Item;
-            }
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
-
-        public IPriorityQueueEntry<TItem> Enqueue(TItem item, TPriority priority)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException("item");
-            }
-            if (priority == null)
-            {
-                throw new ArgumentNullException("priority");
-            }
-            FibonacciNode node = new FibonacciNode(item, priority, identifier);
-
-            if (Count == 0)
-            {
-                node.Left = node.Right = head = node;
-            }
-            else
-            {
-                Paste(head, node);
-
-                if (Compare(head.Priority, priority) > 0)
-                {
-                    head = node;
-                }
-            }
-            Count++;
-            return node;
-        }
-
-        public void UpdatePriority(IPriorityQueueEntry<TItem> entry, TPriority priority)
-        {
-            if (entry == null)
-            {
-                throw new ArgumentNullException("entry");
-            }
-            if (priority == null)
-            {
-                throw new ArgumentNullException("priority");
-            }
-            FibonacciNode node = entry as FibonacciNode;
-            if (node == null)
-            {
-                throw new InvalidCastException("Invalid heap entry format!");
-            }
-            if (node.HeapIdentifier != identifier)
-            {
-                throw new ArgumentException("Heap does not contain this node!");
-            }
-            if (node.Parent != null && Compare(node.Parent.Priority, priority) > 0)
-            {
-                CutNode(node);
-            }
-            node.Priority = priority;
-
-            if (Compare(head.Priority, priority) > 0)
-            {
-                head = node;
-            }
-        }
-
-        public TItem Dequeue()
-        {
-            if (Count == 0)
-            {
-                throw new InvalidOperationException("Heap is empty!");
-            }
-            FibonacciNode h = head;
-
-            if (Count == 1)
-            {
-                head = null;
-                Count--;
-                h.HeapIdentifier = Guid.Empty;
-                return h.Item;
-            }
-            while (head.Degree > 0)
-            {
-                CutNode(head.FirstChild);
-            }
-            Concatenate();
-            head.Left.Right = head.Right;
-            head.Right.Left = head.Left;
-            head = SearchNewMinimum();
-            Count--;
-            h.HeapIdentifier = Guid.Empty;
-            return h.Item;
-        }
-
-        public void Remove(IPriorityQueueEntry<TItem> entry)
-        {
-            if (entry == null)
-            {
-                throw new ArgumentNullException("entry");
-            }
-
-            FibonacciNode temp = entry as FibonacciNode;
-            if (temp == null)
-            {
-                throw new InvalidCastException("Invalid heap entry format!");
-            }
-
-            if (temp.HeapIdentifier != identifier)
-            {
-                throw new ArgumentException("Heap does not contain this node!");
-            }
-            CutNode(temp);
-            head = temp;
-            Dequeue();
-        }
-
-        public void Clear()
-        {
-            foreach (var entry in Enumerate())
-            {
-                entry.HeapIdentifier = Guid.Empty;
-            }
-            Count = 0;
-            head = null;
-        }
-
-        private IEnumerable<FibonacciNode> Enumerate()
-        {
-            if (head == null)
-            {
-                yield break;
-            }
-            var current = head;
-            do
-            {
-                foreach (var node in EnumerateBranch(current))
-                {
-                    yield return node;
-                }
-                current = current.Right;
-            }
-            while (current != head);
-        }
-
-        private IEnumerable<FibonacciNode> EnumerateBranch(FibonacciNode root)
-        {
-            if (root.FirstChild != null)
-            {
-                var current = root.FirstChild;
-                do
-                {
-                    foreach (var node in EnumerateBranch(current))
-                    {
-                        yield return node;
-                    }
-                    current = current.Right;
-                }
-                while (current != root.FirstChild);
-            }
-            yield return root;
-        }
-
-        private FibonacciNode SearchNewMinimum()
-        {
-            FibonacciNode h = head.Right;
-            for (FibonacciNode node = head.Right.Right; node != head.Right; node = node.Right)
-            {
-                if (Compare(h.Priority, node.Priority) > 0)
-                {
-                    h = node;
-                }
-            }
-            return h;
-        }
-
-        private void Concatenate()
-        {
-            IDictionary<int, FibonacciNode> concat = new Dictionary<int, FibonacciNode>();
-
-            for (FibonacciNode node = head.Right; node != head;)
-            {
-                FibonacciNode next = node.Right;
-                bool cont = true;
-                do
-                {
-                    cont = true;
-                    if (!concat.ContainsKey(node.Degree))
-                    {
-                        concat.Add(node.Degree, node);
-                        cont = false;
-                    }
-                    else
-                    {
-                        FibonacciNode n = concat[node.Degree];
-                        concat.Remove(node.Degree);
-                        if (Compare(n.Priority, node.Priority) > 0)
-                        {
-                            Merge(node, n);
-                        }
-                        else
-                        {
-                            Merge(n, node);
-                            node = n;
-                        }
-                    }
-                }
-                while (cont);
-                node = next;
-            }
-        }
-
-        private void Merge(FibonacciNode root, FibonacciNode child)
-        {
-            child.Parent = root;
-            child.IsMarked = false;
-            child.Left.Right = child.Right;
-            child.Right.Left = child.Left;
-            if (root.Degree == 0)
-            {
-                root.FirstChild = child;
-                child.Left = child.Right = child;
-            }
-            else
-            {
-                Paste(root.FirstChild, child);
-            }
-            root.Degree++;
-        }
-
-        private void Paste(FibonacciNode prev, FibonacciNode next)
-        {
-            next.Left = prev;
-            next.Right = prev.Right;
-            prev.Right.Left = next;
-            prev.Right = next;
-        }
-
-        private void CutNode(FibonacciNode node)
-        {
-            if (node.Parent == null)
-            {
-                return;
-            }
-            else if (node.Parent.Degree == 1)
-            {
-                node.Parent.FirstChild = null;
-            }
-            else if (node.Parent.FirstChild == node)
-            {
-                node.Parent.FirstChild = node.Right;
-                node.Right.Left = node.Left;
-                node.Left.Right = node.Right;
-            }
-            else
-            {
-                node.Right.Left = node.Left;
-                node.Left.Right = node.Right;
-            }
-            Paste(head, node);
-            node.Parent.Degree--;
-            if (node.Parent.IsMarked)
-            {
-                CutNode(node.Parent);
-            }
-            else
-            {
-                node.Parent.IsMarked = true;
-            }
-            node.Parent = null;
+            AllDistances = allDistances;
+            Path = path;
+            TargetDistance = targetDistance;
         }
     }
-
 
     public struct SampleOutput
     {
-
         public List<GraphNode> SamplePoints;
         public List<int> SampelIndices;
 
@@ -417,7 +52,6 @@ namespace Engine.Processing
 
     public static class Algorithm
     {
-
         public static List<List<KeyValuePair<int, float>>> ConstructGraphFromMesh(Mesh mesh)
         {
             var graph = new List<List<KeyValuePair<int, float>>>();
@@ -567,60 +201,12 @@ namespace Engine.Processing
 
             return nodeMap[target].Priority;
 
-            //var que = new FastPriorityQueue<QueueNode>(graph.Vertices.Count);
-
-            //var distances = new Dictionary<int, float>();
-            //var previouses = new Dictionary<int, FastPriorityQueueNode>();
-            //var nodeMap = new Dictionary<int, QueueNode>();
-
-            //for (int i = 0; i < graph.Vertices.Count; i++)
-            //{
-            //    var dist = i == src ? 0 : float.MaxValue;
-            //    distances[i] = dist;
-            //    previouses[i] = null;
-            //    var n = new QueueNode(i, dist);
-            //    que.Enqueue(n, dist);
-            //    nodeMap[i] = n;
-            //}
-
-            //while (que.Count > 0)
-            //{
-            //    var u = que.Dequeue();
-
-            //    if (earlyTerminate && u.id == target)
-            //    {
-            //        break;
-            //    }
-
-            //    foreach (var neighbor in graph.Vertices[u.id].Verts)
-            //    {
-            //        //float val = distances[u.id] + (graph.Vertices[u.id].Coord - graph.Vertices[neighbor].Coord).Length;
-            //        float val = distances[u.id] + neighbor.Value;
-            //        if (val < distances[neighbor.Key])
-            //        {
-            //            que.UpdatePriority(nodeMap[neighbor.Key], val);
-            //            distances[neighbor.Key] = val;
-            //            previouses[neighbor.Key] = u;
-            //        }
-            //    }
-
-            //}
-
-            //path = new List<int>();
-            //int k = target;
-            //path.Add(target);
-            //while (k != src)
-            //{
-            //    k = (previouses[k] as QueueNode).id;
-            //    path.Add(k);
-            //}
-
-            //return distances[target];
+          
         }
 
         public static float DijkstraFibonacciHeap(Graph graph, int src, int target, out List<int> path, bool earlyTerminate = false)
         {
-            FibonacciHeap<int, float> que = new FibonacciHeap<int, float>(src);
+             FibonacciHeap.FibonacciHeap<int, float> que = new FibonacciHeap.FibonacciHeap<int, float>(src);
 
             //var previousMap = new Dictionary<int, FibonacciHeapNode<int, float>>();
             var nodeMap = new Dictionary<int, FibonacciHeapNode<int, float>>();
@@ -686,8 +272,8 @@ namespace Engine.Processing
             {
                 var u = que.Dequeue();
 
-                //foreach (var neighbor in graph.Nodes[u.id].Neighbors)
-                foreach (var neighbor in u.Neighbors)
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                //foreach (var neighbor in u.Neighbors)
                 {
                     float val = nodeMap[u.id].Priority + neighbor.Value;
                     if (val < nodeMap[neighbor.Key].Priority)
@@ -855,7 +441,7 @@ namespace Engine.Processing
             return distances;
         }
 
-        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source)
+        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source, int sampleCount)
         {
             Graph graph = new Graph(mesh);
             var distances = DijkstraMinHeap(ref graph, source);
@@ -874,7 +460,7 @@ namespace Engine.Processing
 
              */
 
-            int k = 20;
+            int k = sampleCount;
             float maxDist = distances.Max();
 
             float[] isoCurveDistances = new float[k];
@@ -995,36 +581,111 @@ namespace Engine.Processing
             return new IsoCurveOutput(isoCurves, isoCurveDistances);
         }
 
-        private static void SortCCW(ref List<Vector3> vectors)
+
+
+        //TODO: These are slower but more consistent in terms of usage.. Fix these methods in a more common way along with array implementation
+
+        public static float DijkstraFibonacciHeapNew(Graph graph, int src, int target, out List<int> path, bool earlyTerminate = false)
         {
-            var center = new Vector3();
-            foreach (var item in vectors)
+            var que = new PriorityQueues.FibonacciHeap<HeapNode, float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
-                center += item;
+                var dist = i == src ? 0 : float.MaxValue;
+
+                var n = new HeapNode(i, graph.Nodes[i].Neighbors, dist);
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(n, dist);
+                nodeMap[i] = output;
             }
-            center /= vectors.Count;
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
+            }
+
+            path = new List<int>();
+            int k = target;
+            path.Add(target);
+            while (k != src)
+            {
+                //k = previousMap[k].Data;
+                k = nodeMap[k].Item.PrevId;
+                path.Add(k);
+            }
+
+            return nodeMap[target].Item.Priority;
         }
 
-        private class CCWComparer : IComparer<Vector3>, IComparable<Vector3>
+        public static float DijkstraMinHeapNew(ref Graph graph, int src, int target)
         {
+            var que = new PriorityQueues.BinaryHeap<HeapNode,float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
 
-            private Vector3 c;
-
-            public CCWComparer(Vector3 c)
+            for (int i = 0; i < graph.Nodes.Count; i++)
             {
-                this.c = c;
+                var dist = i == src ? 0 : float.MaxValue;
+
+                var n = new HeapNode(i, graph.Nodes[i].Neighbors, dist);
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(n, dist);
+                nodeMap[i] = output;
             }
 
-            public int Compare(Vector3 v1, Vector3 v2)
+            while (que.Count > 0)
             {
-                return Math.Atan2(v1.X, v1.Z).CompareTo(Math.Atan2(v2.X, v2.X));
-            }
+                var u = que.Dequeue();
 
-            public int CompareTo(Vector3 other)
-            {
-                throw new NotImplementedException();
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
             }
+            //var retVal = new float[nodeMap.Count];
+            //for (int i = 0; i < retVal.Length; i++)
+            //{
+            //    retVal[i] = nodeMap[i].Priority;
+            //}
+
+            //return retVal;
+
+            return nodeMap[target].Item.Priority;
         }
+
 
     }
+    public class HeapNode 
+    {
+        public int id;
+        public int PrevId { get; set; }
+
+        public List<KeyValuePair<int, float>> Neighbors;
+        public float Priority;
+
+        public HeapNode(int id, List<KeyValuePair<int, float>> neighbors, float priority)
+        {
+            this.id = id;
+            Neighbors = neighbors;
+            Priority = priority;
+        }
+    }
+
 }

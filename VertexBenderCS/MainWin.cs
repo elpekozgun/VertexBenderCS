@@ -443,15 +443,16 @@ namespace VertexBenderCS
 
                 var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
                 watch.Start();
-                var d1 = Algorithm.DijkstraArray(b, start, end, out List<int> path);
+                //var d1 = Algorithm.DijkstraArray(b, start, end, out List<int> path);
                 watch.Stop();
                 var a1 = watch.ElapsedMilliseconds;
-                Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
+                //Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
 
                 watch.Reset();
-                
+
                 watch.Start();
-                var d2 = Algorithm.DijkstraMinHeap(g, start, end, out List<int> path2);
+                //var d2 = Algorithm.DijkstraMinHeap(g, start, end, out List<int> path2);
+                var d2 = Algorithm.DijkstraMinHeapNew(ref g, start, end);
                 watch.Stop();
                 var a2 = watch.ElapsedMilliseconds;
                 Log.AppendText("Min Heap: " + d2.ToString() + "   , elapsed: " + a2 + "\n");
@@ -459,7 +460,9 @@ namespace VertexBenderCS
                 watch.Reset();
 
                 watch.Start();
-                var d3 = Algorithm.DijkstraFibonacciHeap(g, start, end, out List<int> path3);
+                //var d3 = Algorithm.DijkstraFibonacciHeap(g, start, end, out List<int> path3);
+                //var d3 = Algorithm.DijkstraMinHeapNew(ref g, start, end);
+                var d3 = Algorithm.DijkstraFibonacciHeapNew(g, start, end, out List<int> path2);
                 watch.Stop();
                 var a3 = watch.ElapsedMilliseconds;
                 Log.AppendText("Fibonacci Heap: " + d3.ToString() + "   , elapsed: " + a3);
@@ -473,7 +476,7 @@ namespace VertexBenderCS
                 for (int i = 0; i < path2.Count - 1; i++)
                 {
                     lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
-                    lines2.Add(_objects[0].Mesh.Vertices[path2[i+1]].Coord);
+                    lines2.Add(_objects[0].Mesh.Vertices[path2[i + 1]].Coord);
                 }
 
                 var r1 = new LineRenderer(lines1);
@@ -507,15 +510,10 @@ namespace VertexBenderCS
         {
             Stopwatch watch = new Stopwatch();
             Graph g = new Graph(_objects[0].Mesh);
-            //UndirectedGraph g = new UndirectedGraph(_objects[0].Mesh);
             _samplePointRenderers.Clear();
 
             watch.Start();
-
             var samples = Algorithm.FarthestPointSampling(g, 100);
-
-            //var samples = Algorithm.FarthestPointSampling(g, 10);
-            //ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
             Log.AppendText("\n output created" + ", elapsed: " + a4);
@@ -531,24 +529,20 @@ namespace VertexBenderCS
         private void BtnGauss_Click(object sender, EventArgs e)
         {
             var a = Algorithm.GaussianCurvature(_objects[0].Mesh);
-            var max = float.MinValue;
-            var min = float.MaxValue;
-            for (int i = 0; i < a.Count; i++)
-            {
-                max = max > a[i] ? max : a[i];
-                min = min < a[i] ? min : a[i];
-            }
-
+            var max = a.Max();
+            var min = a.Min();
+            max -= min;
             var color = new Vector3[a.Count];
             for (int i = 0; i < color.Length; i++)
             {
+                var val = MathHelper.Clamp(Math.Abs(a[i]), 0.0f, 0.4f);
                 if (a[i] < 0)
                 {
-                    color[i] = new Vector3(Math.Abs(a[i]), 0.0f, 0.0f);
+                    color[i] = new Vector3(0.0f, 0.0f, val);
                 }
                 else
                 {
-                    color[i] = new Vector3(0.0f, 0.0f, Math.Abs(a[i] ));
+                    color[i] = new Vector3(val, 0.0f, 0.0f);
                 }
 
             }
@@ -561,11 +555,7 @@ namespace VertexBenderCS
             Graph g = new Graph(_objects[0].Mesh);
             var a = Algorithm.AverageGeodesicDistance(g);
 
-            float max = 0.0f;
-            for (int i = 0; i < a.Count; i++)
-            {
-                max = max > a[i] ? max : a[i];
-            }
+            float max = a.Max();
 
             var color = new Vector3[a.Count];
             for (int i = 0; i < color.Length; i++)
@@ -589,7 +579,7 @@ namespace VertexBenderCS
                 _samplePointRenderers.Add(obj);
             }
 
-            var output = Algorithm.IsoCurveSignature(_objects[0].Mesh, samples.SampelIndices[0]);
+            var output = Algorithm.IsoCurveSignature(_objects[0].Mesh, samples.SampelIndices[0], 40);
 
             chartIsoCurve.Series[0].Points.Clear();
             _lines.Clear();
