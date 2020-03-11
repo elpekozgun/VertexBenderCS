@@ -434,38 +434,40 @@ namespace VertexBenderCS
             {
                 _lines.Clear();
                 Stopwatch watch = new Stopwatch();
-                Graph g = new Graph(_objects[0].Mesh);
+                var mesh = _objects[0].Mesh;
 
                 Log.AppendText("\n starting: \n");
 
                 var start = _src.Value;
                 var end = _trg.Value;
 
-                var b = Algorithm.ConstructGraphFromMesh(_objects[0].Mesh);
+                //watch.Start();
+                //var d1 = Algorithm.DijkstraArray(mesh, start, end);
+                //watch.Stop();
+                //var a1 = watch.ElapsedMilliseconds;
+                //Log.AppendText("Array: " + d1.TargetDistance.ToString() + "   , elapsed: " + a1 + "\n");
+
                 watch.Start();
-                //var d1 = Algorithm.DijkstraArray(b, start, end, out List<int> path);
+                var d1 = Algorithm.AStarMinHeap(mesh, start, end);
                 watch.Stop();
                 var a1 = watch.ElapsedMilliseconds;
-                //Log.AppendText("Array: " + d1.ToString() + "   , elapsed: " + a1 + "\n");
+                Log.AppendText("AStar: " + d1.TargetDistance.ToString() + "   , elapsed: " + a1 + "\n");
 
                 watch.Reset();
 
                 watch.Start();
-                //var d2 = Algorithm.DijkstraMinHeap(g, start, end, out List<int> path2);
-                var d2 = Algorithm.DijkstraMinHeapNew(ref g, start, end);
+                var d2 = Algorithm.DijkstraMinHeap(_objects[0].Mesh, start, end, false);
                 watch.Stop();
                 var a2 = watch.ElapsedMilliseconds;
-                Log.AppendText("Min Heap: " + d2.ToString() + "   , elapsed: " + a2 + "\n");
+                Log.AppendText("Min Heap: " + d2.TargetDistance.ToString() + "   , elapsed: " + a2 + "\n");
 
                 watch.Reset();
 
                 watch.Start();
-                //var d3 = Algorithm.DijkstraFibonacciHeap(g, start, end, out List<int> path3);
-                //var d3 = Algorithm.DijkstraMinHeapNew(ref g, start, end);
-                var d3 = Algorithm.DijkstraFibonacciHeapNew(g, start, end, out List<int> path2);
+                var d3 = Algorithm.DijkstraFibonacciHeap(_objects[0].Mesh, start, end, false);
                 watch.Stop();
                 var a3 = watch.ElapsedMilliseconds;
-                Log.AppendText("Fibonacci Heap: " + d3.ToString() + "   , elapsed: " + a3);
+                Log.AppendText("Fibonacci Heap: " + d3.TargetDistance.ToString() + "   , elapsed: " + a3);
 
                 watch.Reset();
 
@@ -473,11 +475,18 @@ namespace VertexBenderCS
                 List<Vector3> lines2 = new List<Vector3>();
                 List<Vector3> lines3 = new List<Vector3>();
 
-                for (int i = 0; i < path2.Count - 1; i++)
+                for (int i = 0; i < d1.Path.Count - 1; i++)
                 {
-                    lines2.Add(_objects[0].Mesh.Vertices[path2[i]].Coord);
-                    lines2.Add(_objects[0].Mesh.Vertices[path2[i + 1]].Coord);
+                    lines1.Add(_objects[0].Mesh.Vertices[d1.Path[i]].Coord);
+                    lines1.Add(_objects[0].Mesh.Vertices[d1.Path[i + 1]].Coord);
                 }
+
+                for (int i = 0; i < d3.Path.Count - 1; i++)
+                {
+                    lines2.Add(_objects[0].Mesh.Vertices[d3.Path[i]].Coord);
+                    lines2.Add(_objects[0].Mesh.Vertices[d3.Path[i + 1]].Coord);
+                }
+
 
                 var r1 = new LineRenderer(lines1);
                 r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -495,10 +504,9 @@ namespace VertexBenderCS
         private void BtnGeodesicMatrix_Click(object sender, EventArgs e)
         {
             Stopwatch watch = new Stopwatch();
-            Graph g = new Graph(_objects[0].Mesh);
 
             watch.Start();
-            var matrix = Algorithm.CreateLinearGeodesicDistanceMatrix(g);
+            var matrix = Algorithm.CreateGeodesicDistanceMatrix(_objects[0].Mesh);
             ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;

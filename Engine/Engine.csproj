@@ -41,9 +41,6 @@
     <Reference Include="OpenTK.GLControl, Version=3.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.GLControl.3.1.0\lib\net20\OpenTK.GLControl.dll</HintPath>
     </Reference>
-    <Reference Include="Priority Queue, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\OptimizedPriorityQueue.4.2.0\lib\net45\Priority Queue.dll</HintPath>
-    </Reference>
     <Reference Include="PriorityQueues, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\PriorityQueues_boraaros.2.0.1\lib\netstandard2.0\PriorityQueues.dll</HintPath>
     </Reference>
@@ -76,9 +73,8 @@
     <Compile Include="Processing\FibonacciHeap.cs" />
     <Compile Include="Processing\FibonacciNode.cs" />
     <Compile Include="Processing\Graph.cs" />
-    <Compile Include="Processing\PriorityQueue.cs" />
     <Compile Include="Processing\ProcessOutputHandler.cs" />
-    <Compile Include="Processing\QueueNode.cs" />
+    <Compile Include="Processing\OutputStructures.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
