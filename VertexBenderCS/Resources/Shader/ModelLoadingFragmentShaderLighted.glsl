@@ -52,6 +52,7 @@ struct SpotLight
 };
 
 #define NR_POINT_LIGHTS 3
+
 out vec4 FragColor;
 
 uniform vec3 cameraPosition;

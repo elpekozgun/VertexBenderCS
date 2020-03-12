@@ -60,10 +60,14 @@
   <ItemGroup>
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\CameraController.cs" />
+    <Compile Include="Core\CameraNew.cs" />
     <Compile Include="Core\DirectionalLight.cs" />
-    <Compile Include="Core\LineString.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\ObjectLoader.cs" />
+    <Compile Include="Core\PrimitiveObjectFactory.cs" />
+    <Compile Include="Core\SceneGraph.cs" />
+    <Compile Include="Core\Transform.cs" />
+    <Compile Include="GLApi\InstanceRenderer.cs" />
     <Compile Include="GLApi\IRenderable.cs" />
     <Compile Include="GLApi\LineRenderer.cs" />
     <Compile Include="GLApi\MeshRenderer.cs" />

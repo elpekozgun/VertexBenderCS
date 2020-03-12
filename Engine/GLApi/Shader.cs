@@ -8,8 +8,31 @@ using OpenTK;
 
 namespace Engine.GLApi
 {
+
     public class Shader
     {
+        #region Static Items
+
+        private static Shader _defaultShader = ShaderBuilder.CreateShader
+        (
+            "shaded", 
+            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader)
+        );
+
+        private static Shader _defaultUnlit = ShaderBuilder.CreateShader
+        (
+            "shaded",
+            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader)
+        );
+        
+        public static Shader DefaultShader => _defaultShader;
+        public static Shader DefaultUnlitShader=> _defaultUnlit;
+
+        #endregion
+
+
         public string Name { get; set; }
         private readonly int _id;
 

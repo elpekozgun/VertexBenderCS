@@ -5,39 +5,25 @@ using System.Windows.Forms;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using Engine.GLApi;
-using OpenTK.Graphics;
-using OpenTK.Platform;
 using Engine.Core;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using Engine.Processing;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.IO;
 
 namespace VertexBenderCS
 {
     public partial class MainWin : Form
     {
-        private Camera _camera;
-        private CameraController _cameraController;
+        private Camera              _camera;
+        private CameraController    _cameraController;
+        private SceneGraph          _SceneGraph;
 
-        private bool _isFirstMouse;
-        private float _mouseX;
-        private float _mouseY;
-
+        private bool                _isFirstMouse;
+        private float               _mouseX;
+        private float               _mouseY;
         private System.Timers.Timer _Timer;
         
-        //TEST STUFF
-        private Shader _wiredShader;
-        private Shader _shader;
-
-        private List<MeshRenderer> _objects;
-        private List<MeshRenderer> _samplePointRenderers;
-        private List<LineRenderer> _lines;
-
-        private List<Vector3> _sampleCoords; 
 
         public MainWin()
         {
@@ -45,37 +31,6 @@ namespace VertexBenderCS
         }
 
         private Keys KeyState { get; set; }
-
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            GL.ClearColor(Color.FromArgb(25, 25, 25));
-            GL.Enable(EnableCap.DepthTest);
-
-            Text = "Vertex Bender Framework - " +
-                    //GL.GetString(StringName.Vendor) + " " +
-                    GL.GetString(StringName.Renderer);/*+ " " +
-                    GL.GetString(StringName.Version);*/
-
-            GLControl_Resize(GLControl, EventArgs.Empty);
-
-            _mouseX = (int)(Width * 0.5);
-            _mouseY = (int)(Height * 0.5);
-            _isFirstMouse = true;
-
-            _Timer = new System.Timers.Timer(8.0f);
-            _Timer.Elapsed += Update;
-            _Timer.Start();
-
-            SubscribeEvents();
-            SetupTestScene();
-
-            _src = new int?(int.Parse(txtSource.Text));
-            _trg = new int?(int.Parse(txtTarget.Text));
-
-            
-        }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -108,13 +63,6 @@ namespace VertexBenderCS
 
         }
 
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            //Application.Idle -= Application_Idle;
-
-            base.OnClosing(e);
-        }
-
         public void SubscribeEvents()
         {
             GLControl.KeyDown += new KeyEventHandler(GLControl_KeyDown);
@@ -125,6 +73,7 @@ namespace VertexBenderCS
             GLControl.MouseMove += GLControl_MouseMove;
             GLControl.MouseWheel += GLControl_MouseWheel;
             //Application.Idle += Application_Idle;
+            
 
             menuImport.Click += MenuImport_Click;
 
@@ -139,8 +88,6 @@ namespace VertexBenderCS
             txtTarget.TextChanged += TxtTarget_TextChanged;
         }
 
-
-
         private void MenuImport_Click(object sender, EventArgs e)
         {
             var d = new OpenFileDialog();
@@ -148,85 +95,68 @@ namespace VertexBenderCS
             d.Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* ";
             if (d.ShowDialog() == DialogResult.OK)
             {
-                ////////// TEMP ///////
-                _objects.Clear();
-                _lines.Clear();
-                _samplePointRenderers.Clear();
-                _sampleCoords.Clear();
-                ///////////////////////
                 var v = d.FileName.Substring(d.FileName.Length - 4);
                 if (v.ToLower() == ".off")
                 {
+                    _SceneGraph.Clean();
                     var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName));
-                    _objects.Add(obj);
+                    _SceneGraph.AddObject(obj);
                 }
             }
         }
 
-        private void Render()
+        protected override void OnLoad(EventArgs e)
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.CullFace(CullFaceMode.Back);
+            base.OnLoad(e);
 
-            //Matrix4 model = Matrix4.CreateScale(50.0f);
-            //Matrix4 rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
-            //model = model * rotation;
-            Matrix4 model = Matrix4.Identity;
+            GL.ClearColor(Color.FromArgb(25, 25, 25));
+            GL.Enable(EnableCap.DepthTest);
 
-            foreach (var obj in _objects)
-            {
-                obj.Shader = _shader;
-                obj.Shader.Use();
-                obj.Shader.SetVec3("cameraPosition", _camera.Position);
-                obj.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, 0.0f);
-                obj.Shader.SetVec3("directLight.ambient", 0.25f, 0.25f, 0.25f);
-                obj.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.4f);
-                obj.Shader.SetVec3("directLight.specular", 0.1f, 0.1f, 0.1f);
-                obj.Shader.SetFloat("material.shineness", 2.0f);
-                obj.Shader.SetMat4("Model", model);
-                obj.Shader.SetMat4("View", _camera.View);
-                obj.Shader.SetMat4("Projection", _camera.Projection);
-                obj.Render(eRenderMode.shaded);
-            }
+            Text = "Vertex Bender Framework - " +
+                    //GL.GetString(StringName.Vendor) + " " +
+                    GL.GetString(StringName.Renderer);/*+ " " +
+                GL.GetString(StringName.Version);*/
 
-            for (int i = 0; i < _samplePointRenderers.Count; i++)
-            {
-                var obj = _samplePointRenderers[i];
-                //model = Matrix4.CreateScale(50.0f);
-                //rotation = Matrix4.CreateRotationX(-MathHelper.Pi / 2);
-                //model = Matrix4.CreateTranslation(_sampleCoords[i]) * rotation * model;
-                model = Matrix4.CreateTranslation(_sampleCoords[i]);
-
-                var color = new Vector4(_sampleCoords[i]);
-
-                obj.Shader = _wiredShader;
-                obj.Shader.Use();
-                obj.Shader.SetMat4("Model", model);
-                obj.Shader.SetMat4("View", _camera.View);
-                obj.Shader.SetMat4("Projection", _camera.Projection);
-                obj.Shader.SetVec4("Color", color);
-                obj.Shader.SetMat4("Model", model);
-                obj.Shader.SetMat4("View", _camera.View);
-                obj.Shader.SetMat4("Projection", _camera.Projection);
-                obj.Render(eRenderMode.shaded);
-            }
-
-            model = Matrix4.Identity;
-            foreach (var line in _lines)
-            {
-                line.Shader = _wiredShader;
-                line.Shader.Use();
-                line.Shader.SetMat4("Model", model);
-                line.Shader.SetMat4("View", _camera.View);
-                line.Shader.SetMat4("Projection", _camera.Projection);
-                line.Shader.SetVec4("Color", line.Color);
-                line.Render();
-            }
+            GLControl_Resize(GLControl, EventArgs.Empty);
 
 
-            GL.Flush();
-            GLControl.SwapBuffers();
+            GL.ClearColor(Color.FromArgb(25, 25, 25));
+            GL.Enable(EnableCap.DepthTest);
+
+            Text = "Vertex Bender Framework - " +
+                    //GL.GetString(StringName.Vendor) + " " +
+                    GL.GetString(StringName.Renderer) + " " +
+                    GL.GetString(StringName.Version);
+
+            GLControl_Resize(GLControl, EventArgs.Empty);
+
+            _mouseX = (int)(Width * 0.5);
+            _mouseY = (int)(Height * 0.5);
+            _isFirstMouse = true;
+
+            _Timer = new System.Timers.Timer(8.0f);
+            _Timer.Elapsed += Update;
+            _Timer.Start();
+
+            SubscribeEvents();
+            SetupScene();
+
+            _src = new int?(int.Parse(txtSource.Text));
+            _trg = new int?(int.Parse(txtTarget.Text));
+
+
+
+
         }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            //Application.Idle -= Application_Idle;
+
+            base.OnClosing(e);
+        }
+
+        #region GlControl Events
 
         private void GLControl_MouseWheel(object sender, MouseEventArgs e)
         {
@@ -310,7 +240,35 @@ namespace VertexBenderCS
             Render();
         }
 
-        Bitmap GrabScreenshot()
+        #endregion
+
+        private void SetupScene()
+        {
+            _SceneGraph = new SceneGraph();
+            _camera = new Camera(GLControl.Width, GLControl.Height);
+            _cameraController = new CameraController(_camera);
+
+            //Start with a model
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
+            _SceneGraph.AddObject(mesh);
+        }
+
+        private void Render()
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.CullFace(CullFaceMode.Back);
+
+            _SceneGraph.RenderAll(_camera);
+
+            GL.Flush();
+            GLControl.SwapBuffers();
+        }
+
+        // TEST REGION
+
+        #region TEST
+
+        private Bitmap GrabScreenshot()
         {
             Bitmap bmp = new Bitmap(GLControl.Width, GLControl.Height);
             System.Drawing.Imaging.BitmapData data =
@@ -321,87 +279,6 @@ namespace VertexBenderCS
             bmp.UnlockBits(data);
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
             return bmp;
-        }
-
-        // TEST REGION
-        private void SetupTestScene()
-        {
-            _objects = new List<MeshRenderer>();
-            _lines = new List<LineRenderer>();
-            _samplePointRenderers = new List<MeshRenderer>();
-            _sampleCoords = new List<Vector3>();
-
-            _camera = new Camera(GLControl.Width, GLControl.Height);
-            _cameraController = new CameraController(_camera);
-
-            int idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader);
-            int idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader);
-            _shader = ShaderBuilder.CreateShader("shaded", idv, idf);
-
-            idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader);
-            idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader);
-            _wiredShader = ShaderBuilder.CreateShader("wired", idv, idf);
-
-
-            _objects.Clear();
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"));
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"));
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off"));
-            _objects.Add(mesh);
-
-            //idv = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineVertex.glsl", ShaderType.VertexShader);
-            //idf = ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\smoothLineFragment.glsl", ShaderType.FragmentShader);
-            //_lineShader = ShaderBuilder.CreateShader("smoothLine", idv, idf);
-
-
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\MyDemo\0.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\weirdSphere.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\man.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off");
-
-
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\cat.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\centaur.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\gorilla.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man2.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man3.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\man4.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\neptune.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\2) use for the other tasks\woman.off");
-            //var mesh = Engine.Core.ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\examples\64.off");
-
-
-
-            //var lines = new List<Vector3>();
-            //int i = 0;
-            //var prime = mesh.Vertices[0];
-            //while (i < 100)
-            //{
-            //    prime = mesh.Vertices[prime.Verts[i % prime.Verts.Count]];
-            //    lines.Add(prime.Coord);
-            //    i++;
-            //}
-
-            //_mesh = mesh;
-            //var mesh = Engine.Core.ObjectLoader.CreateCube(0.1f);
-            //_meshRenderer = new MeshRenderer(mesh);
-            //_mesh.Shader = _shader;
-
-            //var a = Dijkstra.ConstructGraphFromMesh(mesh);
-
-            //Dijkstra.DijkstraArray(a, 0, 111, out int[] path);
-
-            //List<Vector3> lines = new List<Vector3>();
-
-            //for (int i = 0; i < path.Length; i++)
-            //{
-            //    lines.Add(mesh.Vertices[path[i]].Coord);
-            //}
-
-            //_lineRenderer = new LineRenderer(lines);
         }
 
         private int? _src = null;
@@ -432,9 +309,8 @@ namespace VertexBenderCS
         {
             if (_src.HasValue && _trg.HasValue)
             {
-                _lines.Clear();
                 Stopwatch watch = new Stopwatch();
-                var mesh = _objects[0].Mesh;
+                var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
 
                 Log.AppendText("\n starting: \n");
 
@@ -456,7 +332,7 @@ namespace VertexBenderCS
                 watch.Reset();
 
                 watch.Start();
-                var d2 = Algorithm.DijkstraMinHeap(_objects[0].Mesh, start, end, false);
+                var d2 = Algorithm.DijkstraMinHeap(mesh, start, end, false);
                 watch.Stop();
                 var a2 = watch.ElapsedMilliseconds;
                 Log.AppendText("Min Heap: " + d2.TargetDistance.ToString() + "   , elapsed: " + a2 + "\n");
@@ -464,7 +340,7 @@ namespace VertexBenderCS
                 watch.Reset();
 
                 watch.Start();
-                var d3 = Algorithm.DijkstraFibonacciHeap(_objects[0].Mesh, start, end, false);
+                var d3 = Algorithm.DijkstraFibonacciHeap(mesh, start, end, false);
                 watch.Stop();
                 var a3 = watch.ElapsedMilliseconds;
                 Log.AppendText("Fibonacci Heap: " + d3.TargetDistance.ToString() + "   , elapsed: " + a3);
@@ -477,16 +353,15 @@ namespace VertexBenderCS
 
                 for (int i = 0; i < d1.Path.Count - 1; i++)
                 {
-                    lines1.Add(_objects[0].Mesh.Vertices[d1.Path[i]].Coord);
-                    lines1.Add(_objects[0].Mesh.Vertices[d1.Path[i + 1]].Coord);
+                    lines1.Add(mesh.Vertices[d1.Path[i]].Coord);
+                    lines1.Add(mesh.Vertices[d1.Path[i + 1]].Coord);
                 }
 
                 for (int i = 0; i < d3.Path.Count - 1; i++)
                 {
-                    lines2.Add(_objects[0].Mesh.Vertices[d3.Path[i]].Coord);
-                    lines2.Add(_objects[0].Mesh.Vertices[d3.Path[i + 1]].Coord);
+                    lines2.Add(mesh.Vertices[d3.Path[i]].Coord);
+                    lines2.Add(mesh.Vertices[d3.Path[i + 1]].Coord);
                 }
-
 
                 var r1 = new LineRenderer(lines1);
                 r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -494,9 +369,9 @@ namespace VertexBenderCS
                 r2.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
                 var r3 = new LineRenderer(lines3);
                 r3.Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
-                _lines.Add(r1);
-                _lines.Add(r2);
-                _lines.Add(r3);
+                _SceneGraph.AddObject(r1);
+                _SceneGraph.AddObject(r2);
+                _SceneGraph.AddObject(r3);
 
             }
         }
@@ -506,7 +381,7 @@ namespace VertexBenderCS
             Stopwatch watch = new Stopwatch();
 
             watch.Start();
-            var matrix = Algorithm.CreateGeodesicDistanceMatrix(_objects[0].Mesh);
+            var matrix = Algorithm.CreateGeodesicDistanceMatrix((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
             ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
             watch.Stop();
             var a4 = watch.ElapsedMilliseconds;
@@ -517,26 +392,29 @@ namespace VertexBenderCS
         private void BtnFPS_Click(object sender, EventArgs e)
         {
             Stopwatch watch = new Stopwatch();
-            Graph g = new Graph(_objects[0].Mesh);
-            _samplePointRenderers.Clear();
+            Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
 
             watch.Start();
             var samples = Algorithm.FarthestPointSampling(g, 100);
             watch.Stop();
+                
             var a4 = watch.ElapsedMilliseconds;
-            Log.AppendText("\n output created" + ", elapsed: " + a4);
+            AppendLogSafe("\n output created" + ", elapsed: " + a4);
 
             for (int i = 0; i < samples.SampelIndices.Count; i++)
             {
-                MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
-                _sampleCoords.Add(samples.SamplePoints[i].Coord);
-                _samplePointRenderers.Add(obj);
+                MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
+                obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
+                obj.Transform.Position = samples.SamplePoints[i].Coord;
+                _SceneGraph.AddObject(obj);
             }
         }
 
         private void BtnGauss_Click(object sender, EventArgs e)
         {
-            var a = Algorithm.GaussianCurvature(_objects[0].Mesh);
+            //var a = Algorithm.GaussianCurvature(_objects[0].Mesh);
+            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
+            var a = Algorithm.GaussianCurvature(obj.Mesh);
             var max = a.Max();
             var min = a.Min();
             max -= min;
@@ -555,12 +433,13 @@ namespace VertexBenderCS
 
             }
 
-            _objects[0].SetColorBuffer(color);
+            obj.SetColorBuffer(color);
         }
 
         private void BtnAverageGeo_Click(object sender, EventArgs e)
         {
-            Graph g = new Graph(_objects[0].Mesh);
+            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
+            Graph g = new Graph(obj.Mesh);
             var a = Algorithm.AverageGeodesicDistance(g);
 
             float max = a.Max();
@@ -571,58 +450,53 @@ namespace VertexBenderCS
                 color[i] = ProcessOutputHandler.ColorPixelVector(a[i], max);
             }
 
-            _objects[0].SetColorBuffer(color);
+            obj.SetColorBuffer(color);
 
         }
 
         private void BtnIsoCurve_Click(object sender, EventArgs e)
         {
-            var graph = new Graph(_objects[0].Mesh);
+            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
+            var graph = new Graph(obj.Mesh);
             var samples = Algorithm.FarthestPointSampling(graph, 1);
 
             for (int i = 0; i < samples.SampelIndices.Count; i++)
             {
-                MeshRenderer obj = new MeshRenderer(ObjectLoader.CreateCube(0.05f));
-                _sampleCoords.Add(samples.SamplePoints[i].Coord);
-                _samplePointRenderers.Add(obj);
+                MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
+                gizmo.Transform.Position = samples.SamplePoints[i].Coord;
+                _SceneGraph.AddObject(gizmo);
             }
 
-            var output = Algorithm.IsoCurveSignature(_objects[0].Mesh, samples.SampelIndices[0], 40);
+            var output = Algorithm.IsoCurveSignature(obj.Mesh, samples.SampelIndices[0], 40);
 
             chartIsoCurve.Series[0].Points.Clear();
-            _lines.Clear();
 
             for (int i = 0; i < output.IsoCurveDistances.Length; i++)
             {
                 var line = new LineRenderer(output.IsoCurves[i]);
-                line.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-                _lines.Add(line);
+                _SceneGraph.AddObject(line);
+                line.Color = new Vector4(1, 0, 0, 1);
                 chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
             }
 
             chartIsoCurve.Show();
-
-            //using (var w = new StreamWriter(@"C:\users\ozgun\desktop\asd.csv"))
-            //{
-            //    for (int i = 0; i < output.IsoCurveDistances.Length ; i++)
-            //    {
-            //        var first = i;
-            //        var second = output.IsoCurveDistances[i];
-            //        var line = string.Format("{0},{1}", first, second);
-            //        w.WriteLine(line);
-            //        w.Flush();
-            //    }
-            //}
         }
 
-        [STAThread]
-        public static void Main()
+        delegate void SafeCallDelegate(string text);
+        private void AppendLogSafe(string text)
         {
-            using (MainWin example = new MainWin())
+            if (Log.InvokeRequired)
             {
-                example.ShowDialog();
+                var d = new SafeCallDelegate(AppendLogSafe);
+                Log.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                Log.AppendText(text);
             }
         }
+
+        #endregion
 
     }
 }

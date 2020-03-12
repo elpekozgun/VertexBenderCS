@@ -9,34 +9,9 @@ using OpenTK;
 
 namespace Engine.GLApi
 {
-    public enum eRenderMode : byte
-    {
-        shaded = 1,
-        wireFrame = 2,
-        pointCloud = 4
-    }
 
-    public struct GpuVertex
-    {
-        public Vector3 Coord;
-        public Vector3 Normal;
-        public Vector3 Color;
-
-        public static int Size
-        {
-            get
-            {
-                return Vector3.SizeInBytes * 3;
-            }
-        }
-    }
-
-    public struct GpuTexture
-    {
-
-    }
-
-    public class MeshRenderer : IDisposable, IRenderable
+    //TODO: Use this for multi same object rendering such as cubes in FarthestPointSampling.
+    public class InstanceRenderer : IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
@@ -50,9 +25,24 @@ namespace Engine.GLApi
         private int _VBO;
         private int _EBO;
 
-        public Mesh Mesh { get; set; }
+        public List<Mesh> Mesh { get; set; }
 
-        public Vector4 Color { get; set; }
+        private Vector3 _position;
+        public Vector3 Position
+        {
+            get
+            {
+                return _position;
+            }
+            set
+            {
+                _position = value;
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i].Coord += _position;
+                }
+            }
+        }
 
         public Transform Transform { get; set; }
 
@@ -80,25 +70,17 @@ namespace Engine.GLApi
             }
         }
 
-        public MeshRenderer(Mesh mesh)
+        public InstanceRenderer(List<Mesh> mesh)
         {
-            ExtractVertices(mesh);
+            ExtractVertices(mesh[0]);
             Setup();
             _initialized = true;
-            Mesh = mesh;
-            Transform = new Transform();
-            Shader = Shader.DefaultShader;
+            Mesh = new List<Mesh>();
         }
-
-        public MeshRenderer(Mesh mesh, Shader shader) : this(mesh)
-        {
-            Shader = shader;
-        }
-
 
         private void Setup()
         {
-            GL.GenVertexArrays(1,out _VAO);
+            GL.GenVertexArrays(1, out _VAO);
             GL.GenBuffers(1, out _VBO);
             GL.GenBuffers(1, out _EBO);
 
@@ -110,7 +92,7 @@ namespace Engine.GLApi
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * 4, indices, BufferUsageHint.StaticDraw);
 
-            
+
 
             //coord
             GL.EnableVertexAttribArray(0);
@@ -125,7 +107,7 @@ namespace Engine.GLApi
             GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
 
             GL.BindVertexArray(0);
-                        
+
         }
 
         public void SetColorBuffer(Vector3[] color)
@@ -139,20 +121,13 @@ namespace Engine.GLApi
 
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
-            Shader.Use();
-            Shader.SetMat4("Model", Transform.ModelMatrix);
-            Shader.SetMat4("View", cam.View);
-            Shader.SetMat4("Projection", cam.Projection);
-            Shader.SetVec4("Color", Color);
-
-
             GL.BindVertexArray(_VAO);
 
-            if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
+            if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
                 GL.PolygonMode(MaterialFace.Back, PolygonMode.Fill);
             }
-            if((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
+            if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
                 GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
                 GL.PolygonOffset(1.0f, 1.0f);

@@ -70,6 +70,7 @@ namespace Engine.Core
             V2 = v2;
             V3 = v3;
         }
+        
     }
 
     public class Mesh
@@ -150,13 +151,7 @@ namespace Engine.Core
             }
         }
 
-        /// <summary>
-        /// returns the angle in radians
-        /// </summary>
-        /// <param name="v1"></param>
-        /// <param name="v2"></param>
-        /// <param name="v3"></param>
-        /// <returns></returns>
+
         private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
         {
 

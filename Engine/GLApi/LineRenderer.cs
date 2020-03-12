@@ -22,19 +22,33 @@ namespace Engine.GLApi
         private Vector3[] _vertices;
 
         public Vector4 Color { get; set; }
+        public Transform Transform { get; set; }
+        
 
         public LineRenderer(List<Vector3> vertices)
         {
             _vertices = vertices.ToArray();
             Setup();
+            Shader = Shader.DefaultUnlitShader;
+            Transform = new Transform();
+            Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
         }
 
-        public void Render(eRenderMode mode = eRenderMode.shaded)
+        public LineRenderer(List<Vector3> vertices, Shader shader) : this(vertices)
         {
-            //if (!RenderWithDepth)
-            //{
-            //    GL.Disable(EnableCap.DepthTest);
-            //}
+            Shader = shader;
+        }
+
+
+        public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
+        {
+            Shader.Use();
+            Shader.SetMat4("Model", Transform.ModelMatrix);
+            Shader.SetMat4("View", cam.View);
+            Shader.SetMat4("Projection", cam.Projection);
+            Shader.SetVec4("Color", Color);
+
+
             GL.CullFace(CullFaceMode.FrontAndBack);
             GL.BindVertexArray(_VAO);
 

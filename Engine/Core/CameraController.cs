@@ -91,14 +91,14 @@ namespace Engine.Core
             _yaw += xoffset;
             _pitch += yoffset;
 
-            if (_pitch > 70.0f)
-            {
-                _pitch = 70.0f;
-            }
-            if (_pitch < -70.0f)
-            {
-                _pitch = -70.0f;
-            }
+            //if (_pitch > 70.0f)
+            //{
+            //    _pitch = 70.0f;
+            //}
+            //if (_pitch < -70.0f)
+            //{
+            //    _pitch = -70.0f;
+            //}
 
             //Quaternion q1 = new Quaternion(yoffset, -xoffset, 0);
 

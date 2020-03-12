@@ -63,59 +63,25 @@ namespace Engine.Core
             return mesh;
         }
 
-        public static Mesh CreateCube(float size)
+        public static Mesh LoadObj(string path)
         {
-            Mesh cube = new Mesh();
-
-            float[] flb = new float[3] { 0, 0, 0 };
-            float deltaX = 0;
-            float deltaY = 0;
-            float deltaZ = 0;
-
-            for (int v = 0; v < 8; v++)
-            {
-                switch (v)
-                {
-                    case 1:
-                        deltaX = size;
-                        break;
-                    case 2:
-                        deltaZ = -size;
-                        break;
-                    case 3:
-                        deltaX = 0;
-                        break;
-                    case 4:
-                        deltaZ = 0;
-                        deltaY = size;
-                        break;
-                    case 5:
-                        deltaX = size;
-                        break;
-                    case 6:
-                        deltaZ = -size;
-                        break;
-                    default:
-                        deltaX = 0; ;
-                        break;
-                }
-                cube.AddVertex(flb[0] + deltaX, flb[1] + deltaY, flb[2] + deltaZ);
-            }
-
-            cube.AddTriangle(0, 2, 1);
-            cube.AddTriangle(0, 3, 2);
-            cube.AddTriangle(1, 2, 5);
-            cube.AddTriangle(2, 6, 5);
-            cube.AddTriangle(2, 3, 6);
-            cube.AddTriangle(3, 7, 6);
-            cube.AddTriangle(3, 4, 7);
-            cube.AddTriangle(3, 0, 4);
-            cube.AddTriangle(4, 5, 6);
-            cube.AddTriangle(4, 6, 7);
-            cube.AddTriangle(0, 1, 5);
-            cube.AddTriangle(0, 5, 4);
-
-            return cube;
+            return null;
         }
+
+        public static Mesh LoadDae(string path)
+        {
+            return null;
+        }
+
+        public static Mesh LoadVol(string path)
+        {
+            return null;
+        }
+
+        public static Mesh LoadDicom(string path)
+        {
+            return null;
+        }
+
     }
 }
