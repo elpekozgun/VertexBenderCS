@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace VertexBenderCS
+namespace VertexBenderCS.Forms
 {
     static class Program
     {

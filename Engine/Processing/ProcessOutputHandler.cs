@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace Engine.Processing
             return Color.FromArgb(255, 0, 0);
         }
 
-        public static OpenTK.Vector3 ColorPixelVector(float value, float max)
+        public static Vector3 ColorPixelVector(float value, float max)
         {
             var ratio = value / max;
 
@@ -47,6 +48,29 @@ namespace Engine.Processing
             if (ratio < 0.75f)
             {
                 return new OpenTK.Vector3(ratio , 1.0f, 0.0f);
+            }
+            if (ratio <= 1.0f)
+            {
+                return new OpenTK.Vector3(1.0f, 1 - ratio, 0.0f);
+            }
+            return new OpenTK.Vector3(1.0f, 0.0f, 0.0f);
+        }
+
+        public static Vector3 ColorPixelVectorAGD(float value, float max)
+        {
+            var ratio = value / max;
+
+            if (ratio < 0.5f)
+            {
+                return new OpenTK.Vector3(0.0f, ratio, 1.0f);
+            }
+            if (ratio < 0.5f)
+            {
+                return new OpenTK.Vector3(0.0f, 1.0f, 1 - ratio);
+            }
+            if (ratio < 0.75f)
+            {
+                return new OpenTK.Vector3(ratio, 1.0f, 0.0f);
             }
             if (ratio <= 1.0f)
             {

@@ -9,15 +9,40 @@ using System.Diagnostics;
 
 namespace Engine.Processing
 {
-
-
+    public enum eShortestPathMethod : byte
+    {
+        Array = 0x1,
+        MinHeap = 0x2,
+        Fibonacci= 0x4,
+        Astar = 0x8
+    }
 
     public static class Algorithm
     {
+        private static Stopwatch _Watch = new Stopwatch();
+
+        public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type, Action<string> Callback)
+        {
+            switch (type)
+            {
+                case eShortestPathMethod.Array:
+                    return DijkstraArray(mesh, src, target);
+                case eShortestPathMethod.MinHeap:
+                    return DijkstraMinHeap(mesh, src, target);
+                case eShortestPathMethod.Fibonacci:
+                    return DijkstraFibonacciHeap(mesh, src, target);
+                case eShortestPathMethod.Astar:
+                    return AStarMinHeap(mesh, src, target);
+                default:
+                    return DijkstraMinHeap(mesh, src, target);
+            }
+        }
+
         public static ShortestPathOutput DijkstraArray(Mesh mesh, int src, int target)
         {
             var graph = ConstructGraphFromMesh(mesh);
-            return DijkstraArray(graph, src, target);
+            var a =  DijkstraArray(graph, src, target);
+            return a;
         }
         
         public static ShortestPathOutput DijkstraFibonacciHeap(Mesh mesh, int src, int target, bool earlyTerminate = false)
@@ -38,7 +63,6 @@ namespace Engine.Processing
             return AStarMinHeap(graph, src, target);
         }
 
-
         public static float[] DijkstraFibonacciHeap(Mesh mesh, int src)
         {
             var graph = new Graph(mesh);
@@ -51,7 +75,7 @@ namespace Engine.Processing
             return DijkstraMinHeap(graph, src);
         }
         
-        public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount)
+        public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount, Action<int, int> UpdateProgress)
         {
             var distances = DijkstraMinHeap(graph, 0);
             var allDistances = new HashSet<float[]>
@@ -90,8 +114,10 @@ namespace Engine.Processing
 
                 farthestPoints.Add(graph.Nodes[u.id]);
                 farthestIndices.Add(graph.Nodes[u.id].Id);
+                UpdateProgress(i, sampleCount);
             }
 
+            UpdateProgress(sampleCount,sampleCount);
             return new SampleOutput(farthestPoints, farthestIndices);
         }
 
@@ -115,20 +141,19 @@ namespace Engine.Processing
             return Curvatures;
         }
 
-        public static List<float> AverageGeodesicDistance(Graph graph)
+        public static float[] AverageGeodesicDistance(Graph graph, Action<int, int> updateProgress)
         {
-            List<float> distances = new List<float>();
+            float[] distances = new float[graph.Nodes.Count];
+            
+            var samples = FarthestPointSampling(graph, 100, updateProgress);
 
-            for (int i = 0; i < graph.Nodes.Count; i++)
+            for (int i = 0; i < samples.SampleIndices.Count; i++)
             {
-                float sum = 0.0f;
-                var allDist = DijkstraMinHeap(graph, i);
-                for (int j = 0; j < allDist.Length; j++)
+                var dist = DijkstraMinHeap(graph, samples.SampleIndices[i]);
+                for (int j = 0; j < dist.Length; j++)
                 {
-                    sum += allDist[j];
+                    distances[j] += (dist[j] / samples.SamplePoints.Count);
                 }
-                sum /= allDist.Length;
-                distances.Add(sum);
             }
 
             return distances;
@@ -280,8 +305,6 @@ namespace Engine.Processing
             return CreateGeodesicDistanceMatrix(graph, isParallel);
         }
         
-        
-        
         private static ShortestPathOutput AStarMinHeap(Graph graph, int src, int target)
         {
             var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
@@ -380,7 +403,7 @@ namespace Engine.Processing
 
             return matrix;
         }
-        
+
         private static ShortestPathOutput DijkstraArray(List<List<KeyValuePair<int, float>>> graph, int src, int target, bool earlyTerminate = false)
         {
             int n = graph.Count;
@@ -447,7 +470,7 @@ namespace Engine.Processing
 
             return new ShortestPathOutput(shortestDists[target], path);
         }
-        
+
         private static ShortestPathOutput DijkstraFibonacciHeap(Graph graph, int src, int target, bool earlyTerminate = false)
         {
             var que = new FibonacciHeap<HeapNode, float>(PriorityQueueType.Minimum);
@@ -620,22 +643,6 @@ namespace Engine.Processing
             return retVal;
         }
 
-    }
-
-    public class HeapNode 
-    {
-        public int id;
-        public int PrevId { get; set; }
-
-        public List<KeyValuePair<int, float>> Neighbors;
-        public float Priority;
-
-        public HeapNode(int id, List<KeyValuePair<int, float>> neighbors, float priority)
-        {
-            this.id = id;
-            Neighbors = neighbors;
-            Priority = priority;
-        }
     }
 
 }

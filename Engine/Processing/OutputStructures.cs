@@ -29,12 +29,12 @@ namespace Engine.Processing
     public struct SampleOutput
     {
         public List<GraphNode> SamplePoints;
-        public List<int> SampelIndices;
+        public List<int> SampleIndices;
 
         public SampleOutput(List<GraphNode> samplePoints, List<int> sampelIndices)
         {
             SamplePoints = samplePoints;
-            SampelIndices = sampelIndices;
+            SampleIndices = sampelIndices;
         }
     }
 

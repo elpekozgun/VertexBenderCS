@@ -67,11 +67,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainWin.cs">
+    <Compile Include="Forms\CustomColorTable.cs" />
+    <Compile Include="Forms\CustomToolStripRenderer.cs" />
+    <Compile Include="Forms\MainWin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainWin.Designer.cs">
+    <Compile Include="Forms\MainWin.Designer.cs">
       <DependentUpon>MainWin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmShortestPath.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmShortestPath.Designer.cs">
+      <DependentUpon>frmShortestPath.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -85,8 +93,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="MainWin.resx">
+    <EmbeddedResource Include="Forms\MainWin.resx">
       <DependentUpon>MainWin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmShortestPath.resx">
+      <DependentUpon>frmShortestPath.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

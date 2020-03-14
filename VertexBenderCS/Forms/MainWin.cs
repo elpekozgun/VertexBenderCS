@@ -10,14 +10,46 @@ using System.Collections.Generic;
 using Engine.Processing;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Runtime.InteropServices;
+using VertexBenderCS.Forms;
 
-namespace VertexBenderCS
+namespace VertexBenderCS.Forms
 {
+
     public partial class MainWin : Form
     {
+        //[DllImport("User32.dll", CharSet = CharSet.Auto)]
+        //public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        //[DllImport("User32.dll")]
+        //private static extern IntPtr GetWindowDC(IntPtr hWnd);
+
+        //protected override void WndProc(ref Message m)
+        //{
+        //    base.WndProc(ref m);
+        //    const int WM_NCPAINT = 0x85;
+        //    if (m.Msg == WM_NCPAINT)
+        //    {
+        //        IntPtr hdc = GetWindowDC(m.HWnd);
+        //        if ((int)hdc != 0)
+        //        {
+        //            Graphics g = Graphics.FromHdc(hdc);
+        //            g.FillRectangle(new SolidBrush(Color.FromArgb(255,255,50,50)), new Rectangle(0, 0, 4800, 4800));
+        //            g.Flush();
+        //            ReleaseDC(m.HWnd, hdc);
+        //        }
+        //    }
+        //}
+
         private Camera              _camera;
         private CameraController    _cameraController;
         private SceneGraph          _SceneGraph;
+
+
+        private ToolStripProgressBar    _progressBar;
+        private frmShortestPath         _frmShortestPath;
+
 
         private bool                _isFirstMouse;
         private float               _mouseX;
@@ -72,20 +104,25 @@ namespace VertexBenderCS
             GLControl.MouseDown += GLControl_MouseDown;
             GLControl.MouseMove += GLControl_MouseMove;
             GLControl.MouseWheel += GLControl_MouseWheel;
-            //Application.Idle += Application_Idle;
             
 
-            menuImport.Click += MenuImport_Click;
+            menuImportOff.Click += MenuImport_Click;
 
-            btnGeodesicMatrix.Click += BtnGeodesicMatrix_Click;
-            btnDijkstra.Click += BtnDijkstra_Click;
-            btnFPS.Click += BtnFPS_Click;
-            btnGauss.Click += BtnGauss_Click;
-            btnAverageGeo.Click += BtnAverageGeo_Click;
-            btnIsoCurve.Click += BtnIsoCurve_Click;
+            menuProcessGM.Click += BtnGeodesicMatrix_Click;
+            menuProcessSP.Click += BtnDijkstra_Click;
+            menuProcessFPS.Click += BtnFPS_Click;
+            menuProcessGC.Click += BtnGauss_Click;
+            menuProcessAGD.Click += BtnAverageGeo_Click;
+            menuProcessIso.Click += BtnIsoCurve_Click;
 
-            txtSource.TextChanged += TxtSource_TextChanged;
-            txtTarget.TextChanged += TxtTarget_TextChanged;
+            processWorker.WorkerReportsProgress = true;
+            processWorker.WorkerSupportsCancellation = true;
+            processWorker.DoWork += ProcessWorker_DoWork;
+            processWorker.ProgressChanged += ProcessWorker_ProgressChanged;
+            processWorker.RunWorkerCompleted += ProcessWorker_RunWorkerCompleted;
+
+            _frmShortestPath.OnInputSelected += DijkstraOutput;
+
         }
 
         private void MenuImport_Click(object sender, EventArgs e)
@@ -108,6 +145,12 @@ namespace VertexBenderCS
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+
+            statusBar.BackColor = Color.FromArgb(50, 50, 50);
+            statusBar.ForeColor = Color.MediumAquamarine;
+            mainMenu.BackColor = Color.FromArgb(50, 50, 50);
+            mainMenu.Renderer = new ToolStripProfessionalRenderer(new CustomColorTable());
+            toolBar.Renderer = new CustomToolStripRenderer();
 
             GL.ClearColor(Color.FromArgb(25, 25, 25));
             GL.Enable(EnableCap.DepthTest);
@@ -138,13 +181,12 @@ namespace VertexBenderCS
             _Timer.Elapsed += Update;
             _Timer.Start();
 
+            _progressBar = statusBar.Items["statusProgress"] as ToolStripProgressBar;
+            _frmShortestPath = new frmShortestPath();
+            
+
             SubscribeEvents();
             SetupScene();
-
-            _src = new int?(int.Parse(txtSource.Text));
-            _trg = new int?(int.Parse(txtTarget.Text));
-
-
 
 
         }
@@ -191,7 +233,7 @@ namespace VertexBenderCS
             _mouseX = e.X;
             _mouseY = e.Y;
 
-            statusBar.Text = "X: " + _camera.Position.X + "\n" + "Y: " + _camera.Position.Y + "Z: " + _camera.Position.Z;
+            //_coordinateLabel.Text = "X: " + _camera.Position.X + "\n" + "Y: " + _camera.Position.Y + "Z: " + _camera.Position.Z;
             //statusBar.Text = KeyState.ToString();
         }
 
@@ -251,6 +293,17 @@ namespace VertexBenderCS
             //Start with a model
             var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
             _SceneGraph.AddObject(mesh);
+            
+            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes[1].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes[0].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes[1].Nodes.Add(mesh.Shader.Name);
+            treeView1.Nodes[0].Nodes[1].Nodes.Add(mesh.Shader.Name);
         }
 
         private void Render()
@@ -258,10 +311,55 @@ namespace VertexBenderCS
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.CullFace(CullFaceMode.Back);
 
-            _SceneGraph.RenderAll(_camera);
+            lock(GLControl)
+            {
+                _SceneGraph.RenderAll(_camera);
+            }
 
             GL.Flush();
             GLControl.SwapBuffers();
+        }
+
+        private void ProcessWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled == true)
+            {
+                Log.Text = "cancelled";
+            }
+            else if (e.Error != null)
+            {
+                Log.Text = "Error";
+            }
+            else
+            {
+                Log.Text = "Completed";
+            }
+        }
+
+        private void ProcessWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            UpdateProgress(e.ProgressPercentage, 100);
+        }
+
+        private void ProcessWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+
+            if (worker.CancellationPending == true)
+            {
+                e.Cancel = true;
+            }
+            else
+            {
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
+                var matrix = Algorithm.CreateGeodesicDistanceMatrix((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
+                ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
+                watch.Stop();
+                var a4 = watch.ElapsedMilliseconds;
+                //Log.AppendText("output created" + ", elapsed: " + a4);
+            }
+
         }
 
         // TEST REGION
@@ -305,75 +403,112 @@ namespace VertexBenderCS
             }
         }
 
+        private void UpdateProgress(int progress,int max)
+        {
+            _progressBar.Value = progress;
+            _progressBar.Maximum = max;
+        }
+
+        private void necati(string asdasd)
+        {
+
+        }
+
+        private void DijkstraOutput(List<ShortestPathOutput> output)
+        {
+            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
+
+            List<Vector3> lines1 = new List<Vector3>();
+            for (int i = 0; i < output[0].Path.Count - 1; i++)
+            {
+                lines1.Add(mesh.Vertices[output[0].Path[i]].Coord);
+                lines1.Add(mesh.Vertices[output[0].Path[i + 1]].Coord);
+            }
+
+            var r1 = new LineRenderer(lines1);
+            r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+            _SceneGraph.AddObject(r1);
+        }
+
         private void BtnDijkstra_Click(object sender, EventArgs e)
         {
-            if (_src.HasValue && _trg.HasValue)
-            {
-                Stopwatch watch = new Stopwatch();
-                var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
+            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
+            _frmShortestPath.Mesh = mesh;
+            _frmShortestPath.Show();
 
-                Log.AppendText("\n starting: \n");
 
-                var start = _src.Value;
-                var end = _trg.Value;
 
-                //watch.Start();
-                //var d1 = Algorithm.DijkstraArray(mesh, start, end);
-                //watch.Stop();
-                //var a1 = watch.ElapsedMilliseconds;
-                //Log.AppendText("Array: " + d1.TargetDistance.ToString() + "   , elapsed: " + a1 + "\n");
 
-                watch.Start();
-                var d1 = Algorithm.AStarMinHeap(mesh, start, end);
-                watch.Stop();
-                var a1 = watch.ElapsedMilliseconds;
-                Log.AppendText("AStar: " + d1.TargetDistance.ToString() + "   , elapsed: " + a1 + "\n");
+            //if (_src.HasValue && _trg.HasValue)
+            //{
+            //    Stopwatch watch = new Stopwatch();
+            //    var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
 
-                watch.Reset();
+            //    Log.AppendText("\n starting: \n");
 
-                watch.Start();
-                var d2 = Algorithm.DijkstraMinHeap(mesh, start, end, false);
-                watch.Stop();
-                var a2 = watch.ElapsedMilliseconds;
-                Log.AppendText("Min Heap: " + d2.TargetDistance.ToString() + "   , elapsed: " + a2 + "\n");
+            //    var start = _src.Value;
+            //    var end = _trg.Value;
 
-                watch.Reset();
+            //    watch.Start();
+            //    var d1 = Algorithm.DijkstraArray(mesh, start, end);
+            //    watch.Stop();
+            //    var a1 = watch.ElapsedMilliseconds;
+            //    Log.AppendText("\nArray: " + d1.TargetDistance.ToString() + "   , elapsed: " + a1 + "\n");
 
-                watch.Start();
-                var d3 = Algorithm.DijkstraFibonacciHeap(mesh, start, end, false);
-                watch.Stop();
-                var a3 = watch.ElapsedMilliseconds;
-                Log.AppendText("Fibonacci Heap: " + d3.TargetDistance.ToString() + "   , elapsed: " + a3);
+            //    watch.Reset();
 
-                watch.Reset();
 
-                List<Vector3> lines1 = new List<Vector3>();
-                List<Vector3> lines2 = new List<Vector3>();
-                List<Vector3> lines3 = new List<Vector3>();
+            //    watch.Start();
+            //    var d2 = Algorithm.AStarMinHeap(mesh, start, end);
+            //    watch.Stop();
+            //    var a2 = watch.ElapsedMilliseconds;
+            //    Log.AppendText("\nAStar: " + d2.TargetDistance.ToString() + "   , elapsed: " + a2 + "\n");
 
-                for (int i = 0; i < d1.Path.Count - 1; i++)
-                {
-                    lines1.Add(mesh.Vertices[d1.Path[i]].Coord);
-                    lines1.Add(mesh.Vertices[d1.Path[i + 1]].Coord);
-                }
+            //    watch.Reset();
 
-                for (int i = 0; i < d3.Path.Count - 1; i++)
-                {
-                    lines2.Add(mesh.Vertices[d3.Path[i]].Coord);
-                    lines2.Add(mesh.Vertices[d3.Path[i + 1]].Coord);
-                }
+            //    watch.Start();
+            //    var d3 = Algorithm.DijkstraMinHeap(mesh, start, end, false);
+            //    watch.Stop();
+            //    var a3 = watch.ElapsedMilliseconds;
+            //    Log.AppendText("\nMin Heap: " + d3.TargetDistance.ToString() + "   , elapsed: " + a3 + "\n");
 
-                var r1 = new LineRenderer(lines1);
-                r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-                var r2 = new LineRenderer(lines2);
-                r2.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                var r3 = new LineRenderer(lines3);
-                r3.Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
-                _SceneGraph.AddObject(r1);
-                _SceneGraph.AddObject(r2);
-                _SceneGraph.AddObject(r3);
+            //    watch.Reset();
 
-            }
+            //    watch.Start();
+            //    var d4 = Algorithm.DijkstraFibonacciHeap(mesh, start, end, false);
+            //    watch.Stop();
+            //    var a4 = watch.ElapsedMilliseconds;
+            //    Log.AppendText("\nFibonacci Heap: " + d4.TargetDistance.ToString() + "   , elapsed: " + a4);
+
+            //    watch.Reset();
+
+            //    List<Vector3> lines1 = new List<Vector3>();
+            //    List<Vector3> lines2 = new List<Vector3>();
+            //    List<Vector3> lines3 = new List<Vector3>();
+
+            //    for (int i = 0; i < d1.Path.Count - 1; i++)
+            //    {
+            //        lines1.Add(mesh.Vertices[d1.Path[i]].Coord);
+            //        lines1.Add(mesh.Vertices[d1.Path[i + 1]].Coord);
+            //    }
+
+            //    for (int i = 0; i < d3.Path.Count - 1; i++)
+            //    {
+            //        lines2.Add(mesh.Vertices[d3.Path[i]].Coord);
+            //        lines2.Add(mesh.Vertices[d3.Path[i + 1]].Coord);
+            //    }
+
+            //    var r1 = new LineRenderer(lines1);
+            //    r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+            //    var r2 = new LineRenderer(lines2);
+            //    r2.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+            //    var r3 = new LineRenderer(lines3);
+            //    r3.Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+            //    _SceneGraph.AddObject(r1);
+            //    _SceneGraph.AddObject(r2);
+            //    _SceneGraph.AddObject(r3);
+
+            //}
         }
 
         private void BtnGeodesicMatrix_Click(object sender, EventArgs e)
@@ -395,24 +530,42 @@ namespace VertexBenderCS
             Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
 
             watch.Start();
-            var samples = Algorithm.FarthestPointSampling(g, 100);
+            var samples = Algorithm.FarthestPointSampling(g, 100, UpdateProgress);
             watch.Stop();
-                
+
             var a4 = watch.ElapsedMilliseconds;
             AppendLogSafe("\n output created" + ", elapsed: " + a4);
 
-            for (int i = 0; i < samples.SampelIndices.Count; i++)
+            for (int i = 0; i < samples.SampleIndices.Count; i++)
             {
                 MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
                 obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
                 obj.Transform.Position = samples.SamplePoints[i].Coord;
                 _SceneGraph.AddObject(obj);
             }
+            
+
+            //Stopwatch watch = new Stopwatch();
+            //Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
+
+            //watch.Start();
+            //var samples = Algorithm.FarthestPointSampling(g, 100, UpdateProgress);
+            //watch.Stop();
+                
+            //var a4 = watch.ElapsedMilliseconds;
+            //AppendLogSafe("\n output created" + ", elapsed: " + a4);
+
+            //for (int i = 0; i < samples.SampleIndices.Count; i++)
+            //{
+            //    MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
+            //    obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
+            //    obj.Transform.Position = samples.SamplePoints[i].Coord;
+            //    _SceneGraph.AddObject(obj);
+            //}
         }
 
         private void BtnGauss_Click(object sender, EventArgs e)
         {
-            //var a = Algorithm.GaussianCurvature(_objects[0].Mesh);
             var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
             var a = Algorithm.GaussianCurvature(obj.Mesh);
             var max = a.Max();
@@ -440,11 +593,11 @@ namespace VertexBenderCS
         {
             var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
             Graph g = new Graph(obj.Mesh);
-            var a = Algorithm.AverageGeodesicDistance(g);
+            var a = Algorithm.AverageGeodesicDistance(g, UpdateProgress);
 
             float max = a.Max();
 
-            var color = new Vector3[a.Count];
+            var color = new Vector3[a.Length];
             for (int i = 0; i < color.Length; i++)
             {
                 color[i] = ProcessOutputHandler.ColorPixelVector(a[i], max);
@@ -458,16 +611,16 @@ namespace VertexBenderCS
         {
             var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
             var graph = new Graph(obj.Mesh);
-            var samples = Algorithm.FarthestPointSampling(graph, 1);
+            var samples = Algorithm.FarthestPointSampling(graph, 1, UpdateProgress);
 
-            for (int i = 0; i < samples.SampelIndices.Count; i++)
+            for (int i = 0; i < samples.SampleIndices.Count; i++)
             {
                 MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
                 gizmo.Transform.Position = samples.SamplePoints[i].Coord;
                 _SceneGraph.AddObject(gizmo);
             }
 
-            var output = Algorithm.IsoCurveSignature(obj.Mesh, samples.SampelIndices[0], 40);
+            var output = Algorithm.IsoCurveSignature(obj.Mesh, samples.SampleIndices[0], 40);
 
             chartIsoCurve.Series[0].Points.Clear();
 
@@ -499,4 +652,5 @@ namespace VertexBenderCS
         #endregion
 
     }
+
 }
