@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Runtime.InteropServices;
 using VertexBenderCS.Forms;
+using System.IO;
 
 namespace VertexBenderCS.Forms
 {
@@ -53,7 +54,9 @@ namespace VertexBenderCS.Forms
         private float               _mouseX;
         private float               _mouseY;
         private System.Timers.Timer _Timer;
-        private readonly object RenderLock = new object();
+
+        private MeshRenderer            _activeMesh;
+        private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
 
         public MainWin()
         {
@@ -103,16 +106,25 @@ namespace VertexBenderCS.Forms
             GLControl.MouseMove += GLControl_MouseMove;
             GLControl.MouseWheel += GLControl_MouseWheel;
             
-
             menuImportOff.Click += MenuImport_Click;
 
-            menuProcessSP.Click += BtnDijkstra_Click;
-            menuProcessGC.Click += BtnGauss_Click;
-            menuProcessDescriptor.Click += BtnDescriptor_Click;
+            menuProcessSP.Click += menuProcessSP_Click;
+            menuProcessGC.Click += menuProcessGC_Click;
+            menuProcessDescriptor.Click += menuProcessDescriptor_Click;
+            menuExit.Click += MenuExit_Click;
+            menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
 
             _Logger.OnItemLogged += Logger_OnItemLogged;
             _Logger.OnLogCleaned += Logger_OnLogCleaned;
+
+            sceneGraphTree.AfterSelect += SceneGraphTree_AfterSelect;
+            sceneGraphTree.KeyDown += SceneGraphTree_KeyDown;
+            _SceneGraph.OnItemAdded += SceneGraph_OnItemAdded;
+            _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
+            _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
+
+
 
         private void Logger_OnLogCleaned(string obj)
         {
@@ -135,8 +147,12 @@ namespace VertexBenderCS.Forms
                 var v = d.FileName.Substring(d.FileName.Length - 4);
                 if (v.ToLower() == ".off")
                 {
-                    _SceneGraph.Clean();
-                    var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName));
+                    var split = d.FileName.Split(new char[] { '\\'});
+                    var name = split[split.Length - 1];
+
+                    //_SceneGraph.Clean();
+                    var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
+                    sceneGraphTree.SelectedNode = null;
                     _SceneGraph.AddObject(obj);
                 }
             }
@@ -183,10 +199,15 @@ namespace VertexBenderCS.Forms
 
             _frmProcess = null;
             _Logger = new Logger();
-
+            _SceneGraph = new SceneGraph();
+            _camera = new Camera(GLControl.Width, GLControl.Height);
+            _cameraController = new CameraController(_camera);
+            _IsoCurveOutputs = new Dictionary<Transform, IsoCurveOutput>();
+            
+            InitTransformPanel();
             SubscribeEvents();
-            SetupScene();
-
+            
+            //SetupScene();
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -280,27 +301,216 @@ namespace VertexBenderCS.Forms
 
         #endregion
 
-        private void SetupScene()
-        {
-            _SceneGraph = new SceneGraph();
-            _camera = new Camera(GLControl.Width, GLControl.Height);
-            _cameraController = new CameraController(_camera);
+        #region Scene Graph
 
-            //Start with a model
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\man0.off"));
-            _SceneGraph.AddObject(mesh);
-            
-            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes[1].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes[0].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes[1].Nodes.Add(mesh.Shader.Name);
-            treeView1.Nodes[0].Nodes[1].Nodes.Add(mesh.Shader.Name);
+        private void SceneGraph_OnSceneCleared()
+        {
+            sceneGraphTree.Nodes.Clear();
         }
+
+        private void SceneGraph_OnItemDeleted(Transform obj)
+        {
+            var deletionNode = GetNodeFromTree(obj, (SceneNode)sceneGraphTree.SelectedNode);
+            if (deletionNode != null)
+            {
+                deletionNode.Remove();
+            }
+        }
+
+        private SceneNode GetNodeFromTree(Transform obj, SceneNode Parent)
+        {
+            if (obj == Parent.Transform)
+            {
+                return Parent;
+            }
+            foreach (SceneNode node in Parent.Nodes)
+            {
+                if (node.Transform == obj)
+                {
+                    return GetNodeFromTree(obj, node);
+                }
+            }
+            return null;
+        }
+
+        private void SceneGraph_OnItemAdded(Transform obj)
+        {
+            var selectedNode = sceneGraphTree.SelectedNode;
+            if (selectedNode == null)
+            {
+                sceneGraphTree.Nodes.Add(new SceneNode(obj));
+            }
+            else
+            {
+                sceneGraphTree.SelectedNode.Nodes.Add(new SceneNode(obj));
+            }
+        }
+
+        private void SceneGraphTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            var item = (e.Node as SceneNode).Transform;
+            if (item is MeshRenderer)
+            {
+                _activeMesh = item as MeshRenderer;
+
+                numericScaleX.ValueChanged -= NumericScale_ValueChanged;
+                numericScaleY.ValueChanged -= NumericScale_ValueChanged;
+                numericScaleZ.ValueChanged -= NumericScale_ValueChanged;
+
+                numericPosX.ValueChanged -= NumericPos_ValueChanged;
+                numericPosY.ValueChanged -= NumericPos_ValueChanged;
+                numericPosZ.ValueChanged -= NumericPos_ValueChanged;
+
+                numericRotX.ValueChanged -= NumericRot_ValueChanged;
+                numericRotY.ValueChanged -= NumericRot_ValueChanged;
+                numericRotZ.ValueChanged -= NumericRot_ValueChanged;
+
+                transformPanel.Visible = true;
+                labelTransform.Text = _activeMesh.Name;
+                numericPosX.Value = new decimal(_activeMesh.Position.X);
+                numericPosY.Value = new decimal(_activeMesh.Position.Y);
+                numericPosZ.Value = new decimal(_activeMesh.Position.Z);
+
+                //Quaternion to Euler angles.
+                var q = _activeMesh.Rotation;
+                var eX = Math.Atan2(-2 * (q.Y * q.Z - q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z);
+                var eY = Math.Asin(2 * (q.X * q.Z + q.W * q.Y));
+                var eZ = Math.Atan2(-2 * (q.X * q.Y - q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z);
+
+                numericRotX.Value = new decimal(MathHelper.RadiansToDegrees(eX));
+                numericRotY.Value = new decimal(MathHelper.RadiansToDegrees(eY));
+                numericRotZ.Value = new decimal(MathHelper.RadiansToDegrees(eZ));
+
+                numericScaleX.Value  = new decimal(_activeMesh.Scale.X);
+                numericScaleY.Value  = new decimal(_activeMesh.Scale.Y);
+                numericScaleZ.Value  = new decimal(_activeMesh.Scale.Z);
+
+                numericScaleX.ValueChanged += NumericScale_ValueChanged;
+                numericScaleY.ValueChanged += NumericScale_ValueChanged;
+                numericScaleZ.ValueChanged += NumericScale_ValueChanged;
+
+                numericPosX.ValueChanged += NumericPos_ValueChanged;
+                numericPosY.ValueChanged += NumericPos_ValueChanged;
+                numericPosZ.ValueChanged += NumericPos_ValueChanged;
+
+                numericRotX.ValueChanged += NumericRot_ValueChanged;
+                numericRotY.ValueChanged += NumericRot_ValueChanged;
+                numericRotZ.ValueChanged += NumericRot_ValueChanged;
+
+                chartIsoCurve.Hide();
+                if(_IsoCurveOutputs.TryGetValue(_activeMesh, out IsoCurveOutput output))
+                {
+                    UpdateChart(output);
+                }
+            }
+        }
+
+        private void SceneGraphTree_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                if (sceneGraphTree.SelectedNode != null)
+                {
+                    var obj = (sceneGraphTree.SelectedNode as SceneNode).Transform;
+                    _SceneGraph.DeleteObject(obj);
+                    if (_IsoCurveOutputs.ContainsKey(obj))
+                    {
+                        _IsoCurveOutputs.Remove(obj);
+                    }
+                }
+            }
+        }
+
+
+        #endregion
+
+        #region Transform Panel
+
+        public void InitTransformPanel()
+        {
+
+            numericPosX.Controls[0].Visible = false;
+            numericPosY.Controls[0].Visible = false;
+            numericPosZ.Controls[0].Visible = false;
+            numericRotX.Controls[0].Visible = false;
+            numericRotY.Controls[0].Visible = false;
+            numericRotZ.Controls[0].Visible = false;
+            numericScaleX.Controls[0].Visible = false;
+            numericScaleY.Controls[0].Visible = false;
+            numericScaleZ.Controls[0].Visible = false;
+            transformPanel.Visible = false;
+
+            numericScaleX.ValueChanged += NumericScale_ValueChanged;
+            numericScaleY.ValueChanged += NumericScale_ValueChanged;
+            numericScaleZ.ValueChanged += NumericScale_ValueChanged;
+
+            numericPosX.ValueChanged += NumericPos_ValueChanged;
+            numericPosY.ValueChanged += NumericPos_ValueChanged;
+            numericPosZ.ValueChanged += NumericPos_ValueChanged;
+
+            numericRotX.ValueChanged += NumericRot_ValueChanged;
+            numericRotY.ValueChanged += NumericRot_ValueChanged;
+            numericRotZ.ValueChanged += NumericRot_ValueChanged;
+
+        }
+
+        private void NumericRot_ValueChanged(object sender, EventArgs e)
+        {
+            if (_activeMesh != null)
+            {
+                _activeMesh.Rotation = Quaternion.FromEulerAngles
+                (
+                    MathHelper.DegreesToRadians((float)numericRotX.Value),
+                    MathHelper.DegreesToRadians((float)numericRotY.Value),
+                    MathHelper.DegreesToRadians((float)numericRotZ.Value)
+                );
+
+                foreach (var child in _activeMesh.Children)
+                {
+                    child.Rotation = _activeMesh.Rotation;
+                }
+
+            }
+        }
+
+        private void NumericPos_ValueChanged(object sender, EventArgs e)
+        {
+            if (_activeMesh != null)
+            {
+                _activeMesh.Position = new Vector3
+                (
+                    (float)numericPosX.Value, 
+                    (float)numericPosY.Value, 
+                    (float)numericPosZ.Value
+                );
+
+                foreach (var child in _activeMesh.Children)
+                {
+                    child.Position = _activeMesh.Position;
+                }
+            }
+        }
+
+        private void NumericScale_ValueChanged(object sender, EventArgs e) 
+        {
+            if (_activeMesh != null)
+            {
+                _activeMesh.Scale = new Vector3
+                (
+                    (float)numericScaleX.Value, 
+                    (float)numericScaleY.Value, 
+                    (float)numericScaleZ.Value
+                );
+                foreach (var child in _activeMesh.Children)
+                {
+                    child.Scale = _activeMesh.Scale;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Drawing
 
         private void Render()
         {
@@ -320,8 +530,6 @@ namespace VertexBenderCS.Forms
             }
         }
 
-        #region TEST
-
         private Bitmap GrabScreenshot()
         {
             Bitmap bmp = new Bitmap(GLControl.Width, GLControl.Height);
@@ -335,76 +543,148 @@ namespace VertexBenderCS.Forms
             return bmp;
         }
 
+        private void UpdateChart(IsoCurveOutput output)
+        {
+            chartIsoCurve.Series[0].Points.Clear();
+            for (int i = 0; i < output.IsoCurves.Count; i++)
+            {
+                chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
+            }
+            chartIsoCurve.Show();
+        }
+
+        #endregion
+
+        #region Menu Items
+
         private void DisplayShortestPathOutput(ShortestPathOutput output)
         {
-            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
-
-            List<Vector3> lines1 = new List<Vector3>();
-            for (int i = 0; i < output.Path.Count - 1; i++)
+            if (_activeMesh != null)
             {
-                lines1.Add(mesh.Vertices[output.Path[i]].Coord);
-                lines1.Add(mesh.Vertices[output.Path[i + 1]].Coord);
+                //foreach (var child in _activeMesh.Children)
+                //{
+                //    _SceneGraph.DeleteObject(child);
+                //}
+
+                List<Vector3> lines1 = new List<Vector3>();
+                for (int i = 0; i < output.Path.Count - 1; i++)
+                {
+                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i]].Coord);
+                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i + 1]].Coord);
+                }
+
+                var r1 = new LineRenderer(lines1, output.Type.ToString() + " path");
+                r1.Parent = _activeMesh;
+
+                r1.Position = _activeMesh.Position;
+                r1.Rotation = _activeMesh.Rotation;
+                r1.Scale = _activeMesh.Scale;
+
+                r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                if (output.Method == eShortestPathMethod.Astar)
+                {
+                    r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                }
+                
+                _SceneGraph.AddObject(r1);
+
+                _Logger.Append(output.Info);
             }
-
-            var r1 = new LineRenderer(lines1);
-            r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-            _SceneGraph.AddObject(r1);
-
-            _Logger.Append(output.Info);
         }
 
         private void DisplaySamplingOutput(SampleOutput output)
         {
-            List<MeshRenderer> points = new List<MeshRenderer>();
-            for (int i = 0; i < output.SampleIndices.Count; i++)
+            if (_activeMesh != null)
             {
-                MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader)
+                foreach (var child in _activeMesh.Children)
                 {
-                    Color = new Vector4(output.SamplePoints[i].Coord * 0.5f, 1.0f)
-                };
-                obj.Transform.Position = output.SamplePoints[i].Coord;
-                points.Add(obj);
-                _SceneGraph.AddObject(obj);
-            }
+                    _SceneGraph.DeleteObject(child);
+                }
 
-            _Logger.Append(output.Info);
+                List<MeshRenderer> points = new List<MeshRenderer>();
+                for (int i = 0; i < output.SampleIndices.Count; i++)
+                {
+                    MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader, "sample-" + i + 1)
+                    {
+                        //Color = new Vector4(output.SamplePoints[i].Coord * 0.5f, 1.0f)
+                        Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
+                    };
+                    obj.Position =  output.SamplePoints[i].Coord;
+
+                    //obj.Position = new Vector3(_activeMesh.ModelMatrix * new Vector4(obj.Position));
+                    obj.Position += _activeMesh.Position;
+
+                    
+                    // bad block but keep it for now..
+                    obj.Parent = _activeMesh;
+
+                    points.Add(obj);
+                    _SceneGraph.AddObject(obj);
+                }
+
+                _Logger.Append(output.Info);
+            }
         }
 
         private void DisplayIsoCurveOutput(IsoCurveOutput output)
         {
-            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
-
-            MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
-            gizmo.Transform.Position = mesh.Vertices[output.SourceIndex].Coord;
-            _SceneGraph.AddObject(gizmo);
-
-            chartIsoCurve.Series[0].Points.Clear();
-
-            for (int i = 0; i < output.IsoCurveDistances.Length; i++)
+            if (_activeMesh != null)
             {
-                var line = new LineRenderer(output.IsoCurves[i]);
-                _SceneGraph.AddObject(line);
-                line.Color = new Vector4(1, 0, 0, 1);
-                chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
-            }
+                if (_IsoCurveOutputs.ContainsKey(_activeMesh))
+                {
+                    _IsoCurveOutputs.Remove(_activeMesh);
+                }
+                _IsoCurveOutputs.Add(_activeMesh, output);
 
-            chartIsoCurve.Show();
-            _Logger.Append(output.Info);
+                foreach (var child in _activeMesh.Children)
+                {
+                    _SceneGraph.DeleteObject(child);
+                }
+
+                MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader, "source")
+                {
+                    Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f)
+                };
+                gizmo.Position = _activeMesh.Mesh.Vertices[output.SourceIndex].Coord;
+
+                gizmo.Parent = _activeMesh;
+                _SceneGraph.AddObject(gizmo);
+
+
+                for (int i = 0; i < output.IsoCurveDistances.Length; i++)
+                {
+                    var line = new LineRenderer(output.IsoCurves[i], "sample-" + i);
+                    line.Position = _activeMesh.Position;
+                    line.Rotation = _activeMesh.Rotation;
+                    line.Scale = _activeMesh.Scale;
+                    
+                    line.Parent = _activeMesh;
+                    _SceneGraph.AddObject(line);
+
+                    line.Color = new Vector4(1, 0, 0, 1);
+                }
+
+                UpdateChart(output);
+
+                _Logger.Append(output.Info);
+            }
         }
 
         private void DisplayAverageGeodesicOutput(AverageGeodesicOutput output)
         {
-            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
-            float max = output.Distances.Max();
-
-            var color = new Vector3[output.Distances.Length];
-            for (int i = 0; i < color.Length; i++)
+            if (_activeMesh != null)
             {
-                color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max);
-            }
+                float max = output.Distances.Max();
 
-            obj.SetColorBuffer(color);
-            _Logger.Append(output.Info);
+                var color = new Vector3[output.Distances.Length];
+                for (int i = 0; i < color.Length; i++)
+                {
+                    color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f;
+                }
+
+                _activeMesh.SetColorBuffer(color);
+                _Logger.Append(output.Info);
+            }
         }
 
         private void ShortestPathOnResultReturned(IOutput output)
@@ -428,208 +708,86 @@ namespace VertexBenderCS.Forms
             }
         }
 
-        private void BtnDijkstra_Click(object sender, EventArgs e)
+        private void menuProcessSP_Click(object sender, EventArgs e)
         {
-            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
-            _frmProcess = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
-            _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
-            _frmProcess.ShowDialog();
-            //if (_src.HasValue && _trg.HasValue)
-            //{
-            //    Stopwatch watch = new Stopwatch();
-            //    var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
 
-            //    Log.AppendText("\n starting: \n");
-
-            //    var start = _src.Value;
-            //    var end = _trg.Value;
-
-            //    watch.Start();
-            //    var d1 = Algorithm.DijkstraArray(mesh, start, end);
-            //    watch.Stop();
-            //    var a1 = watch.ElapsedMilliseconds;
-            //    Log.AppendText("\nArray: " + d1.TargetDistance.ToString() + "   , elapsed: " + a1 + "\n");
-
-            //    watch.Reset();
-
-
-            //    watch.Start();
-            //    var d2 = Algorithm.AStarMinHeap(mesh, start, end);
-            //    watch.Stop();
-            //    var a2 = watch.ElapsedMilliseconds;
-            //    Log.AppendText("\nAStar: " + d2.TargetDistance.ToString() + "   , elapsed: " + a2 + "\n");
-
-            //    watch.Reset();
-
-            //    watch.Start();
-            //    var d3 = Algorithm.DijkstraMinHeap(mesh, start, end, false);
-            //    watch.Stop();
-            //    var a3 = watch.ElapsedMilliseconds;
-            //    Log.AppendText("\nMin Heap: " + d3.TargetDistance.ToString() + "   , elapsed: " + a3 + "\n");
-
-            //    watch.Reset();
-
-            //    watch.Start();
-            //    var d4 = Algorithm.DijkstraFibonacciHeap(mesh, start, end, false);
-            //    watch.Stop();
-            //    var a4 = watch.ElapsedMilliseconds;
-            //    Log.AppendText("\nFibonacci Heap: " + d4.TargetDistance.ToString() + "   , elapsed: " + a4);
-
-            //    watch.Reset();
-
-            //    List<Vector3> lines1 = new List<Vector3>();
-            //    List<Vector3> lines2 = new List<Vector3>();
-            //    List<Vector3> lines3 = new List<Vector3>();
-
-            //    for (int i = 0; i < d1.Path.Count - 1; i++)
-            //    {
-            //        lines1.Add(mesh.Vertices[d1.Path[i]].Coord);
-            //        lines1.Add(mesh.Vertices[d1.Path[i + 1]].Coord);
-            //    }
-
-            //    for (int i = 0; i < d3.Path.Count - 1; i++)
-            //    {
-            //        lines2.Add(mesh.Vertices[d3.Path[i]].Coord);
-            //        lines2.Add(mesh.Vertices[d3.Path[i + 1]].Coord);
-            //    }
-
-            //    var r1 = new LineRenderer(lines1);
-            //    r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-            //    var r2 = new LineRenderer(lines2);
-            //    r2.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-            //    var r3 = new LineRenderer(lines3);
-            //    r3.Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
-            //    _SceneGraph.AddObject(r1);
-            //    _SceneGraph.AddObject(r2);
-            //    _SceneGraph.AddObject(r3);
-
-            //}
+            if (_activeMesh != null)
+            {
+                var mesh = _activeMesh.Mesh;
+                _frmProcess = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
+                _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
+                _frmProcess.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Please Select a model to process", "No models selected", MessageBoxButtons.OK);
+            }
         }
 
-        private void BtnGauss_Click(object sender, EventArgs e)
+        private void menuProcessGC_Click(object sender, EventArgs e)
         {
-            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
-            var a = Algorithm.GaussianCurvature(obj.Mesh);
-            var max = a.Max();
-            var min = a.Min();
-            max -= min;
-            var color = new Vector3[a.Count];
-            for (int i = 0; i < color.Length; i++)
+            if (_activeMesh != null)
             {
-                var val = MathHelper.Clamp(Math.Abs(a[i]), 0.0f, 0.4f);
-                if (a[i] < 0)
+                var a = Algorithm.GaussianCurvature(_activeMesh.Mesh);
+                var max = a.Max();
+                var min = a.Min();
+                max -= min;
+                var color = new Vector3[a.Count];
+                for (int i = 0; i < color.Length; i++)
                 {
-                    color[i] = new Vector3(0.0f, 0.0f, val);
+                    var val = MathHelper.Clamp(Math.Abs(a[i]), 0.0f, 0.4f);
+                    if (a[i] < 0)
+                    {
+                        color[i] = new Vector3(0.0f, 0.0f, val);
+                    }
+                    else
+                    {
+                        color[i] = new Vector3(val, 0.0f, 0.0f);
+                    }
                 }
-                else
-                {
-                    color[i] = new Vector3(val, 0.0f, 0.0f);
-                }
+
+                _activeMesh.SetColorBuffer(color);
+            }
+        }
+
+        private void menuProcessDescriptor_Click(object sender, EventArgs e)
+        {
+            if (_activeMesh != null)
+            {
+                var mesh = _activeMesh.Mesh;
+                _frmProcess = new FrmProcess(mesh, eProcessCoreType.Descriptor);
+                _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
+                _frmProcess.ShowDialog();
+            }
+        }
+
+        private void MenuIsoCurveExport_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+            dialog.Title = "Save csv Files";
+            dialog.DefaultExt = "csv";
+            dialog.FilterIndex = 2;
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                ProcessOutputHandler.SaveIsoCurveOutputs(_IsoCurveOutputs, dialog.FileName);
             }
 
-            obj.SetColorBuffer(color);
         }
 
-        private void BtnDescriptor_Click(object sender, EventArgs e)
+        private void MenuExit_Click(object sender, EventArgs e)
         {
-            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
-            _frmProcess = new FrmProcess(mesh, eProcessCoreType.Descriptor);
-            _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
-            _frmProcess.ShowDialog();
-            //var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
-            //var graph = new Graph(obj.Mesh);
-            //var samples = Algorithm.FarthestPointSampling(graph, 1, _worker.ReportProgress);
-
-            //for (int i = 0; i < samples.SampleIndices.Count; i++)
-            //{
-            //    MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
-            //    gizmo.Transform.Position = samples.SamplePoints[i].Coord;
-            //    _SceneGraph.AddObject(gizmo);
-            //}
-
-            //var output = Algorithm.IsoCurveSignature(obj.Mesh, samples.SampleIndices[0], 40);
-
-            //chartIsoCurve.Series[0].Points.Clear();
-
-            //for (int i = 0; i < output.IsoCurveDistances.Length; i++)
-            //{
-            //    var line = new LineRenderer(output.IsoCurves[i]);
-            //    _SceneGraph.AddObject(line);
-            //    line.Color = new Vector4(1, 0, 0, 1);
-            //    chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
-            //}
-
-            //chartIsoCurve.Show();
+            Close();
         }
-
-
-        //private void BtnGeodesicMatrix_Click(object sender, EventArgs e)
-        //{
-        //    Stopwatch watch = new Stopwatch();
-
-        //    watch.Start();
-        //    var matrix = Algorithm.CreateGeodesicDistanceMatrix((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh, (a)=> { });
-        //    ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix.Matrix, @"C:\users\ozgun\desktop\out");
-        //    watch.Stop();
-        //    var a4 = watch.ElapsedMilliseconds;
-        //    Log.AppendText("output created" + ", elapsed: " + a4);
-
-        //}
-
-        //private void BtnFPS_Click(object sender, EventArgs e)
-        //{
-        //    var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
-        //    _frmShortestPath = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
-        //    _frmShortestPath.OnResultReturned += ShortestPathOnResultReturned;
-        //    _frmShortestPath.Show();
-
-        //    //_worker.RunWorkerAsync();
-
-        //    //Stopwatch watch = new Stopwatch();
-        //    //Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
-
-        //    //watch.Start();
-        //    //var samples = Algorithm.FarthestPointSampling(g, 100, UpdateProgress);
-        //    //watch.Stop();
-
-        //    //var a4 = watch.ElapsedMilliseconds;
-        //    //AppendLogSafe("\n output created" + ", elapsed: " + a4);
-
-        //    //List<MeshRenderer> points = new List<MeshRenderer>();
-        //    //for (int i = 0; i < samples.SampleIndices.Count; i++)
-        //    //{
-        //    //    MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
-        //    //    obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
-        //    //    obj.Transform.Position = samples.SamplePoints[i].Coord;
-        //    //    points.Add(obj);
-        //    //     _SceneGraph.AddObject(obj);
-        //    //}
-        //}
-
-        //private void BtnAverageGeo_Click(object sender, EventArgs e)
-        //{
-        //    var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
-        //    Graph g = new Graph(obj.Mesh);
-        //    var a = Algorithm.AverageGeodesicDistance(g, _worker.ReportProgress);
-
-        //    float max = a.Max();
-
-        //    var color = new Vector3[a.Length];
-        //    for (int i = 0; i < color.Length; i++)
-        //    {
-        //        color[i] = ProcessOutputHandler.ColorPixelVector(a[i], max);
-        //    }
-
-        //    obj.SetColorBuffer(color);
-
-        //}
 
         #endregion
 
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
+        #region Toolbar
 
-        }
+
+
+        #endregion
+
     }
 
 }

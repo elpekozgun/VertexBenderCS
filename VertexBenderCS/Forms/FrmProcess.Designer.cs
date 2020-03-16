@@ -145,6 +145,7 @@
             // 
             // numericSource
             // 
+            this.numericSource.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.numericSource.Location = new System.Drawing.Point(141, 89);
             this.numericSource.Name = "numericSource";
             this.numericSource.Size = new System.Drawing.Size(80, 24);
@@ -152,6 +153,7 @@
             // 
             // numericTarget
             // 
+            this.numericTarget.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.numericTarget.Location = new System.Drawing.Point(141, 129);
             this.numericTarget.Name = "numericTarget";
             this.numericTarget.Size = new System.Drawing.Size(80, 24);

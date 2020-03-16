@@ -26,24 +26,24 @@ namespace Engine.Processing
 
         #region Public Wrapper Methods
 
-        public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type)
+        public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type, bool earlyTerminate = false)
         {
             switch (type)
             {
                 case eShortestPathMethod.Array:
-                    return DijkstraArray(mesh, src, target);
+                    return DijkstraArray(mesh, src, target, earlyTerminate);
                 case eShortestPathMethod.MinHeap:
-                    return DijkstraMinHeap(mesh, src, target);
+                    return DijkstraMinHeap(mesh, src, target, earlyTerminate);
                 case eShortestPathMethod.Fibonacci:
-                    return DijkstraFibonacciHeap(mesh, src, target);
+                    return DijkstraFibonacciHeap(mesh, src, target, earlyTerminate);
                 case eShortestPathMethod.Astar:
                     return AStarMinHeap(mesh, src, target);
                 default:
-                    return DijkstraMinHeap(mesh, src, target);
+                    return DijkstraMinHeap(mesh, src, target, earlyTerminate);
             }
         }
 
-        public static ShortestPathOutput DijkstraArray(Mesh mesh, int src, int target)
+        public static ShortestPathOutput DijkstraArray(Mesh mesh, int src, int target, bool earlyterminate = false)
         {
             var graph = ConstructGraphFromMesh(mesh);
             var a =  DijkstraArray(graph, src, target);
@@ -67,19 +67,6 @@ namespace Engine.Processing
             var graph = new Graph(mesh);
             return AStarMinHeap(graph, src, target);
         }
-
-        public static float[] DijkstraFibonacciHeap(Mesh mesh, int src)
-        {
-            var graph = new Graph(mesh);
-            return DijkstraFibonacciHeap(graph, src);
-        }
-        
-        public static float[] DijkstraMinHeap(Mesh mesh, int src)
-        {
-            var graph = new Graph(mesh);
-            return DijkstraMinHeap(graph, src);
-        }
-        
 
         public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
         {
@@ -327,6 +314,18 @@ namespace Engine.Processing
         {
             var graph = new Graph(mesh);
             return CreateGeodesicDistanceMatrix(graph, progress, isParallel);
+        }
+
+        internal static float[] DijkstraFibonacciHeap(Mesh mesh, int src)
+        {
+            var graph = new Graph(mesh);
+            return DijkstraFibonacciHeap(graph, src);
+        }
+
+        internal static float[] DijkstraMinHeap(Mesh mesh, int src)
+        {
+            var graph = new Graph(mesh);
+            return DijkstraMinHeap(graph, src);
         }
 
         #endregion

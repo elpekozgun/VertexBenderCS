@@ -10,29 +10,49 @@ namespace Engine.Core
 {
     public class SceneGraph 
     {
-        public List<IRenderable> SceneItems;
+        public List<Transform> SceneItems;
+        public Action<Transform> OnItemAdded;
+        public Action<Transform> OnItemDeleted;
+        public Action OnSceneCleared;
 
         public SceneGraph()
         {
-            SceneItems = new List<IRenderable>();
+            SceneItems = new List<Transform>();
         }
 
         public void Clean()
         {
             SceneItems.Clear();
+            OnSceneCleared?.Invoke();
         }
 
-        public void AddObject(IRenderable renderable)
+        public void AddObject(Transform item)
         {
-            SceneItems.Add(renderable);
+            SceneItems.Add(item);
+            OnItemAdded?.Invoke(item);
+        }
+
+        public void DeleteObject(Transform item)
+        {
+            foreach (var child in item.Children)
+            {
+                DeleteObject(child);
+            }
+            SceneItems.Remove(item);
+            OnItemDeleted?.Invoke(item);
         }
 
         public void RenderAll(Camera cam)
         {
             foreach (var item in SceneItems)
             {
-                SetDirectLight(item, cam);
-                item.Render(cam, eRenderMode.shaded);
+                if (item is IRenderable)
+                {
+                    var renderable = item as IRenderable;
+
+                    SetDirectLight(renderable, cam);
+                    renderable.Render(cam, eRenderMode.shaded);
+                }
             }
         }
         

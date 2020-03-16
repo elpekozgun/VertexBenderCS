@@ -28,13 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Scene");
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl();
-            this.treeView1 = new System.Windows.Forms.TreeView();
+            this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.processWorker = new System.ComponentModel.BackgroundWorker();
@@ -44,6 +43,10 @@
             this.toolStripButton6 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton7 = new System.Windows.Forms.ToolStripButton();
             this.BottomToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.TopToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.RightToolStripPanel = new System.Windows.Forms.ToolStripPanel();
@@ -79,14 +82,38 @@
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton7 = new System.Windows.Forms.ToolStripButton();
+            this.transformPanel = new System.Windows.Forms.Panel();
+            this.numericScaleZ = new System.Windows.Forms.NumericUpDown();
+            this.numericScaleY = new System.Windows.Forms.NumericUpDown();
+            this.numericScaleX = new System.Windows.Forms.NumericUpDown();
+            this.numericRotZ = new System.Windows.Forms.NumericUpDown();
+            this.numericRotY = new System.Windows.Forms.NumericUpDown();
+            this.numericRotX = new System.Windows.Forms.NumericUpDown();
+            this.numericPosZ = new System.Windows.Forms.NumericUpDown();
+            this.numericPosY = new System.Windows.Forms.NumericUpDown();
+            this.labelZPos = new System.Windows.Forms.Label();
+            this.labelYPos = new System.Windows.Forms.Label();
+            this.labelXpos = new System.Windows.Forms.Label();
+            this.labelScale = new System.Windows.Forms.Label();
+            this.labelRotation = new System.Windows.Forms.Label();
+            this.labelPosition = new System.Windows.Forms.Label();
+            this.numericPosX = new System.Windows.Forms.NumericUpDown();
+            this.labelTransform = new System.Windows.Forms.Label();
+            this.menuIsoCurveExport = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
             this.statusBar.SuspendLayout();
+            this.transformPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericScaleZ)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericScaleY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericScaleX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericRotZ)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericRotY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericRotX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPosZ)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPosY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPosX)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -103,22 +130,16 @@
             this.GLControl.TabIndex = 0;
             this.GLControl.VSync = false;
             // 
-            // treeView1
+            // sceneGraphTree
             // 
-            this.treeView1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.treeView1.Font = new System.Drawing.Font("Ebrima", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.treeView1.HotTracking = true;
-            this.treeView1.LineColor = System.Drawing.Color.MediumPurple;
-            this.treeView1.Location = new System.Drawing.Point(3, 97);
-            this.treeView1.Name = "treeView1";
-            treeNode1.Checked = true;
-            treeNode1.Name = "Scene";
-            treeNode1.NodeFont = new System.Drawing.Font("Ebrima", 8.25F);
-            treeNode1.Text = "Scene";
-            this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1});
-            this.treeView1.Size = new System.Drawing.Size(250, 336);
-            this.treeView1.TabIndex = 4;
+            this.sceneGraphTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.sceneGraphTree.Font = new System.Drawing.Font("Ebrima", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.sceneGraphTree.HotTracking = true;
+            this.sceneGraphTree.LineColor = System.Drawing.Color.MediumPurple;
+            this.sceneGraphTree.Location = new System.Drawing.Point(3, 97);
+            this.sceneGraphTree.Name = "sceneGraphTree";
+            this.sceneGraphTree.Size = new System.Drawing.Size(250, 336);
+            this.sceneGraphTree.TabIndex = 4;
             // 
             // Log
             // 
@@ -150,48 +171,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisX.LabelStyle.Interval = 0D;
-            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.LabelStyle.Interval = 0D;
-            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea1.BackColor = System.Drawing.Color.White;
-            chartArea1.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea1);
-            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend1.ForeColor = System.Drawing.Color.Gainsboro;
-            legend1.InterlacedRowsColor = System.Drawing.Color.White;
-            legend1.Name = "Legend1";
-            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend1);
+            chartArea2.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisX.LabelStyle.Interval = 0D;
+            chartArea2.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea2.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea2.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisY.LabelStyle.Interval = 0D;
+            chartArea2.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea2.BackColor = System.Drawing.Color.White;
+            chartArea2.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea2);
+            legend2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend2.ForeColor = System.Drawing.Color.Gainsboro;
+            legend2.InterlacedRowsColor = System.Drawing.Color.White;
+            legend2.Name = "Legend1";
+            legend2.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend2);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series1.BackSecondaryColor = System.Drawing.Color.White;
-            series1.ChartArea = "isoCurve-Distances";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.StackedColumn;
-            series1.Color = System.Drawing.Color.DodgerBlue;
-            series1.CustomProperties = "PointWidth=0.3";
-            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series1.IsVisibleInLegend = false;
-            series1.LabelBackColor = System.Drawing.Color.White;
-            series1.LabelBorderColor = System.Drawing.Color.White;
-            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series1.Legend = "Legend1";
-            series1.MarkerBorderColor = System.Drawing.Color.White;
-            series1.MarkerColor = System.Drawing.Color.White;
-            series1.MarkerSize = 3;
-            series1.Name = "IsoCurve";
-            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series1);
+            series2.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series2.BackSecondaryColor = System.Drawing.Color.White;
+            series2.ChartArea = "isoCurve-Distances";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series2.Color = System.Drawing.Color.DodgerBlue;
+            series2.CustomProperties = "PointWidth=0.3";
+            series2.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series2.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series2.IsVisibleInLegend = false;
+            series2.LabelBackColor = System.Drawing.Color.White;
+            series2.LabelBorderColor = System.Drawing.Color.White;
+            series2.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series2.Legend = "Legend1";
+            series2.MarkerBorderColor = System.Drawing.Color.White;
+            series2.MarkerColor = System.Drawing.Color.White;
+            series2.MarkerSize = 3;
+            series2.Name = "IsoCurve";
+            series2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series2.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series2.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series2);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -268,6 +289,42 @@
             this.toolStripButton4.Name = "toolStripButton4";
             this.toolStripButton4.Size = new System.Drawing.Size(52, 67);
             this.toolStripButton4.Text = "Point Cloud";
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 70);
+            // 
+            // toolStripButton2
+            // 
+            this.toolStripButton2.CheckOnClick = true;
+            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton2.Image = global::VertexBenderCS.Resources.grid;
+            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton2.Name = "toolStripButton2";
+            this.toolStripButton2.Size = new System.Drawing.Size(52, 67);
+            this.toolStripButton2.Text = "Show Grid";
+            // 
+            // toolStripButton3
+            // 
+            this.toolStripButton3.CheckOnClick = true;
+            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton3.Image = global::VertexBenderCS.Resources.showLight;
+            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton3.Name = "toolStripButton3";
+            this.toolStripButton3.Size = new System.Drawing.Size(52, 67);
+            this.toolStripButton3.Text = "Toggle Lights";
+            this.toolStripButton3.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            // 
+            // toolStripButton7
+            // 
+            this.toolStripButton7.CheckOnClick = true;
+            this.toolStripButton7.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton7.Image = global::VertexBenderCS.Resources.showGizmo;
+            this.toolStripButton7.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton7.Name = "toolStripButton7";
+            this.toolStripButton7.Size = new System.Drawing.Size(52, 67);
+            this.toolStripButton7.Text = "Toggle Indicators";
             // 
             // BottomToolStripPanel
             // 
@@ -351,7 +408,7 @@
             this.menuImport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuImport.Name = "menuImport";
             this.menuImport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.menuImport.Size = new System.Drawing.Size(149, 22);
+            this.menuImport.Size = new System.Drawing.Size(180, 22);
             this.menuImport.Text = "&Import";
             // 
             // menuImportOff
@@ -363,6 +420,7 @@
             // 
             // menuImportObj
             // 
+            this.menuImportObj.Enabled = false;
             this.menuImportObj.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportObj.Name = "menuImportObj";
             this.menuImportObj.Size = new System.Drawing.Size(199, 22);
@@ -370,6 +428,7 @@
             // 
             // menuImportDae
             // 
+            this.menuImportDae.Enabled = false;
             this.menuImportDae.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportDae.Name = "menuImportDae";
             this.menuImportDae.Size = new System.Drawing.Size(199, 22);
@@ -377,6 +436,7 @@
             // 
             // menuImportVol
             // 
+            this.menuImportVol.Enabled = false;
             this.menuImportVol.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportVol.Name = "menuImportVol";
             this.menuImportVol.Size = new System.Drawing.Size(199, 22);
@@ -384,6 +444,7 @@
             // 
             // menuImportDcm
             // 
+            this.menuImportDcm.Enabled = false;
             this.menuImportDcm.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportDcm.Name = "menuImportDcm";
             this.menuImportDcm.Size = new System.Drawing.Size(199, 22);
@@ -391,12 +452,14 @@
             // 
             // menuExport
             // 
+            this.menuExport.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuIsoCurveExport});
             this.menuExport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExport.Image = ((System.Drawing.Image)(resources.GetObject("menuExport.Image")));
             this.menuExport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuExport.Name = "menuExport";
             this.menuExport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuExport.Size = new System.Drawing.Size(149, 22);
+            this.menuExport.Size = new System.Drawing.Size(180, 22);
             this.menuExport.Text = "&Export";
             // 
             // toolStripSeparator
@@ -404,23 +467,25 @@
             this.toolStripSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator.ForeColor = System.Drawing.SystemColors.Desktop;
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(177, 6);
             // 
             // menuSave
             // 
+            this.menuSave.Enabled = false;
             this.menuSave.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuSave.Image = ((System.Drawing.Image)(resources.GetObject("menuSave.Image")));
             this.menuSave.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(149, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save";
             // 
             // menuSaveAs
             // 
+            this.menuSaveAs.Enabled = false;
             this.menuSaveAs.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuSaveAs.Name = "menuSaveAs";
-            this.menuSaveAs.Size = new System.Drawing.Size(149, 22);
+            this.menuSaveAs.Size = new System.Drawing.Size(180, 22);
             this.menuSaveAs.Text = "Save &As";
             // 
             // toolStripSeparator2
@@ -428,13 +493,13 @@
             this.toolStripSeparator2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator2.ForeColor = System.Drawing.SystemColors.Highlight;
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // menuExit
             // 
             this.menuExit.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(149, 22);
+            this.menuExit.Size = new System.Drawing.Size(180, 22);
             this.menuExit.Text = "E&xit";
             // 
             // processMenu
@@ -453,8 +518,8 @@
             // 
             this.menuProcessSP.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuProcessSP.Name = "menuProcessSP";
-            this.menuProcessSP.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.menuProcessSP.Size = new System.Drawing.Size(215, 22);
+            this.menuProcessSP.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D1)));
+            this.menuProcessSP.Size = new System.Drawing.Size(244, 22);
             this.menuProcessSP.Text = "&Shortest Path";
             // 
             // menuProcessGC
@@ -462,15 +527,16 @@
             this.menuProcessGC.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuProcessGC.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuProcessGC.Name = "menuProcessGC";
-            this.menuProcessGC.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.menuProcessGC.Size = new System.Drawing.Size(215, 22);
+            this.menuProcessGC.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D2)));
+            this.menuProcessGC.Size = new System.Drawing.Size(244, 22);
             this.menuProcessGC.Text = "&Gaussian Curvature";
             // 
             // menuProcessDescriptor
             // 
             this.menuProcessDescriptor.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuProcessDescriptor.Name = "menuProcessDescriptor";
-            this.menuProcessDescriptor.Size = new System.Drawing.Size(215, 22);
+            this.menuProcessDescriptor.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
+            this.menuProcessDescriptor.Size = new System.Drawing.Size(244, 22);
             this.menuProcessDescriptor.Text = "Sampling and &Descriptors";
             // 
             // aboutMenu
@@ -584,41 +650,281 @@
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 20);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
-            // toolStripButton2
+            // transformPanel
             // 
-            this.toolStripButton2.CheckOnClick = true;
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton2.Image = global::VertexBenderCS.Resources.grid;
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(52, 67);
-            this.toolStripButton2.Text = "Show Grid";
+            this.transformPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
+            this.transformPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.transformPanel.Controls.Add(this.numericScaleZ);
+            this.transformPanel.Controls.Add(this.numericScaleY);
+            this.transformPanel.Controls.Add(this.numericScaleX);
+            this.transformPanel.Controls.Add(this.numericRotZ);
+            this.transformPanel.Controls.Add(this.numericRotY);
+            this.transformPanel.Controls.Add(this.numericRotX);
+            this.transformPanel.Controls.Add(this.numericPosZ);
+            this.transformPanel.Controls.Add(this.numericPosY);
+            this.transformPanel.Controls.Add(this.labelZPos);
+            this.transformPanel.Controls.Add(this.labelYPos);
+            this.transformPanel.Controls.Add(this.labelXpos);
+            this.transformPanel.Controls.Add(this.labelScale);
+            this.transformPanel.Controls.Add(this.labelRotation);
+            this.transformPanel.Controls.Add(this.labelPosition);
+            this.transformPanel.Controls.Add(this.numericPosX);
+            this.transformPanel.Controls.Add(this.labelTransform);
+            this.transformPanel.Location = new System.Drawing.Point(15, 444);
+            this.transformPanel.Name = "transformPanel";
+            this.transformPanel.Size = new System.Drawing.Size(226, 155);
+            this.transformPanel.TabIndex = 21;
             // 
-            // toolStripSeparator4
+            // numericScaleZ
             // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 70);
+            this.numericScaleZ.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericScaleZ.Location = new System.Drawing.Point(180, 104);
+            this.numericScaleZ.Margin = new System.Windows.Forms.Padding(0);
+            this.numericScaleZ.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericScaleZ.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericScaleZ.Name = "numericScaleZ";
+            this.numericScaleZ.Size = new System.Drawing.Size(35, 22);
+            this.numericScaleZ.TabIndex = 15;
+            this.numericScaleZ.Tag = "scaleZ";
             // 
-            // toolStripButton3
+            // numericScaleY
             // 
-            this.toolStripButton3.CheckOnClick = true;
-            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton3.Image = global::VertexBenderCS.Resources.showLight;
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(52, 67);
-            this.toolStripButton3.Text = "Toggle Lights";
-            this.toolStripButton3.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.numericScaleY.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericScaleY.Location = new System.Drawing.Point(125, 104);
+            this.numericScaleY.Margin = new System.Windows.Forms.Padding(0);
+            this.numericScaleY.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericScaleY.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericScaleY.Name = "numericScaleY";
+            this.numericScaleY.Size = new System.Drawing.Size(35, 22);
+            this.numericScaleY.TabIndex = 14;
+            this.numericScaleY.Tag = "scaleY";
             // 
-            // toolStripButton7
+            // numericScaleX
             // 
-            this.toolStripButton7.CheckOnClick = true;
-            this.toolStripButton7.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton7.Image = global::VertexBenderCS.Resources.showGizmo;
-            this.toolStripButton7.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton7.Name = "toolStripButton7";
-            this.toolStripButton7.Size = new System.Drawing.Size(52, 67);
-            this.toolStripButton7.Text = "Toggle Indicators";
+            this.numericScaleX.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericScaleX.Location = new System.Drawing.Point(70, 104);
+            this.numericScaleX.Margin = new System.Windows.Forms.Padding(0);
+            this.numericScaleX.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericScaleX.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericScaleX.Name = "numericScaleX";
+            this.numericScaleX.Size = new System.Drawing.Size(35, 22);
+            this.numericScaleX.TabIndex = 13;
+            this.numericScaleX.Tag = "scaleX";
+            // 
+            // numericRotZ
+            // 
+            this.numericRotZ.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericRotZ.Location = new System.Drawing.Point(180, 74);
+            this.numericRotZ.Margin = new System.Windows.Forms.Padding(0);
+            this.numericRotZ.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericRotZ.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericRotZ.Name = "numericRotZ";
+            this.numericRotZ.Size = new System.Drawing.Size(35, 22);
+            this.numericRotZ.TabIndex = 12;
+            this.numericRotZ.Tag = "rotZ";
+            // 
+            // numericRotY
+            // 
+            this.numericRotY.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericRotY.Location = new System.Drawing.Point(125, 74);
+            this.numericRotY.Margin = new System.Windows.Forms.Padding(0);
+            this.numericRotY.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericRotY.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericRotY.Name = "numericRotY";
+            this.numericRotY.Size = new System.Drawing.Size(35, 22);
+            this.numericRotY.TabIndex = 11;
+            this.numericRotY.Tag = "rotY";
+            // 
+            // numericRotX
+            // 
+            this.numericRotX.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericRotX.Location = new System.Drawing.Point(70, 74);
+            this.numericRotX.Margin = new System.Windows.Forms.Padding(0);
+            this.numericRotX.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericRotX.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericRotX.Name = "numericRotX";
+            this.numericRotX.Size = new System.Drawing.Size(35, 22);
+            this.numericRotX.TabIndex = 10;
+            this.numericRotX.Tag = "rotX";
+            // 
+            // numericPosZ
+            // 
+            this.numericPosZ.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericPosZ.Location = new System.Drawing.Point(180, 44);
+            this.numericPosZ.Margin = new System.Windows.Forms.Padding(0);
+            this.numericPosZ.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericPosZ.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericPosZ.Name = "numericPosZ";
+            this.numericPosZ.Size = new System.Drawing.Size(35, 22);
+            this.numericPosZ.TabIndex = 9;
+            this.numericPosZ.Tag = "posZ";
+            // 
+            // numericPosY
+            // 
+            this.numericPosY.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericPosY.Location = new System.Drawing.Point(125, 44);
+            this.numericPosY.Margin = new System.Windows.Forms.Padding(0);
+            this.numericPosY.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericPosY.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericPosY.Name = "numericPosY";
+            this.numericPosY.Size = new System.Drawing.Size(35, 22);
+            this.numericPosY.TabIndex = 8;
+            this.numericPosY.Tag = "posY";
+            // 
+            // labelZPos
+            // 
+            this.labelZPos.AutoSize = true;
+            this.labelZPos.Location = new System.Drawing.Point(177, 26);
+            this.labelZPos.Name = "labelZPos";
+            this.labelZPos.Size = new System.Drawing.Size(17, 15);
+            this.labelZPos.TabIndex = 7;
+            this.labelZPos.Text = "Z:";
+            // 
+            // labelYPos
+            // 
+            this.labelYPos.AutoSize = true;
+            this.labelYPos.Location = new System.Drawing.Point(122, 26);
+            this.labelYPos.Name = "labelYPos";
+            this.labelYPos.Size = new System.Drawing.Size(17, 15);
+            this.labelYPos.TabIndex = 6;
+            this.labelYPos.Text = "Y:";
+            // 
+            // labelXpos
+            // 
+            this.labelXpos.AutoSize = true;
+            this.labelXpos.Location = new System.Drawing.Point(67, 26);
+            this.labelXpos.Name = "labelXpos";
+            this.labelXpos.Size = new System.Drawing.Size(17, 15);
+            this.labelXpos.TabIndex = 5;
+            this.labelXpos.Text = "X:";
+            // 
+            // labelScale
+            // 
+            this.labelScale.AutoSize = true;
+            this.labelScale.Location = new System.Drawing.Point(20, 106);
+            this.labelScale.Name = "labelScale";
+            this.labelScale.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.labelScale.Size = new System.Drawing.Size(37, 15);
+            this.labelScale.TabIndex = 4;
+            this.labelScale.Text = "Scale:";
+            // 
+            // labelRotation
+            // 
+            this.labelRotation.AutoSize = true;
+            this.labelRotation.Location = new System.Drawing.Point(2, 75);
+            this.labelRotation.Name = "labelRotation";
+            this.labelRotation.Size = new System.Drawing.Size(55, 15);
+            this.labelRotation.TabIndex = 3;
+            this.labelRotation.Text = "Rotation:";
+            // 
+            // labelPosition
+            // 
+            this.labelPosition.AutoSize = true;
+            this.labelPosition.Location = new System.Drawing.Point(4, 46);
+            this.labelPosition.Name = "labelPosition";
+            this.labelPosition.Size = new System.Drawing.Size(53, 15);
+            this.labelPosition.TabIndex = 2;
+            this.labelPosition.Text = "Position:";
+            // 
+            // numericPosX
+            // 
+            this.numericPosX.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericPosX.Location = new System.Drawing.Point(70, 44);
+            this.numericPosX.Margin = new System.Windows.Forms.Padding(0);
+            this.numericPosX.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericPosX.Minimum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            -2147483648});
+            this.numericPosX.Name = "numericPosX";
+            this.numericPosX.Size = new System.Drawing.Size(35, 22);
+            this.numericPosX.TabIndex = 1;
+            this.numericPosX.Tag = "posX";
+            // 
+            // labelTransform
+            // 
+            this.labelTransform.AutoSize = true;
+            this.labelTransform.Location = new System.Drawing.Point(3, 3);
+            this.labelTransform.Name = "labelTransform";
+            this.labelTransform.Size = new System.Drawing.Size(38, 15);
+            this.labelTransform.TabIndex = 0;
+            this.labelTransform.Text = "Name";
+            // 
+            // menuIsoCurveExport
+            // 
+            this.menuIsoCurveExport.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuIsoCurveExport.Name = "menuIsoCurveExport";
+            this.menuIsoCurveExport.Size = new System.Drawing.Size(180, 22);
+            this.menuIsoCurveExport.Text = "Iso-Curve Output";
             // 
             // MainWin
             // 
@@ -627,12 +933,13 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1298, 905);
+            this.Controls.Add(this.transformPanel);
             this.Controls.Add(this.statusBar);
             this.Controls.Add(this.toolBar);
             this.Controls.Add(this.mainMenu);
             this.Controls.Add(this.chartIsoCurve);
             this.Controls.Add(this.Log);
-            this.Controls.Add(this.treeView1);
+            this.Controls.Add(this.sceneGraphTree);
             this.Controls.Add(this.GLControl);
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("Ebrima", 9F);
@@ -648,6 +955,17 @@
             this.mainMenu.PerformLayout();
             this.statusBar.ResumeLayout(false);
             this.statusBar.PerformLayout();
+            this.transformPanel.ResumeLayout(false);
+            this.transformPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericScaleZ)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericScaleY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericScaleX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericRotZ)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericRotY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericRotX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPosZ)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPosY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPosX)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -656,7 +974,7 @@
         #endregion
 
         private OpenTK.GLControl GLControl;
-        private System.Windows.Forms.TreeView treeView1;
+        private System.Windows.Forms.TreeView sceneGraphTree;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartIsoCurve;
         private System.ComponentModel.BackgroundWorker processWorker;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
@@ -705,6 +1023,24 @@
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripButton toolStripButton3;
         private System.Windows.Forms.ToolStripButton toolStripButton7;
+        private System.Windows.Forms.Panel transformPanel;
+        private System.Windows.Forms.Label labelScale;
+        private System.Windows.Forms.Label labelRotation;
+        private System.Windows.Forms.Label labelPosition;
+        private System.Windows.Forms.NumericUpDown numericPosX;
+        private System.Windows.Forms.Label labelTransform;
+        private System.Windows.Forms.NumericUpDown numericScaleZ;
+        private System.Windows.Forms.NumericUpDown numericScaleY;
+        private System.Windows.Forms.NumericUpDown numericScaleX;
+        private System.Windows.Forms.NumericUpDown numericRotZ;
+        private System.Windows.Forms.NumericUpDown numericRotY;
+        private System.Windows.Forms.NumericUpDown numericRotX;
+        private System.Windows.Forms.NumericUpDown numericPosZ;
+        private System.Windows.Forms.NumericUpDown numericPosY;
+        private System.Windows.Forms.Label labelZPos;
+        private System.Windows.Forms.Label labelYPos;
+        private System.Windows.Forms.Label labelXpos;
+        private System.Windows.Forms.ToolStripMenuItem menuIsoCurveExport;
     }
 }
 

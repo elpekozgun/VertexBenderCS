@@ -62,6 +62,11 @@ namespace VertexBenderCS.Forms
                 tabProcess.TabPages.Remove(tabGm);
             }
 
+            numericSource.Controls[0].Visible = false;
+            numericTarget.Controls[0].Visible = false;
+            numericStartIndex.Controls[0].Visible = false;
+            numericSampleCount.Controls[0].Visible  = false;
+
         }
 
         private void SubscribeEvents()
@@ -72,7 +77,7 @@ namespace VertexBenderCS.Forms
 
         private void UpdateControls(bool isActive)
         {
-            btnStart.Text = isActive ? "Start" : "Cancel";
+            btnStart.Enabled = isActive;
             foreach (var tab in tabProcess.TabPages)
             {
                 (tab as TabPage).Enabled = isActive;
@@ -103,7 +108,7 @@ namespace VertexBenderCS.Forms
             var tab = (TabPage)e.Argument;
             if (tab == tabSPH)
             {
-                e.Result = Algorithm.ShortestPath(_mesh, (int)(numericSource.Value), (int)numericTarget.Value, _method);
+                e.Result = Algorithm.ShortestPath(_mesh, (int)(numericSource.Value), (int)numericTarget.Value, _method, true);
             }
             else if (tab == tabGm)
             {
@@ -159,7 +164,6 @@ namespace VertexBenderCS.Forms
             {
                 if (_worker.IsBusy)
                 {
-                    
                     _worker.CancelAsync();
                 }
                 else

@@ -1,19 +1,39 @@
 ﻿using OpenTK;
+using System.Collections.Generic;
 
 namespace Engine.Core
 {
     public class Transform
     {
-        public Transform()
+        private Transform _parent;
+        
+        public string Name;
+        public Transform Parent
+        {
+            set
+            {
+                _parent = value;
+                _parent.Children.Add(this);
+            }
+            get
+            {
+                return _parent;
+            }
+        }
+        public readonly List<Transform> Children;
+
+        public Vector3 Position { get; set; }
+        public Vector3 Scale { get; set; }
+        public Quaternion Rotation { get; set; }
+
+        public Transform(string name = "entity")
         {
             Position = Vector3.Zero;
             Rotation = Quaternion.Identity;
             Scale = Vector3.One;
+            Name = name;
+            Children = new List<Transform>();
         }
-
-        public Vector3 Position{ get; set; }
-        public Vector3 Scale { get; set; }
-        public Quaternion Rotation { get; set; }
 
         public Matrix4 ModelMatrix
         {
@@ -26,6 +46,7 @@ namespace Engine.Core
                 return scale * rotation * translation;
             }
         }
+
     }
 
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Engine.Processing
 {
@@ -68,7 +69,7 @@ namespace Engine.Processing
         public List<int> SampleIndices;
         public long Duration { get; private set; }
         public eOutputType Type => eOutputType.Sampling;
-        public string Info => "Farthest point sample calculated in: " + Duration.ToString() + " ms." + "Sample Count: " + SamplePoints.Count;
+        public string Info => "Farthest point sample calculated in: " + Duration.ToString() + " ms." + "Sample Count: " + SampleIndices.Count + ". samples: " + ConvertIndicesTostring(); 
 
         public SampleOutput(List<GraphNode> samplePoints, List<int> sampelIndices, long duration)
         {
@@ -77,7 +78,15 @@ namespace Engine.Processing
             Duration = duration;
         }
 
-        
+        private string ConvertIndicesTostring()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var item in SampleIndices)
+            {
+                sb.Append(item.ToString() + " ");
+            }
+            return sb.ToString();
+        }
     }
 
     public struct IsoCurveOutput : IOutput

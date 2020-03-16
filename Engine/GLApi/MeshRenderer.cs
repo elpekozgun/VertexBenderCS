@@ -36,7 +36,7 @@ namespace Engine.GLApi
 
     }
 
-    public class MeshRenderer : IDisposable, IRenderable
+    public class MeshRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
@@ -53,8 +53,6 @@ namespace Engine.GLApi
         public Mesh Mesh { get; set; }
 
         public Vector4 Color { get; set; }
-
-        public Transform Transform { get; set; }
 
         private void ExtractVertices(Mesh mesh)
         {
@@ -80,21 +78,20 @@ namespace Engine.GLApi
             }
         }
 
-        public MeshRenderer(Mesh mesh)
+        public MeshRenderer(Mesh mesh, string name = "") 
+            : base(name)
         {
             ExtractVertices(mesh);
             Setup();
             _initialized = true;
             Mesh = mesh;
-            Transform = new Transform();
             Shader = Shader.DefaultShader;
         }
 
-        public MeshRenderer(Mesh mesh, Shader shader) : this(mesh)
+        public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
         {
             Shader = shader;
         }
-
 
         private void Setup()
         {
@@ -140,7 +137,7 @@ namespace Engine.GLApi
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
             Shader.Use();
-            Shader.SetMat4("Model", Transform.ModelMatrix);
+            Shader.SetMat4("Model", ModelMatrix);
             Shader.SetMat4("View", cam.View);
             Shader.SetMat4("Projection", cam.Projection);
             Shader.SetVec4("Color", Color);

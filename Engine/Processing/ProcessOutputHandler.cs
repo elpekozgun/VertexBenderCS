@@ -1,4 +1,7 @@
-﻿using OpenTK;
+﻿using Engine.Core;
+using OpenTK;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 
@@ -164,8 +167,28 @@ namespace Engine.Processing
                 }
             }
         }
+
+        public static void SaveIsoCurveOutputs(Dictionary<Transform, IsoCurveOutput> outputs, string file)
+        {
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+                foreach (var output in outputs)
+                {
+                    writer.WriteLine(output.Key.Name);
+                    for (int i = 0; i < output.Value.IsoCurveDistances.Length; i++)
+                    {
+                        var first = i;
+                        var second = output.Value.IsoCurveDistances[i];
+                        var line = string.Format("{0},{1}", first, second);
+                        writer.WriteLine(line);
+                        writer.Flush();
+                    }
+                    writer.Write(Environment.NewLine);
+                }
+            }
+
+
+        }
     }
-
-
 
 }

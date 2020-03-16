@@ -9,7 +9,8 @@ using Engine.Core;
 
 namespace Engine.GLApi
 {
-    public class LineRenderer : IDisposable, IRenderable
+
+    public class LineRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
 
@@ -22,19 +23,18 @@ namespace Engine.GLApi
         private Vector3[] _vertices;
 
         public Vector4 Color { get; set; }
-        public Transform Transform { get; set; }
-        
 
-        public LineRenderer(List<Vector3> vertices)
+        public LineRenderer(List<Vector3> vertices, string name = "") 
+            : base(name)
         {
             _vertices = vertices.ToArray();
             Setup();
             Shader = Shader.DefaultUnlitShader;
-            Transform = new Transform();
             Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
         }
 
-        public LineRenderer(List<Vector3> vertices, Shader shader) : this(vertices)
+        public LineRenderer(List<Vector3> vertices, Shader shader, string name = "") 
+            : this(vertices, name)
         {
             Shader = shader;
         }
@@ -43,7 +43,7 @@ namespace Engine.GLApi
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
             Shader.Use();
-            Shader.SetMat4("Model", Transform.ModelMatrix);
+            Shader.SetMat4("Model", ModelMatrix);
             Shader.SetMat4("View", cam.View);
             Shader.SetMat4("Projection", cam.Projection);
             Shader.SetVec4("Color", Color);
@@ -105,5 +105,6 @@ namespace Engine.GLApi
             GL.Enable(EnableCap.ProgramPointSize);
             GL.Enable(EnableCap.LineSmooth);
         }
+
     }
 }
