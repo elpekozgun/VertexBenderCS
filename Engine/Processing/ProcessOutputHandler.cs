@@ -1,10 +1,6 @@
 ﻿using OpenTK;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace Engine.Processing
 {
@@ -39,21 +35,21 @@ namespace Engine.Processing
 
             if (ratio < 0.25f)
             {
-                return new OpenTK.Vector3(0.0f, ratio , 1.0f);
+                return new Vector3(0.0f, ratio , 1.0f);
             }
             if (ratio < 0.5f)
             {
-                return new OpenTK.Vector3(0.0f, 1.0f, 1 - ratio);
+                return new Vector3(0.0f, 1.0f, 1 - ratio);
             }
             if (ratio < 0.75f)
             {
-                return new OpenTK.Vector3(ratio , 1.0f, 0.0f);
+                return new Vector3(ratio , 1.0f, 0.0f);
             }
             if (ratio <= 1.0f)
             {
-                return new OpenTK.Vector3(1.0f, 1 - ratio, 0.0f);
+                return new Vector3(1.0f, 1 - ratio, 0.0f);
             }
-            return new OpenTK.Vector3(1.0f, 0.0f, 0.0f);
+            return new Vector3(1.0f, 0.0f, 0.0f);
         }
 
         public static Vector3 ColorPixelVectorAGD(float value, float max)
@@ -62,21 +58,21 @@ namespace Engine.Processing
 
             if (ratio < 0.5f)
             {
-                return new OpenTK.Vector3(0.0f, ratio, 1.0f);
+                return new Vector3(0.0f, ratio, 1.0f);
             }
             if (ratio < 0.5f)
             {
-                return new OpenTK.Vector3(0.0f, 1.0f, 1 - ratio);
+                return new Vector3(0.0f, 1.0f, 1 - ratio);
             }
             if (ratio < 0.75f)
             {
-                return new OpenTK.Vector3(ratio, 1.0f, 0.0f);
+                return new Vector3(ratio, 1.0f, 0.0f);
             }
             if (ratio <= 1.0f)
             {
-                return new OpenTK.Vector3(1.0f, 1 - ratio, 0.0f);
+                return new Vector3(1.0f, 1 - ratio, 0.0f);
             }
-            return new OpenTK.Vector3(1.0f, 0.0f, 0.0f);
+            return new Vector3(1.0f, 0.0f, 0.0f);
         }
 
         public static void CreateBitmapForGraph(float[][] graph, int[] path, string file)
@@ -118,7 +114,7 @@ namespace Engine.Processing
             bitmap.Dispose();
         }
 
-        public static void CreateBitmapGeodesicDistance(float[][] matrix, string file)
+        public static Bitmap CreateBitmapGeodesicDistance(float[][] matrix, string file)
         {
             var n = matrix.GetLength(0);
             Bitmap bitmap = new Bitmap(n, n, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -140,10 +136,34 @@ namespace Engine.Processing
                 }
             }
 
-            bitmap.Save(file + ".bmp");
-            bitmap.Dispose();
+            bitmap.Save(file);
+            return bitmap;
         }
        
+        public static void SaveGeodesicDistanceToFile(float[][] matrix, string file)
+        {
+            var n = matrix.GetLength(0);
+
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+                float max = 0;
+                for (int y = 0; y < n; y++)
+                {
+                    for (int x = 0; x < n; x++)
+                    {
+                        max = max < matrix[y][x] ? matrix[y][x] : max;
+                    }
+                }
+
+                for (int y = 0; y < n; y++)
+                {
+                    for (int x = 0; x < n; x++)
+                    {
+                        writer.Write(matrix[y][x].ToString() + " ");
+                    }
+                }
+            }
+        }
     }
 
 

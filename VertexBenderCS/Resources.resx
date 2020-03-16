@@ -118,28 +118,52 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="vertex" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Shader\vertex.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="fragment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Shader\fragment.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>resources\icon\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ModelLoadingFragmentShaderLighted" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Shader\ModelLoadingFragmentShaderLighted.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="ModelLoadingVertexShaderWithLight" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Shader\ModelLoadingVertexShaderWithLight.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="Perspective2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>resources\image\perspective2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="vertex" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Shader\vertex.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="WireframeFragment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Shader\WireframeFragment.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="ModelLoadingFragmentShaderLighted" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Shader\ModelLoadingFragmentShaderLighted.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="WireframeVertex" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Shader\WireframeVertex.glsl;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Perspective2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>resources\image\perspective2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="grid" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\grid.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Ortho" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\Ortho.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Perspective21" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\Perspective2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Shaded" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\Shaded.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="showGizmo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\showGizmo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="showLight" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\showLight.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="showPointCloud" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\showPointCloud.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Wireframe" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Image\Wireframe.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

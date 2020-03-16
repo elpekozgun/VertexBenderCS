@@ -45,17 +45,15 @@ namespace VertexBenderCS.Forms
         private Camera              _camera;
         private CameraController    _cameraController;
         private SceneGraph          _SceneGraph;
+        private Logger              _Logger;
 
-
-        private ToolStripProgressBar    _progressBar;
-        private frmShortestPath         _frmShortestPath;
-
+        private FrmProcess          _frmProcess;
 
         private bool                _isFirstMouse;
         private float               _mouseX;
         private float               _mouseY;
         private System.Timers.Timer _Timer;
-        
+        private readonly object RenderLock = new object();
 
         public MainWin()
         {
@@ -108,21 +106,23 @@ namespace VertexBenderCS.Forms
 
             menuImportOff.Click += MenuImport_Click;
 
-            menuProcessGM.Click += BtnGeodesicMatrix_Click;
             menuProcessSP.Click += BtnDijkstra_Click;
-            menuProcessFPS.Click += BtnFPS_Click;
             menuProcessGC.Click += BtnGauss_Click;
-            menuProcessAGD.Click += BtnAverageGeo_Click;
-            menuProcessIso.Click += BtnIsoCurve_Click;
+            menuProcessDescriptor.Click += BtnDescriptor_Click;
 
-            processWorker.WorkerReportsProgress = true;
-            processWorker.WorkerSupportsCancellation = true;
-            processWorker.DoWork += ProcessWorker_DoWork;
-            processWorker.ProgressChanged += ProcessWorker_ProgressChanged;
-            processWorker.RunWorkerCompleted += ProcessWorker_RunWorkerCompleted;
+            _Logger.OnItemLogged += Logger_OnItemLogged;
+            _Logger.OnLogCleaned += Logger_OnLogCleaned;
+        }
 
-            _frmShortestPath.OnInputSelected += DijkstraOutput;
+        private void Logger_OnLogCleaned(string obj)
+        {
+            Log.Clear();
+        }
 
+        private void Logger_OnItemLogged(string obj)
+        {
+            Log.AppendText(obj);
+            Log.AppendText(Environment.NewLine);
         }
 
         private void MenuImport_Click(object sender, EventArgs e)
@@ -181,20 +181,16 @@ namespace VertexBenderCS.Forms
             _Timer.Elapsed += Update;
             _Timer.Start();
 
-            _progressBar = statusBar.Items["statusProgress"] as ToolStripProgressBar;
-            _frmShortestPath = new frmShortestPath();
-            
+            _frmProcess = null;
+            _Logger = new Logger();
 
             SubscribeEvents();
             SetupScene();
-
 
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            //Application.Idle -= Application_Idle;
-
             base.OnClosing(e);
         }
 
@@ -308,61 +304,21 @@ namespace VertexBenderCS.Forms
 
         private void Render()
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.CullFace(CullFaceMode.Back);
+            //lock (RenderLock)
+            {
 
-            lock(GLControl)
-            {
-                _SceneGraph.RenderAll(_camera);
-            }
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                GL.CullFace(CullFaceMode.Back);
 
-            GL.Flush();
-            GLControl.SwapBuffers();
-        }
+                //lock(RenderLock)
+                {
+                    _SceneGraph.RenderAll(_camera);
+                }
 
-        private void ProcessWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled == true)
-            {
-                Log.Text = "cancelled";
-            }
-            else if (e.Error != null)
-            {
-                Log.Text = "Error";
-            }
-            else
-            {
-                Log.Text = "Completed";
+                GL.Flush();
+                GLControl.SwapBuffers();
             }
         }
-
-        private void ProcessWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            UpdateProgress(e.ProgressPercentage, 100);
-        }
-
-        private void ProcessWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var worker = sender as BackgroundWorker;
-
-            if (worker.CancellationPending == true)
-            {
-                e.Cancel = true;
-            }
-            else
-            {
-                Stopwatch watch = new Stopwatch();
-                watch.Start();
-                var matrix = Algorithm.CreateGeodesicDistanceMatrix((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
-                ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
-                watch.Stop();
-                var a4 = watch.ElapsedMilliseconds;
-                //Log.AppendText("output created" + ", elapsed: " + a4);
-            }
-
-        }
-
-        // TEST REGION
 
         #region TEST
 
@@ -379,66 +335,105 @@ namespace VertexBenderCS.Forms
             return bmp;
         }
 
-        private int? _src = null;
-        private int? _trg = null;
-
-        private void TxtTarget_TextChanged(object sender, EventArgs e)
-        {
-            var text = (sender as MaskedTextBox).Text;
-
-            if (text != string.Empty)
-            {
-                _trg = new int?(int.Parse(text));
-            }
-
-        }
-
-        private void TxtSource_TextChanged(object sender, EventArgs e)
-        {
-            var text = (sender as MaskedTextBox).Text;
-
-            if (text != string.Empty)
-            {
-                _src = new int?(int.Parse(text));
-            }
-        }
-
-        private void UpdateProgress(int progress,int max)
-        {
-            _progressBar.Value = progress;
-            _progressBar.Maximum = max;
-        }
-
-        private void necati(string asdasd)
-        {
-
-        }
-
-        private void DijkstraOutput(List<ShortestPathOutput> output)
+        private void DisplayShortestPathOutput(ShortestPathOutput output)
         {
             var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
 
             List<Vector3> lines1 = new List<Vector3>();
-            for (int i = 0; i < output[0].Path.Count - 1; i++)
+            for (int i = 0; i < output.Path.Count - 1; i++)
             {
-                lines1.Add(mesh.Vertices[output[0].Path[i]].Coord);
-                lines1.Add(mesh.Vertices[output[0].Path[i + 1]].Coord);
+                lines1.Add(mesh.Vertices[output.Path[i]].Coord);
+                lines1.Add(mesh.Vertices[output.Path[i + 1]].Coord);
             }
 
             var r1 = new LineRenderer(lines1);
             r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
             _SceneGraph.AddObject(r1);
+
+            _Logger.Append(output.Info);
+        }
+
+        private void DisplaySamplingOutput(SampleOutput output)
+        {
+            List<MeshRenderer> points = new List<MeshRenderer>();
+            for (int i = 0; i < output.SampleIndices.Count; i++)
+            {
+                MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader)
+                {
+                    Color = new Vector4(output.SamplePoints[i].Coord * 0.5f, 1.0f)
+                };
+                obj.Transform.Position = output.SamplePoints[i].Coord;
+                points.Add(obj);
+                _SceneGraph.AddObject(obj);
+            }
+
+            _Logger.Append(output.Info);
+        }
+
+        private void DisplayIsoCurveOutput(IsoCurveOutput output)
+        {
+            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
+
+            MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
+            gizmo.Transform.Position = mesh.Vertices[output.SourceIndex].Coord;
+            _SceneGraph.AddObject(gizmo);
+
+            chartIsoCurve.Series[0].Points.Clear();
+
+            for (int i = 0; i < output.IsoCurveDistances.Length; i++)
+            {
+                var line = new LineRenderer(output.IsoCurves[i]);
+                _SceneGraph.AddObject(line);
+                line.Color = new Vector4(1, 0, 0, 1);
+                chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
+            }
+
+            chartIsoCurve.Show();
+            _Logger.Append(output.Info);
+        }
+
+        private void DisplayAverageGeodesicOutput(AverageGeodesicOutput output)
+        {
+            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
+            float max = output.Distances.Max();
+
+            var color = new Vector3[output.Distances.Length];
+            for (int i = 0; i < color.Length; i++)
+            {
+                color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max);
+            }
+
+            obj.SetColorBuffer(color);
+            _Logger.Append(output.Info);
+        }
+
+        private void ShortestPathOnResultReturned(IOutput output)
+        {
+            switch (output.Type)
+            {
+                case eOutputType.shortestPath:
+                    DisplayShortestPathOutput((ShortestPathOutput)output);
+                    break;
+                case eOutputType.Sampling:
+                    DisplaySamplingOutput((SampleOutput)output);
+                    break;
+                case eOutputType.IsoCurve:
+                    DisplayIsoCurveOutput((IsoCurveOutput)output);
+                    break;
+                case eOutputType.AverageGeodesicDistance:
+                    DisplayAverageGeodesicOutput((AverageGeodesicOutput)output);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void BtnDijkstra_Click(object sender, EventArgs e)
         {
             var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
-            _frmShortestPath.Mesh = mesh;
-            _frmShortestPath.Show();
-
-
-
-
+            _frmProcess = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
+            _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
+            _frmProcess.ShowDialog();
             //if (_src.HasValue && _trg.HasValue)
             //{
             //    Stopwatch watch = new Stopwatch();
@@ -511,59 +506,6 @@ namespace VertexBenderCS.Forms
             //}
         }
 
-        private void BtnGeodesicMatrix_Click(object sender, EventArgs e)
-        {
-            Stopwatch watch = new Stopwatch();
-
-            watch.Start();
-            var matrix = Algorithm.CreateGeodesicDistanceMatrix((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
-            ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix, @"C:\users\ozgun\desktop\out");
-            watch.Stop();
-            var a4 = watch.ElapsedMilliseconds;
-            Log.AppendText("output created" + ", elapsed: " + a4);
-
-        }
-
-        private void BtnFPS_Click(object sender, EventArgs e)
-        {
-            Stopwatch watch = new Stopwatch();
-            Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
-
-            watch.Start();
-            var samples = Algorithm.FarthestPointSampling(g, 100, UpdateProgress);
-            watch.Stop();
-
-            var a4 = watch.ElapsedMilliseconds;
-            AppendLogSafe("\n output created" + ", elapsed: " + a4);
-
-            for (int i = 0; i < samples.SampleIndices.Count; i++)
-            {
-                MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
-                obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
-                obj.Transform.Position = samples.SamplePoints[i].Coord;
-                _SceneGraph.AddObject(obj);
-            }
-            
-
-            //Stopwatch watch = new Stopwatch();
-            //Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
-
-            //watch.Start();
-            //var samples = Algorithm.FarthestPointSampling(g, 100, UpdateProgress);
-            //watch.Stop();
-                
-            //var a4 = watch.ElapsedMilliseconds;
-            //AppendLogSafe("\n output created" + ", elapsed: " + a4);
-
-            //for (int i = 0; i < samples.SampleIndices.Count; i++)
-            //{
-            //    MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
-            //    obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
-            //    obj.Transform.Position = samples.SamplePoints[i].Coord;
-            //    _SceneGraph.AddObject(obj);
-            //}
-        }
-
         private void BtnGauss_Click(object sender, EventArgs e)
         {
             var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
@@ -583,74 +525,111 @@ namespace VertexBenderCS.Forms
                 {
                     color[i] = new Vector3(val, 0.0f, 0.0f);
                 }
-
             }
 
             obj.SetColorBuffer(color);
         }
 
-        private void BtnAverageGeo_Click(object sender, EventArgs e)
+        private void BtnDescriptor_Click(object sender, EventArgs e)
         {
-            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
-            Graph g = new Graph(obj.Mesh);
-            var a = Algorithm.AverageGeodesicDistance(g, UpdateProgress);
+            var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
+            _frmProcess = new FrmProcess(mesh, eProcessCoreType.Descriptor);
+            _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
+            _frmProcess.ShowDialog();
+            //var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
+            //var graph = new Graph(obj.Mesh);
+            //var samples = Algorithm.FarthestPointSampling(graph, 1, _worker.ReportProgress);
 
-            float max = a.Max();
+            //for (int i = 0; i < samples.SampleIndices.Count; i++)
+            //{
+            //    MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
+            //    gizmo.Transform.Position = samples.SamplePoints[i].Coord;
+            //    _SceneGraph.AddObject(gizmo);
+            //}
 
-            var color = new Vector3[a.Length];
-            for (int i = 0; i < color.Length; i++)
-            {
-                color[i] = ProcessOutputHandler.ColorPixelVector(a[i], max);
-            }
+            //var output = Algorithm.IsoCurveSignature(obj.Mesh, samples.SampleIndices[0], 40);
 
-            obj.SetColorBuffer(color);
+            //chartIsoCurve.Series[0].Points.Clear();
 
+            //for (int i = 0; i < output.IsoCurveDistances.Length; i++)
+            //{
+            //    var line = new LineRenderer(output.IsoCurves[i]);
+            //    _SceneGraph.AddObject(line);
+            //    line.Color = new Vector4(1, 0, 0, 1);
+            //    chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
+            //}
+
+            //chartIsoCurve.Show();
         }
 
-        private void BtnIsoCurve_Click(object sender, EventArgs e)
-        {
-            var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
-            var graph = new Graph(obj.Mesh);
-            var samples = Algorithm.FarthestPointSampling(graph, 1, UpdateProgress);
 
-            for (int i = 0; i < samples.SampleIndices.Count; i++)
-            {
-                MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f));
-                gizmo.Transform.Position = samples.SamplePoints[i].Coord;
-                _SceneGraph.AddObject(gizmo);
-            }
+        //private void BtnGeodesicMatrix_Click(object sender, EventArgs e)
+        //{
+        //    Stopwatch watch = new Stopwatch();
 
-            var output = Algorithm.IsoCurveSignature(obj.Mesh, samples.SampleIndices[0], 40);
+        //    watch.Start();
+        //    var matrix = Algorithm.CreateGeodesicDistanceMatrix((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh, (a)=> { });
+        //    ProcessOutputHandler.CreateBitmapGeodesicDistance(matrix.Matrix, @"C:\users\ozgun\desktop\out");
+        //    watch.Stop();
+        //    var a4 = watch.ElapsedMilliseconds;
+        //    Log.AppendText("output created" + ", elapsed: " + a4);
 
-            chartIsoCurve.Series[0].Points.Clear();
+        //}
 
-            for (int i = 0; i < output.IsoCurveDistances.Length; i++)
-            {
-                var line = new LineRenderer(output.IsoCurves[i]);
-                _SceneGraph.AddObject(line);
-                line.Color = new Vector4(1, 0, 0, 1);
-                chartIsoCurve.Series[0].Points.AddXY(i, output.IsoCurveDistances[i]);
-            }
+        //private void BtnFPS_Click(object sender, EventArgs e)
+        //{
+        //    var mesh = (_SceneGraph.SceneItems[0] as MeshRenderer).Mesh;
+        //    _frmShortestPath = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
+        //    _frmShortestPath.OnResultReturned += ShortestPathOnResultReturned;
+        //    _frmShortestPath.Show();
 
-            chartIsoCurve.Show();
-        }
+        //    //_worker.RunWorkerAsync();
 
-        delegate void SafeCallDelegate(string text);
-        private void AppendLogSafe(string text)
-        {
-            if (Log.InvokeRequired)
-            {
-                var d = new SafeCallDelegate(AppendLogSafe);
-                Log.Invoke(d, new object[] { text });
-            }
-            else
-            {
-                Log.AppendText(text);
-            }
-        }
+        //    //Stopwatch watch = new Stopwatch();
+        //    //Graph g = new Graph((_SceneGraph.SceneItems[0] as MeshRenderer).Mesh);
+
+        //    //watch.Start();
+        //    //var samples = Algorithm.FarthestPointSampling(g, 100, UpdateProgress);
+        //    //watch.Stop();
+
+        //    //var a4 = watch.ElapsedMilliseconds;
+        //    //AppendLogSafe("\n output created" + ", elapsed: " + a4);
+
+        //    //List<MeshRenderer> points = new List<MeshRenderer>();
+        //    //for (int i = 0; i < samples.SampleIndices.Count; i++)
+        //    //{
+        //    //    MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader);
+        //    //    obj.Color = new Vector4(samples.SamplePoints[i].Coord * 0.5f, 1.0f);
+        //    //    obj.Transform.Position = samples.SamplePoints[i].Coord;
+        //    //    points.Add(obj);
+        //    //     _SceneGraph.AddObject(obj);
+        //    //}
+        //}
+
+        //private void BtnAverageGeo_Click(object sender, EventArgs e)
+        //{
+        //    var obj = (_SceneGraph.SceneItems[0] as MeshRenderer);
+        //    Graph g = new Graph(obj.Mesh);
+        //    var a = Algorithm.AverageGeodesicDistance(g, _worker.ReportProgress);
+
+        //    float max = a.Max();
+
+        //    var color = new Vector3[a.Length];
+        //    for (int i = 0; i < color.Length; i++)
+        //    {
+        //        color[i] = ProcessOutputHandler.ColorPixelVector(a[i], max);
+        //    }
+
+        //    obj.SetColorBuffer(color);
+
+        //}
 
         #endregion
 
+        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 
 }

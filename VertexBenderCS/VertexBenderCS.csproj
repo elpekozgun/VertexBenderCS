@@ -69,17 +69,18 @@
   <ItemGroup>
     <Compile Include="Forms\CustomColorTable.cs" />
     <Compile Include="Forms\CustomToolStripRenderer.cs" />
+    <Compile Include="Forms\Logger.cs" />
     <Compile Include="Forms\MainWin.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\MainWin.Designer.cs">
       <DependentUpon>MainWin.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\frmShortestPath.cs">
+    <Compile Include="Forms\FrmProcess.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\frmShortestPath.Designer.cs">
-      <DependentUpon>frmShortestPath.cs</DependentUpon>
+    <Compile Include="Forms\FrmProcess.Designer.cs">
+      <DependentUpon>FrmProcess.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -96,8 +97,8 @@
     <EmbeddedResource Include="Forms\MainWin.resx">
       <DependentUpon>MainWin.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\frmShortestPath.resx">
-      <DependentUpon>frmShortestPath.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\FrmProcess.resx">
+      <DependentUpon>FrmProcess.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -106,8 +107,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
@@ -145,7 +146,39 @@
       <Name>Engine</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\Image\horse0.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\fps100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\man0.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\gauss.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\Ortho.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\Shaded.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\showGizmo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\showLight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\showPointCloud.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\Wireframe.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\grid.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

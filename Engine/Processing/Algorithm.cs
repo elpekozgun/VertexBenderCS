@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OpenTK;
 using PriorityQueues;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Engine.Processing
 {
@@ -19,9 +20,13 @@ namespace Engine.Processing
 
     public static class Algorithm
     {
-        private static Stopwatch _Watch = new Stopwatch();
+        private static readonly Stopwatch _Watch = new Stopwatch();
 
-        public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type, Action<string> Callback)
+        private static readonly object Lock = new object();
+
+        #region Public Wrapper Methods
+
+        public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type)
         {
             switch (type)
             {
@@ -75,9 +80,12 @@ namespace Engine.Processing
             return DijkstraMinHeap(graph, src);
         }
         
-        public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount, Action<int, int> UpdateProgress)
+
+        public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
         {
-            var distances = DijkstraMinHeap(graph, 0);
+            _Watch.Reset();
+            _Watch.Start();
+            var distances = DijkstraMinHeap(graph, startIndex);
             var allDistances = new HashSet<float[]>
             {
                 distances
@@ -88,7 +96,7 @@ namespace Engine.Processing
 
             for (int i = 0; i < sampleCount; i++)
             {
-                var cluster = new PriorityQueues.BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
+                var storage = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
 
                 foreach (var node in graph.Nodes)
                 {
@@ -101,11 +109,11 @@ namespace Engine.Processing
                             minDist = dist;
                         }
                     }
-                    cluster.Enqueue(new HeapNode(node.Id, node.Neighbors, -minDist), -minDist);
+                    storage.Enqueue(new HeapNode(node.Id, node.Neighbors, -minDist), -minDist);
                 }
 
 
-                var u = cluster.Dequeue();
+                var u = storage.Dequeue();
                 if (i == 0)
                 {
                     allDistances.Clear();
@@ -114,11 +122,12 @@ namespace Engine.Processing
 
                 farthestPoints.Add(graph.Nodes[u.id]);
                 farthestIndices.Add(graph.Nodes[u.id].Id);
-                UpdateProgress(i, sampleCount);
+                updateProgress((int)(100 * ((float)i /  (float)sampleCount)));
             }
+            _Watch.Stop();
+            updateProgress(100);
 
-            UpdateProgress(sampleCount,sampleCount);
-            return new SampleOutput(farthestPoints, farthestIndices);
+            return new SampleOutput(farthestPoints, farthestIndices,_Watch.ElapsedMilliseconds);
         }
 
         public static List<float> GaussianCurvature(Mesh mesh)
@@ -141,11 +150,14 @@ namespace Engine.Processing
             return Curvatures;
         }
 
-        public static float[] AverageGeodesicDistance(Graph graph, Action<int, int> updateProgress)
+        public static AverageGeodesicOutput AverageGeodesicDistance(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
         {
+            _Watch.Reset();
+            _Watch.Start();
+
             float[] distances = new float[graph.Nodes.Count];
             
-            var samples = FarthestPointSampling(graph, 100, updateProgress);
+            var samples = FarthestPointSampling(graph, sampleCount, startIndex, updateProgress);
 
             for (int i = 0; i < samples.SampleIndices.Count; i++)
             {
@@ -154,13 +166,19 @@ namespace Engine.Processing
                 {
                     distances[j] += (dist[j] / samples.SamplePoints.Count);
                 }
+                updateProgress((int)(100 * ((float)i / (float)samples.SampleIndices.Count)));
             }
 
-            return distances;
+            _Watch.Stop();
+
+            return new AverageGeodesicOutput(distances, _Watch.ElapsedMilliseconds);
         }
 
-        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source, int sampleCount)
+        public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source, int sampleCount, Action<int> updateProgress)
         {
+            _Watch.Reset();
+            _Watch.Start();
+
             Graph graph = new Graph(mesh);
             var distances = DijkstraMinHeap(graph, source);
 
@@ -172,7 +190,7 @@ namespace Engine.Processing
               v1---/--v2
                \  /   /   
                 \/   /    lxT(ri) = |p1 - p2| , where
-              p2/\  /     pj = (1 - αj)*v0 + αj*vj,
+              p2/\  /     pj = (1 - αj) * v0 + αj * vj,
                   \/      and  αj = |ri - g0| / |gj - g0|
                   v3
 
@@ -185,6 +203,7 @@ namespace Engine.Processing
             List<List<Vector3>> isoCurves = new List<List<Vector3>>();
 
             var d = maxDist / k;
+
 
             for (int i = 0; i < k; i++)
             {
@@ -281,6 +300,8 @@ namespace Engine.Processing
                     isoCurveLength += (p1 - p2).Length;
                     isoCurve.Add(p1);
                     isoCurve.Add(p2);
+
+                    updateProgress( (int)(100 * ((float) (i * mesh.Triangles.Count + j) / (float)(mesh.Triangles.Count * k))));
                 }
                 isoCurveDistances[i] = isoCurveLength;
 
@@ -296,17 +317,27 @@ namespace Engine.Processing
 
                 isoCurves.Add(isoCurve);
             }
-            return new IsoCurveOutput(isoCurves, isoCurveDistances);
+            updateProgress(100);
+            _Watch.Stop();
+
+            return new IsoCurveOutput(isoCurves, isoCurveDistances, source, _Watch.ElapsedMilliseconds);
         }
 
-        public static float[][] CreateGeodesicDistanceMatrix(Mesh mesh, bool isParallel = true)
+        public static GeodesicMatrixOutput CreateGeodesicDistanceMatrix(Mesh mesh, Action<int> progress, bool isParallel = true)
         {
             var graph = new Graph(mesh);
-            return CreateGeodesicDistanceMatrix(graph, isParallel);
+            return CreateGeodesicDistanceMatrix(graph, progress, isParallel);
         }
-        
+
+        #endregion
+
+
+        #region Private Methods
+
         private static ShortestPathOutput AStarMinHeap(Graph graph, int src, int target)
         {
+            _Watch.Reset();
+            _Watch.Start();
             var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
             var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
 
@@ -354,8 +385,9 @@ namespace Engine.Processing
 
                 path.Add(k);
             }
+            _Watch.Stop();
 
-            return new ShortestPathOutput(targetDistance, path);
+            return new ShortestPathOutput(eShortestPathMethod.Astar, targetDistance, path, _Watch.ElapsedMilliseconds);
         }
 
         private static List<List<KeyValuePair<int, float>>> ConstructGraphFromMesh(Mesh mesh)
@@ -373,8 +405,11 @@ namespace Engine.Processing
             
         }
         
-        private static float[][] CreateGeodesicDistanceMatrix(Graph graph, bool isParallel = true)
+        private static GeodesicMatrixOutput CreateGeodesicDistanceMatrix(Graph graph, Action<int> progress, bool isParallel = true)
         {
+            _Watch.Reset();
+            _Watch.Start();
+
             int n = graph.Nodes.Count;
 
             float[][] matrix = new float[n][];
@@ -388,31 +423,37 @@ namespace Engine.Processing
                     (i) =>
                     {
                         matrix[i] = DijkstraMinHeap(graph, i);
-                        count++;
+                        progress((int)(100.0f * Interlocked.Increment(ref count) / (n )));
                     }
                 );
+                
             }
             else
             {
                 for (int i = 0; i < n; i++)
                 {
                     matrix[i] = DijkstraMinHeap(graph, i);
+                    progress((int)(100.0f * i / (n)));
+
                 }
             }
+            _Watch.Stop();
+            progress(100);
 
-
-            return matrix;
+            return new GeodesicMatrixOutput(matrix, _Watch.ElapsedMilliseconds);
         }
 
         private static ShortestPathOutput DijkstraArray(List<List<KeyValuePair<int, float>>> graph, int src, int target, bool earlyTerminate = false)
         {
+            _Watch.Reset();
+            _Watch.Start();
             int n = graph.Count;
             float[] shortestDists = new float[n];
             bool[] added = new bool[n];
 
             if (src >= n || src < 0 || target >= n || target < 0)
             {
-                return new ShortestPathOutput(-1, null);
+                return new ShortestPathOutput(eShortestPathMethod.Array, -1, null, 0);
             }
 
             for (int i = 0; i < n; i++)
@@ -468,11 +509,16 @@ namespace Engine.Processing
                 k = parents[k];
             }
 
-            return new ShortestPathOutput(shortestDists[target], path);
+            _Watch.Stop();
+            
+            return new ShortestPathOutput(eShortestPathMethod.Array, shortestDists[target], path, _Watch.ElapsedMilliseconds);
         }
 
         private static ShortestPathOutput DijkstraFibonacciHeap(Graph graph, int src, int target, bool earlyTerminate = false)
         {
+            _Watch.Reset();
+            _Watch.Start();
+
             var que = new FibonacciHeap<HeapNode, float>(PriorityQueueType.Minimum);
             var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
 
@@ -517,11 +563,16 @@ namespace Engine.Processing
                 path.Add(k);
             }
 
-            return  new ShortestPathOutput(nodeMap[target].Item.Priority, path);
+            _Watch.Stop();
+
+            return  new ShortestPathOutput(eShortestPathMethod.Fibonacci, nodeMap[target].Item.Priority, path, _Watch.ElapsedMilliseconds);
         }
         
         private static ShortestPathOutput DijkstraMinHeap(Graph graph, int src, int target, bool earlyTerminate = false)
         {
+            _Watch.Reset();
+            _Watch.Start();
+
             var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
             var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
 
@@ -562,7 +613,10 @@ namespace Engine.Processing
                 k = nodeMap[k].Item.PrevId;
                 path.Add(k);
             }
-            return new ShortestPathOutput(nodeMap[target].Item.Priority, path);
+
+            _Watch.Stop();
+
+            return new ShortestPathOutput(eShortestPathMethod.MinHeap, nodeMap[target].Item.Priority, path, _Watch.ElapsedMilliseconds);
         }
         
         private static float[] DijkstraFibonacciHeap(Graph graph, int src)
@@ -642,6 +696,8 @@ namespace Engine.Processing
 
             return retVal;
         }
+
+        #endregion
 
     }
 
