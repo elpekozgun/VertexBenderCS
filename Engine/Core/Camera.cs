@@ -18,12 +18,13 @@ namespace Engine.Core
 
             Up = Vector3.UnitY;
             Right = Vector3.UnitX;
-            OrthoSize = new Vector2(width, height);
             AspectRatio = width / height;
+            OrthoSize = new Vector2(AspectRatio,1.0f);
             
             FoV = fov;
             Near = near;
             Far = far;
+
         }
 
         public Vector3 Position;
@@ -57,10 +58,8 @@ namespace Engine.Core
         {
             get
             {
-                //return Matrix4.LookAt(new Vector3(-1, 2, -3), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
                 return Matrix4.LookAt(Position, Position + Front, Up);
             }
-
         }
 
     }

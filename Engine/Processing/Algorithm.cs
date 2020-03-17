@@ -20,11 +20,9 @@ namespace Engine.Processing
 
     public static class Algorithm
     {
-        private static readonly Stopwatch _Watch = new Stopwatch();
+        private static readonly Stopwatch _watch = new Stopwatch();
 
-        private static readonly object Lock = new object();
-
-        #region Public Wrapper Methods
+        #region Public Methods
 
         public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type, bool earlyTerminate = false)
         {
@@ -46,32 +44,252 @@ namespace Engine.Processing
         public static ShortestPathOutput DijkstraArray(Mesh mesh, int src, int target, bool earlyterminate = false)
         {
             var graph = ConstructGraphFromMesh(mesh);
-            var a =  DijkstraArray(graph, src, target);
-            return a;
+
+            _watch.Reset();
+            _watch.Start();
+            int n = graph.Count;
+            float[] shortestDists = new float[n];
+            bool[] added = new bool[n];
+
+            if (src >= n || src < 0 || target >= n || target < 0)
+            {
+                return new ShortestPathOutput(eShortestPathMethod.Array, -1, null, 0);
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                shortestDists[i] = float.MaxValue;
+                added[i] = false;
+            }
+            int[] parents = new int[n];
+
+            shortestDists[src] = 0;
+            parents[src] = -1;
+
+            for (int i = 0; i < n; i++)
+            {
+                int neighbor = -1;
+                float shortestDist = float.MaxValue;
+
+                for (int j = 0; j < n; j++)
+                {
+                    if (!added[j] && shortestDists[j] < shortestDist)
+                    {
+                        neighbor = j;
+                        shortestDist = shortestDists[j];
+                    }
+                }
+
+                added[neighbor] = true;
+
+
+                for (int j = 0; j < graph[neighbor].Count; j++)
+                {
+                    var dist = graph[neighbor][j].Value;
+
+                    var index = graph[neighbor][j].Key;
+
+                    if (dist > 0 && (dist + shortestDist) < shortestDists[index])
+                    {
+                        parents[index] = neighbor;
+                        shortestDists[index] = dist + shortestDist;
+                    }
+                }
+
+            }
+
+            var path = new List<int>
+            {
+                target
+            };
+            int k = parents[target];
+            while (k != -1)
+            {
+                path.Add(k);
+                k = parents[k];
+            }
+
+            _watch.Stop();
+            Logger.Log($"{mesh.Name}: Dijkstra Array -> Source: {src}, Target: {target} Duration: {_watch.ElapsedMilliseconds} ms. Max distance -> {shortestDists[target]}");
+
+
+            return new ShortestPathOutput(eShortestPathMethod.Array, shortestDists[target], path, _watch.ElapsedMilliseconds);
         }
         
         public static ShortestPathOutput DijkstraFibonacciHeap(Mesh mesh, int src, int target, bool earlyTerminate = false)
         {
             var graph = new Graph(mesh);
-            return DijkstraFibonacciHeap(graph, src, target, earlyTerminate);
+            _watch.Reset();
+            _watch.Start();
+
+            var que = new FibonacciHeap<HeapNode, float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                var dist = i == src ? 0 : float.MaxValue;
+
+                var n = new HeapNode(i, graph.Nodes[i].Neighbors, dist);
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(n, dist);
+                nodeMap[i] = output;
+            }
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                if (earlyTerminate && u.id == target)
+                {
+                    break;
+                }
+
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
+            }
+
+            var path = new List<int>();
+            int k = target;
+            path.Add(target);
+            while (k != src)
+            {
+                //k = previousMap[k].Data;
+                k = nodeMap[k].Item.PrevId;
+                path.Add(k);
+            }
+
+            _watch.Stop();
+            Logger.Log($"{mesh.Name}: Dijkstra Fibonacci Heap -> Source: {src}, Target: {target} Duration: {_watch.ElapsedMilliseconds} ms. Max distance -> {nodeMap[target].Item.Priority}");
+
+            return new ShortestPathOutput(eShortestPathMethod.Fibonacci, nodeMap[target].Item.Priority, path, _watch.ElapsedMilliseconds);
         }
 
         public static ShortestPathOutput DijkstraMinHeap(Mesh mesh, int src, int target, bool earlyTerminate = false)
         {
             var graph = new Graph(mesh);
-            return DijkstraMinHeap(graph, src, target, earlyTerminate);
+
+            _watch.Reset();
+            _watch.Start();
+
+            var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                var dist = i == src ? 0 : float.MaxValue;
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(new HeapNode(i, graph.Nodes[i].Neighbors, dist), dist);
+                nodeMap[i] = output;
+            }
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                if (earlyTerminate && u.id == target)
+                {
+                    break;
+                }
+
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
+            }
+
+            var path = new List<int>();
+            int k = target;
+            path.Add(k);
+            while (k != src)
+            {
+                k = nodeMap[k].Item.PrevId;
+                path.Add(k);
+            }
+
+            _watch.Stop();
+
+            Logger.Log($"{mesh.Name}: Dijkstra Min Heap -> Source: {src}, Target: {target} Duration: {_watch.ElapsedMilliseconds} ms. Max distance -> {nodeMap[target].Item.Priority}");
+
+            return new ShortestPathOutput(eShortestPathMethod.MinHeap, nodeMap[target].Item.Priority, path, _watch.ElapsedMilliseconds);
         }
 
         public static ShortestPathOutput AStarMinHeap(Mesh mesh, int src, int target)
         {
             var graph = new Graph(mesh);
-            return AStarMinHeap(graph, src, target);
+            _watch.Reset();
+            _watch.Start();
+            var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                var dist = i == src ? (graph.Nodes[src].Coord - graph.Nodes[target].Coord).Length : float.MaxValue;
+
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(new HeapNode(i, graph.Nodes[i].Neighbors, dist), dist);
+                nodeMap[i] = output;
+            }
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                if (u.id == target)
+                {
+                    break;
+                }
+
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    var euclidDist = (graph.Nodes[neighbor.Key].Coord - graph.Nodes[target].Coord).Length;
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value + euclidDist;
+
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val - euclidDist;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val - euclidDist);
+
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
+            }
+
+            var path = new List<int>();
+            int k = target;
+            var targetDistance = 0.0f;
+            path.Add(k);
+            while (k != src)
+            {
+                targetDistance += (graph.Nodes[k].Coord - graph.Nodes[nodeMap[k].Item.PrevId].Coord).Length;
+                k = nodeMap[k].Item.PrevId;
+
+                path.Add(k);
+            }
+            _watch.Stop();
+
+            Logger.Log($"{mesh.Name}: A* Min Heap -> Source: {src}, Target: {target} Duration: {_watch.ElapsedMilliseconds} ms. Max distance -> {targetDistance}");
+
+            return new ShortestPathOutput(eShortestPathMethod.Astar, targetDistance, path, _watch.ElapsedMilliseconds);
         }
 
         public static SampleOutput FarthestPointSampling(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
         {
-            _Watch.Reset();
-            _Watch.Start();
+            _watch.Reset();
+            _watch.Start();
             var distances = DijkstraMinHeap(graph, startIndex);
             var allDistances = new HashSet<float[]>
             {
@@ -111,10 +329,16 @@ namespace Engine.Processing
                 farthestIndices.Add(graph.Nodes[u.id].Id);
                 updateProgress((int)(100 * ((float)i /  (float)sampleCount)));
             }
-            _Watch.Stop();
+            _watch.Stop();
             updateProgress(100);
 
-            return new SampleOutput(farthestPoints, farthestIndices,_Watch.ElapsedMilliseconds);
+            Logger.Log($"Farthest point sample -> Duration: {_watch.ElapsedMilliseconds} ms. SampleCount -> {farthestIndices} ");
+            if (farthestIndices.Count > 1)
+            {
+                Logger.Log($"Farthest 2 Points -> Duration: {farthestIndices[0]} {farthestIndices[1]} ");
+            }
+
+            return new SampleOutput(farthestPoints, farthestIndices,_watch.ElapsedMilliseconds);
         }
 
         public static List<float> GaussianCurvature(Mesh mesh)
@@ -139,8 +363,8 @@ namespace Engine.Processing
 
         public static AverageGeodesicOutput AverageGeodesicDistance(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
         {
-            _Watch.Reset();
-            _Watch.Start();
+            _watch.Reset();
+            _watch.Start();
 
             float[] distances = new float[graph.Nodes.Count];
             
@@ -156,15 +380,17 @@ namespace Engine.Processing
                 updateProgress((int)(100 * ((float)i / (float)samples.SampleIndices.Count)));
             }
 
-            _Watch.Stop();
+            _watch.Stop();
 
-            return new AverageGeodesicOutput(distances, _Watch.ElapsedMilliseconds);
+            Logger.Log($"Average geodesic distance -> Duration: {_watch.ElapsedMilliseconds} ms");
+
+            return new AverageGeodesicOutput(distances, _watch.ElapsedMilliseconds);
         }
 
         public static IsoCurveOutput IsoCurveSignature(Mesh mesh, int source, int sampleCount, Action<int> updateProgress)
         {
-            _Watch.Reset();
-            _Watch.Start();
+            _watch.Reset();
+            _watch.Start();
 
             Graph graph = new Graph(mesh);
             var distances = DijkstraMinHeap(graph, source);
@@ -305,16 +531,56 @@ namespace Engine.Processing
                 isoCurves.Add(isoCurve);
             }
             updateProgress(100);
-            _Watch.Stop();
+            _watch.Stop();
 
-            return new IsoCurveOutput(isoCurves, isoCurveDistances, source, _Watch.ElapsedMilliseconds);
+            Logger.Log($"Iso-Curve Signature -> Duration: {_watch.ElapsedMilliseconds} ms for {k} samples");
+
+
+            return new IsoCurveOutput(isoCurves, isoCurveDistances, source, _watch.ElapsedMilliseconds);
         }
 
         public static GeodesicMatrixOutput CreateGeodesicDistanceMatrix(Mesh mesh, Action<int> progress, bool isParallel = true)
         {
             var graph = new Graph(mesh);
-            return CreateGeodesicDistanceMatrix(graph, progress, isParallel);
+            _watch.Reset();
+            _watch.Start();
+
+            int n = graph.Nodes.Count;
+
+            float[][] matrix = new float[n][];
+            int count = 0;
+            if (isParallel)
+            {
+                Parallel.For
+                (
+                    0,
+                    n,
+                    (i) =>
+                    {
+                        matrix[i] = DijkstraMinHeap(graph, i);
+                        progress((int)(100.0f * Interlocked.Increment(ref count) / (n)));
+                    }
+                );
+
+            }
+            else
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    matrix[i] = DijkstraMinHeap(graph, i);
+                    progress((int)(100.0f * i / (n)));
+
+                }
+            }
+            _watch.Stop();
+            progress(100);
+
+            Logger.Log($"Geodesic Distance Matrix -> Duration: {_watch.ElapsedMilliseconds} ms");
+
+
+            return new GeodesicMatrixOutput(matrix, _watch.ElapsedMilliseconds);
         }
+
 
         internal static float[] DijkstraFibonacciHeap(Mesh mesh, int src)
         {
@@ -330,64 +596,7 @@ namespace Engine.Processing
 
         #endregion
 
-
         #region Private Methods
-
-        private static ShortestPathOutput AStarMinHeap(Graph graph, int src, int target)
-        {
-            _Watch.Reset();
-            _Watch.Start();
-            var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
-            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
-
-            for (int i = 0; i < graph.Nodes.Count; i++)
-            {
-                var dist = i == src ? (graph.Nodes[src].Coord - graph.Nodes[target].Coord).Length : float.MaxValue;
-
-                IPriorityQueueEntry<HeapNode> output = que.Enqueue(new HeapNode(i, graph.Nodes[i].Neighbors, dist), dist );
-                nodeMap[i] = output;
-            }
-
-            while (que.Count > 0)
-            {
-                var u = que.Dequeue();
-
-                if (u.id == target)
-                {
-                    break;
-                }
-
-                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
-                {
-                    var euclidDist = (graph.Nodes[neighbor.Key].Coord - graph.Nodes[target].Coord).Length;
-                    float val = nodeMap[u.id].Item.Priority + neighbor.Value + euclidDist;
-
-                    if (val < nodeMap[neighbor.Key].Item.Priority)
-                    {
-                        nodeMap[neighbor.Key].Item.Priority = val - euclidDist;
-                        que.UpdatePriority(nodeMap[neighbor.Key], val - euclidDist);
-
-                        nodeMap[neighbor.Key].Item.PrevId = u.id;
-                    }
-                }
-
-            }
-
-            var path = new List<int>();
-            int k = target;
-            var targetDistance = 0.0f;
-            path.Add(k);
-            while (k != src)
-            {
-                targetDistance += (graph.Nodes[k].Coord - graph.Nodes[nodeMap[k].Item.PrevId].Coord).Length;
-                k = nodeMap[k].Item.PrevId;
-
-                path.Add(k);
-            }
-            _Watch.Stop();
-
-            return new ShortestPathOutput(eShortestPathMethod.Astar, targetDistance, path, _Watch.ElapsedMilliseconds);
-        }
 
         private static List<List<KeyValuePair<int, float>>> ConstructGraphFromMesh(Mesh mesh)
         {
@@ -402,220 +611,6 @@ namespace Engine.Processing
 
             return retVal;
             
-        }
-        
-        private static GeodesicMatrixOutput CreateGeodesicDistanceMatrix(Graph graph, Action<int> progress, bool isParallel = true)
-        {
-            _Watch.Reset();
-            _Watch.Start();
-
-            int n = graph.Nodes.Count;
-
-            float[][] matrix = new float[n][];
-            int count = 0;
-            if (isParallel)
-            {
-                Parallel.For
-                (
-                    0,
-                    n,
-                    (i) =>
-                    {
-                        matrix[i] = DijkstraMinHeap(graph, i);
-                        progress((int)(100.0f * Interlocked.Increment(ref count) / (n )));
-                    }
-                );
-                
-            }
-            else
-            {
-                for (int i = 0; i < n; i++)
-                {
-                    matrix[i] = DijkstraMinHeap(graph, i);
-                    progress((int)(100.0f * i / (n)));
-
-                }
-            }
-            _Watch.Stop();
-            progress(100);
-
-            return new GeodesicMatrixOutput(matrix, _Watch.ElapsedMilliseconds);
-        }
-
-        private static ShortestPathOutput DijkstraArray(List<List<KeyValuePair<int, float>>> graph, int src, int target, bool earlyTerminate = false)
-        {
-            _Watch.Reset();
-            _Watch.Start();
-            int n = graph.Count;
-            float[] shortestDists = new float[n];
-            bool[] added = new bool[n];
-
-            if (src >= n || src < 0 || target >= n || target < 0)
-            {
-                return new ShortestPathOutput(eShortestPathMethod.Array, -1, null, 0);
-            }
-
-            for (int i = 0; i < n; i++)
-            {
-                shortestDists[i] = float.MaxValue;
-                added[i] = false;
-            }
-            int[] parents = new int[n];
-
-            shortestDists[src] = 0;
-            parents[src] = -1;
-
-            for (int i = 0; i < n; i++)
-            {
-                int neighbor = -1;
-                float shortestDist = float.MaxValue;
-
-                for (int j = 0; j < n; j++)
-                {
-                    if (!added[j] && shortestDists[j] < shortestDist)
-                    {
-                        neighbor = j;
-                        shortestDist = shortestDists[j];
-                    }
-                }
-
-                added[neighbor] = true;
-
-
-                for (int j = 0; j < graph[neighbor].Count; j++)
-                {
-                    var dist = graph[neighbor][j].Value;
-
-                    var index = graph[neighbor][j].Key;
-
-                    if (dist > 0 && (dist + shortestDist) < shortestDists[index])
-                    {
-                        parents[index] = neighbor;
-                        shortestDists[index] = dist + shortestDist;
-                    }
-                }
-
-            }
-
-            var path = new List<int>
-            {
-                target
-            };
-            int k = parents[target];
-            while (k != -1)
-            {
-                path.Add(k);
-                k = parents[k];
-            }
-
-            _Watch.Stop();
-            
-            return new ShortestPathOutput(eShortestPathMethod.Array, shortestDists[target], path, _Watch.ElapsedMilliseconds);
-        }
-
-        private static ShortestPathOutput DijkstraFibonacciHeap(Graph graph, int src, int target, bool earlyTerminate = false)
-        {
-            _Watch.Reset();
-            _Watch.Start();
-
-            var que = new FibonacciHeap<HeapNode, float>(PriorityQueueType.Minimum);
-            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
-
-            for (int i = 0; i < graph.Nodes.Count; i++)
-            {
-                var dist = i == src ? 0 : float.MaxValue;
-
-                var n = new HeapNode(i, graph.Nodes[i].Neighbors, dist);
-                IPriorityQueueEntry<HeapNode> output = que.Enqueue(n, dist);
-                nodeMap[i] = output;
-            }
-
-            while (que.Count > 0)
-            {
-                var u = que.Dequeue();
-
-                if (earlyTerminate && u.id == target)
-                {
-                    break;
-                }
-
-                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
-                {
-                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
-                    if (val < nodeMap[neighbor.Key].Item.Priority)
-                    {
-                        nodeMap[neighbor.Key].Item.Priority = val;
-                        que.UpdatePriority(nodeMap[neighbor.Key], val);
-                        nodeMap[neighbor.Key].Item.PrevId = u.id;
-                    }
-                }
-
-            }
-
-            var path = new List<int>();
-            int k = target;
-            path.Add(target);
-            while (k != src)
-            {
-                //k = previousMap[k].Data;
-                k = nodeMap[k].Item.PrevId;
-                path.Add(k);
-            }
-
-            _Watch.Stop();
-
-            return  new ShortestPathOutput(eShortestPathMethod.Fibonacci, nodeMap[target].Item.Priority, path, _Watch.ElapsedMilliseconds);
-        }
-        
-        private static ShortestPathOutput DijkstraMinHeap(Graph graph, int src, int target, bool earlyTerminate = false)
-        {
-            _Watch.Reset();
-            _Watch.Start();
-
-            var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
-            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
-
-            for (int i = 0; i < graph.Nodes.Count; i++)
-            {
-                var dist = i == src ? 0 : float.MaxValue;
-                IPriorityQueueEntry<HeapNode> output = que.Enqueue(new HeapNode(i, graph.Nodes[i].Neighbors, dist), dist);
-                nodeMap[i] = output;
-            }
-
-            while (que.Count > 0)
-            {
-                var u = que.Dequeue();
-
-                if (earlyTerminate && u.id == target)
-                {
-                    break;
-                }
-
-                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
-                {
-                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
-                    if (val < nodeMap[neighbor.Key].Item.Priority)
-                    {
-                        nodeMap[neighbor.Key].Item.Priority = val;
-                        que.UpdatePriority(nodeMap[neighbor.Key], val);
-                        nodeMap[neighbor.Key].Item.PrevId = u.id;
-                    }
-                }
-
-            }
-
-            var path = new List<int>();
-            int k = target;
-            path.Add(k);
-            while (k != src)
-            {
-                k = nodeMap[k].Item.PrevId;
-                path.Add(k);
-            }
-
-            _Watch.Stop();
-
-            return new ShortestPathOutput(eShortestPathMethod.MinHeap, nodeMap[target].Item.Priority, path, _Watch.ElapsedMilliseconds);
         }
         
         private static float[] DijkstraFibonacciHeap(Graph graph, int src)

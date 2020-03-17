@@ -6,6 +6,7 @@ namespace Engine.Core
 {
     public struct Vertex
     {
+
         public Vertex(int id, float x, float y, float z)
         {
             Id = id;
@@ -75,8 +76,11 @@ namespace Engine.Core
 
     public class Mesh
     {
-        public Mesh()
+        public string Name { get; set; }
+
+        public Mesh(string name = "")
         {
+            Name = name;
             Vertices = new List<Vertex>();
             Triangles = new List<Triangle>();
             Edges = new List<Edge>();

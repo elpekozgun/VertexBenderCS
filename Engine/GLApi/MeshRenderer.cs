@@ -158,11 +158,11 @@ namespace Engine.GLApi
                 Shader.SetMat4("Model", ModelMatrix);
                 Shader.SetMat4("View", cam.View);
                 Shader.SetMat4("Projection", cam.Projection);
-                Shader.SetVec4("Color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+                Shader.SetVec4("Color", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.LineWidth(0.5f);
-                GL.Enable(EnableCap.LineSmooth);
+                GL.LineWidth(2.0f);
+                //GL.Enable(EnableCap.LineSmooth);
 
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
             }

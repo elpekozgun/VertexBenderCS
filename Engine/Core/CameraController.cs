@@ -39,7 +39,7 @@ namespace Engine.Core
     {
         private readonly Camera Cam;
 
-        public float MouseSensitivity = 0.1f;
+        public float MouseSensitivity = 0.001f;
         public float MouseSpeed;
 
         private float _yaw;
@@ -69,7 +69,8 @@ namespace Engine.Core
 
         public void Zoom(int val)
         {
-            Cam.Position += (Cam.Front * val * MouseSensitivity * 0.1f);
+            Cam.OrthoSize =  new Vector2(Math.Max(Cam.OrthoSize.X - val * Cam.AspectRatio * MouseSensitivity, 0.0f) ,Math.Max(Cam.OrthoSize.Y - val * MouseSensitivity, 0.0f));
+            Cam.Position += (Cam.Front * val * MouseSensitivity);
         }
 
         public void Pan(float xoffset, float yoffset)
@@ -85,24 +86,30 @@ namespace Engine.Core
         public void Rotate(float xoffset, float yoffset)
         {
 
-            xoffset *= MouseSensitivity;
-            yoffset *= MouseSensitivity;
+            xoffset *= MouseSensitivity*100;
+            yoffset *= MouseSensitivity*100;
 
             _yaw += xoffset;
             _pitch += yoffset;
 
-            //if (_pitch > 70.0f)
-            //{
-            //    _pitch = 70.0f;
-            //}
-            //if (_pitch < -70.0f)
-            //{
-            //    _pitch = -70.0f;
-            //}
-
+            if (_pitch > 85.0f)
+            {
+                _pitch = 85.0f;
+            }
+            if (_pitch < -85.0f)
+            {
+                _pitch = -85.0f;
+            }
+            //Logger.Log(_pitch.ToString());
+            //Logger.Log(_yaw.ToString());
             //Quaternion q1 = new Quaternion(yoffset, -xoffset, 0);
+            //Quaternion q1 = new Quaternion(MathHelper.DegreesToRadians(_yaw), MathHelper.DegreesToRadians(_pitch), 0);
 
             //Cam.Front = q1 * Cam.Front.Normalized();
+            //Cam.Right = Vector3.Cross(Cam.Front, Vector3.UnitY).Normalized();
+            //Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
+            //Logger.Log(_yaw.ToString());
+
             UpdateCameraVectors();
         }
 
@@ -125,42 +132,49 @@ namespace Engine.Core
             float angleX = (float)Math.Asin(sinX);
             float angleY = (float)Math.Asin(sinY);
 
-            Quaternion q1 = new Quaternion(new Vector3(angleX,angleY,0));
+            Quaternion q = new Quaternion(new Vector3(angleX, angleY, 0));
 
-            Cam.Position = q1 * Cam.Position;
-
+            Cam.Position = q * Cam.Position;
             Cam.Front = (target - Cam.Position).Normalized();
             Cam.Right = Vector3.Cross(Cam.Front, Vector3.UnitY).Normalized();
             Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
 
+
+            var eulerRot = q.EulerAngles();
+            _yaw -= eulerRot.Y;
+            _pitch += eulerRot.X;
+
+            //Logger.Log(_yaw.ToString());
         }
 
-        public void Navigate(eCameraMovement movement, float delta = 0.1f)
+
+        public void Navigate(KeyboardState state, float delta = 0.1f)
         {
-            if ((movement & eCameraMovement.forward) == eCameraMovement.forward)
+            if (state.IsKeyDown(Key.W))
             {
                 Cam.Position += Cam.Front * delta;
             }
-            if ((movement & eCameraMovement.backward) == eCameraMovement.backward)
+            if (state.IsKeyDown(Key.S))
             {
                 Cam.Position -= Cam.Front * delta;
             }
-            if ((movement & eCameraMovement.left) == eCameraMovement.left)
-            {
-                Cam.Position -= Cam.Right * delta;
-            }
-            if ((movement & eCameraMovement.right) == eCameraMovement.right)
+            if (state.IsKeyDown(Key.D))
             {
                 Cam.Position += Cam.Right * delta;
             }
-            if ((movement & eCameraMovement.up) == eCameraMovement.up)
+            if (state.IsKeyDown(Key.A))
+            {
+                Cam.Position -= Cam.Right * delta;
+            }
+            if (state.IsKeyDown(Key.E))
             {
                 Cam.Position += Vector3.UnitY * delta;
             }
-            if ((movement & eCameraMovement.down) == eCameraMovement.down)
+            if (state.IsKeyDown(Key.Q))
             {
                 Cam.Position -= Vector3.UnitY * delta;
             }
+            
         }
 
         private void UpdateCameraVectors()
@@ -176,5 +190,6 @@ namespace Engine.Core
             Cam.Up = Vector3.Cross(Cam.Right, Cam.Front).Normalized();
 
         }
+
     }
 }

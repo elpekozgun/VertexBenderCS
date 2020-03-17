@@ -683,8 +683,9 @@
             // 
             // numericScaleZ
             // 
+            this.numericScaleZ.DecimalPlaces = 3;
             this.numericScaleZ.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericScaleZ.Location = new System.Drawing.Point(180, 104);
+            this.numericScaleZ.Location = new System.Drawing.Point(170, 105);
             this.numericScaleZ.Margin = new System.Windows.Forms.Padding(0);
             this.numericScaleZ.Maximum = new decimal(new int[] {
             10000000,
@@ -697,14 +698,15 @@
             0,
             -2147483648});
             this.numericScaleZ.Name = "numericScaleZ";
-            this.numericScaleZ.Size = new System.Drawing.Size(35, 22);
+            this.numericScaleZ.Size = new System.Drawing.Size(50, 22);
             this.numericScaleZ.TabIndex = 15;
             this.numericScaleZ.Tag = "scaleZ";
             // 
             // numericScaleY
             // 
+            this.numericScaleY.DecimalPlaces = 3;
             this.numericScaleY.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericScaleY.Location = new System.Drawing.Point(125, 104);
+            this.numericScaleY.Location = new System.Drawing.Point(115, 105);
             this.numericScaleY.Margin = new System.Windows.Forms.Padding(0);
             this.numericScaleY.Maximum = new decimal(new int[] {
             10000000,
@@ -717,14 +719,15 @@
             0,
             -2147483648});
             this.numericScaleY.Name = "numericScaleY";
-            this.numericScaleY.Size = new System.Drawing.Size(35, 22);
+            this.numericScaleY.Size = new System.Drawing.Size(50, 22);
             this.numericScaleY.TabIndex = 14;
             this.numericScaleY.Tag = "scaleY";
             // 
             // numericScaleX
             // 
+            this.numericScaleX.DecimalPlaces = 3;
             this.numericScaleX.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericScaleX.Location = new System.Drawing.Point(70, 104);
+            this.numericScaleX.Location = new System.Drawing.Point(60, 105);
             this.numericScaleX.Margin = new System.Windows.Forms.Padding(0);
             this.numericScaleX.Maximum = new decimal(new int[] {
             10000000,
@@ -737,14 +740,15 @@
             0,
             -2147483648});
             this.numericScaleX.Name = "numericScaleX";
-            this.numericScaleX.Size = new System.Drawing.Size(35, 22);
+            this.numericScaleX.Size = new System.Drawing.Size(50, 22);
             this.numericScaleX.TabIndex = 13;
             this.numericScaleX.Tag = "scaleX";
             // 
             // numericRotZ
             // 
+            this.numericRotZ.DecimalPlaces = 3;
             this.numericRotZ.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericRotZ.Location = new System.Drawing.Point(180, 74);
+            this.numericRotZ.Location = new System.Drawing.Point(170, 75);
             this.numericRotZ.Margin = new System.Windows.Forms.Padding(0);
             this.numericRotZ.Maximum = new decimal(new int[] {
             10000000,
@@ -757,14 +761,15 @@
             0,
             -2147483648});
             this.numericRotZ.Name = "numericRotZ";
-            this.numericRotZ.Size = new System.Drawing.Size(35, 22);
+            this.numericRotZ.Size = new System.Drawing.Size(50, 22);
             this.numericRotZ.TabIndex = 12;
             this.numericRotZ.Tag = "rotZ";
             // 
             // numericRotY
             // 
+            this.numericRotY.DecimalPlaces = 3;
             this.numericRotY.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericRotY.Location = new System.Drawing.Point(125, 74);
+            this.numericRotY.Location = new System.Drawing.Point(115, 75);
             this.numericRotY.Margin = new System.Windows.Forms.Padding(0);
             this.numericRotY.Maximum = new decimal(new int[] {
             10000000,
@@ -777,14 +782,15 @@
             0,
             -2147483648});
             this.numericRotY.Name = "numericRotY";
-            this.numericRotY.Size = new System.Drawing.Size(35, 22);
+            this.numericRotY.Size = new System.Drawing.Size(50, 22);
             this.numericRotY.TabIndex = 11;
             this.numericRotY.Tag = "rotY";
             // 
             // numericRotX
             // 
+            this.numericRotX.DecimalPlaces = 3;
             this.numericRotX.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericRotX.Location = new System.Drawing.Point(70, 74);
+            this.numericRotX.Location = new System.Drawing.Point(60, 75);
             this.numericRotX.Margin = new System.Windows.Forms.Padding(0);
             this.numericRotX.Maximum = new decimal(new int[] {
             10000000,
@@ -797,14 +803,15 @@
             0,
             -2147483648});
             this.numericRotX.Name = "numericRotX";
-            this.numericRotX.Size = new System.Drawing.Size(35, 22);
+            this.numericRotX.Size = new System.Drawing.Size(50, 22);
             this.numericRotX.TabIndex = 10;
             this.numericRotX.Tag = "rotX";
             // 
             // numericPosZ
             // 
+            this.numericPosZ.DecimalPlaces = 3;
             this.numericPosZ.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericPosZ.Location = new System.Drawing.Point(180, 44);
+            this.numericPosZ.Location = new System.Drawing.Point(170, 45);
             this.numericPosZ.Margin = new System.Windows.Forms.Padding(0);
             this.numericPosZ.Maximum = new decimal(new int[] {
             10000000,
@@ -817,14 +824,15 @@
             0,
             -2147483648});
             this.numericPosZ.Name = "numericPosZ";
-            this.numericPosZ.Size = new System.Drawing.Size(35, 22);
+            this.numericPosZ.Size = new System.Drawing.Size(50, 22);
             this.numericPosZ.TabIndex = 9;
             this.numericPosZ.Tag = "posZ";
             // 
             // numericPosY
             // 
+            this.numericPosY.DecimalPlaces = 3;
             this.numericPosY.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericPosY.Location = new System.Drawing.Point(125, 44);
+            this.numericPosY.Location = new System.Drawing.Point(115, 45);
             this.numericPosY.Margin = new System.Windows.Forms.Padding(0);
             this.numericPosY.Maximum = new decimal(new int[] {
             10000000,
@@ -837,14 +845,14 @@
             0,
             -2147483648});
             this.numericPosY.Name = "numericPosY";
-            this.numericPosY.Size = new System.Drawing.Size(35, 22);
+            this.numericPosY.Size = new System.Drawing.Size(50, 22);
             this.numericPosY.TabIndex = 8;
             this.numericPosY.Tag = "posY";
             // 
             // labelZPos
             // 
             this.labelZPos.AutoSize = true;
-            this.labelZPos.Location = new System.Drawing.Point(177, 26);
+            this.labelZPos.Location = new System.Drawing.Point(167, 25);
             this.labelZPos.Name = "labelZPos";
             this.labelZPos.Size = new System.Drawing.Size(17, 15);
             this.labelZPos.TabIndex = 7;
@@ -853,7 +861,7 @@
             // labelYPos
             // 
             this.labelYPos.AutoSize = true;
-            this.labelYPos.Location = new System.Drawing.Point(122, 26);
+            this.labelYPos.Location = new System.Drawing.Point(112, 25);
             this.labelYPos.Name = "labelYPos";
             this.labelYPos.Size = new System.Drawing.Size(17, 15);
             this.labelYPos.TabIndex = 6;
@@ -862,7 +870,7 @@
             // labelXpos
             // 
             this.labelXpos.AutoSize = true;
-            this.labelXpos.Location = new System.Drawing.Point(67, 26);
+            this.labelXpos.Location = new System.Drawing.Point(57, 25);
             this.labelXpos.Name = "labelXpos";
             this.labelXpos.Size = new System.Drawing.Size(17, 15);
             this.labelXpos.TabIndex = 5;
@@ -898,8 +906,9 @@
             // 
             // numericPosX
             // 
+            this.numericPosX.DecimalPlaces = 3;
             this.numericPosX.Font = new System.Drawing.Font("Ebrima", 8F);
-            this.numericPosX.Location = new System.Drawing.Point(70, 44);
+            this.numericPosX.Location = new System.Drawing.Point(60, 45);
             this.numericPosX.Margin = new System.Windows.Forms.Padding(0);
             this.numericPosX.Maximum = new decimal(new int[] {
             10000000,
@@ -912,7 +921,7 @@
             0,
             -2147483648});
             this.numericPosX.Name = "numericPosX";
-            this.numericPosX.Size = new System.Drawing.Size(35, 22);
+            this.numericPosX.Size = new System.Drawing.Size(50, 22);
             this.numericPosX.TabIndex = 1;
             this.numericPosX.Tag = "posX";
             // 

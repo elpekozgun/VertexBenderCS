@@ -66,7 +66,6 @@
   <ItemGroup>
     <Compile Include="Forms\CustomColorTable.cs" />
     <Compile Include="Forms\CustomToolStripRenderer.cs" />
-    <Compile Include="Forms\Logger.cs" />
     <Compile Include="Forms\MainWin.cs">
       <SubType>Form</SubType>
     </Compile>

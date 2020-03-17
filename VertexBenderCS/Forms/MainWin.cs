@@ -46,7 +46,7 @@ namespace VertexBenderCS.Forms
         private Camera              _camera;
         private CameraController    _cameraController;
         private SceneGraph          _SceneGraph;
-        private Logger              _Logger;
+        //private Logger              _Logger;
 
         private FrmProcess          _frmProcess;
 
@@ -59,8 +59,9 @@ namespace VertexBenderCS.Forms
 
         private MeshRenderer            _activeMesh;
         private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
-        private Keys KeyState { get; set; }
-
+        
+        private OpenTK.Input.KeyboardState KeyState { get; set; }
+        private OpenTK.Input.MouseState MouseState { get; set; }
 
         public MainWin()
         {
@@ -97,7 +98,7 @@ namespace VertexBenderCS.Forms
             _timer.Start();
 
             _frmProcess = null;
-            _Logger = new Logger();
+            //_Logger = new Logger();
             _SceneGraph = new SceneGraph();
             _camera = new Camera(GLControl.Width, GLControl.Height);
             _cameraController = new CameraController(_camera);
@@ -109,7 +110,13 @@ namespace VertexBenderCS.Forms
             InitTransformPanel();
             SubscribeEvents();
             
-            //SetupScene();
+            SetupTestScene();
+        }
+
+        private void SetupTestScene()
+        {
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"),"test");
+            _SceneGraph.AddObject(mesh);
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -121,39 +128,20 @@ namespace VertexBenderCS.Forms
         {
             GLControl.Invalidate();
 
-            if (KeyState == Keys.Q)
-            {
-                _cameraController.Navigate(eCameraMovement.up);
-            }
-            if (KeyState == Keys.E)
-            {
-                _cameraController.Navigate(eCameraMovement.down);
-            }
-            if (KeyState == Keys.W)
-            {
-                _cameraController.Navigate(eCameraMovement.forward);
-            }
-            if (KeyState == Keys.S)
-            {
-                _cameraController.Navigate(eCameraMovement.backward);
-            }
-            if (KeyState == Keys.A)
-            {
-                _cameraController.Navigate(eCameraMovement.left);
-            }
-            if (KeyState == Keys.D)
-            {
-                _cameraController.Navigate(eCameraMovement.right);
-            }
-
+            _cameraController.Navigate(KeyState);
+            
+            KeyState = OpenTK.Input.Keyboard.GetState();
+            MouseState = OpenTK.Input.Mouse.GetCursorState();
+            MouseState = OpenTK.Input.Mouse.GetState();
         }
-
+        
         public void SubscribeEvents()
         {
-            GLControl.KeyDown += new KeyEventHandler(GLControl_KeyDown);
-            GLControl.KeyUp += new KeyEventHandler(GLControl_KeyUp);
-            GLControl.Resize += new EventHandler(GLControl_Resize);
-            GLControl.Paint += new PaintEventHandler(GLControl_Paint);
+            GLControl.MouseClick += GLControl_MouseClick;
+            GLControl.KeyDown += GLControl_KeyDown;
+            GLControl.KeyUp += GLControl_KeyUp;
+            GLControl.Resize += GLControl_Resize;
+            GLControl.Paint += GLControl_Paint;
             GLControl.MouseDown += GLControl_MouseDown;
             GLControl.MouseMove += GLControl_MouseMove;
             GLControl.MouseWheel += GLControl_MouseWheel;
@@ -171,8 +159,8 @@ namespace VertexBenderCS.Forms
             toolbarWireframe.Click += ToolbarWireframe_Click;
             toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
 
-            _Logger.OnItemLogged += Logger_OnItemLogged;
-            _Logger.OnLogCleaned += Logger_OnLogCleaned;
+            Logger.OnItemLogged += Logger_OnItemLogged;
+            Logger.OnLogCleaned += Logger_OnLogCleaned;
 
             sceneGraphTree.AfterSelect += SceneGraphTree_AfterSelect;
             sceneGraphTree.KeyDown += SceneGraphTree_KeyDown;
@@ -181,47 +169,36 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
 
+
+
         private void Logger_OnLogCleaned(string obj)
         {
-            Log.Clear();
+            Log.Invoke((MethodInvoker)delegate ()
+            {
+                Log.Clear();
+            });
         }
 
         private void Logger_OnItemLogged(string obj)
         {
-            Log.AppendText(obj);
-            Log.AppendText(Environment.NewLine);
-        }
-
-        private void MenuImport_Click(object sender, EventArgs e)
-        {
-            var d = new OpenFileDialog();
-            d.ValidateNames = true;
-            d.Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* ";
-            if (d.ShowDialog() == DialogResult.OK)
+            Log.Invoke((MethodInvoker)delegate ()
             {
-                var v = d.FileName.Substring(d.FileName.Length - 4);
-                if (v.ToLower() == ".off")
-                {
-                    var split = d.FileName.Split(new char[] { '\\'});
-                    var name = split[split.Length - 1];
-
-                    //_SceneGraph.Clean();
-                    var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
-                    sceneGraphTree.SelectedNode = null;
-                    _SceneGraph.AddObject(obj);
-                }
-            }
+                Log.AppendText(obj);
+                Log.AppendText(Environment.NewLine);
+            });
         }
+
 
         #region GlControl Events
 
-        private void GLControl_MouseWheel(object sender, MouseEventArgs e)
+        private void GLControl_MouseWheel(object sender,  System.Windows.Forms.MouseEventArgs e)
         {
             _cameraController.Zoom(e.Delta);
         }
 
         private void GLControl_MouseMove(object sender, MouseEventArgs e)
         {
+
             if (_isFirstMouse)
             {
                 _mouseX = (float)e.X;
@@ -232,28 +209,43 @@ namespace VertexBenderCS.Forms
             float offsetX = e.X - _mouseX;
             float offsetY = _mouseY - e.Y;
 
-
             if (e.Button == MouseButtons.Middle)
             {
                 _cameraController.Pan(offsetX, offsetY);
             }
-            else if (e.Button == MouseButtons.Right && (KeyState & Keys.ControlKey) == Keys.ControlKey)
+            //else if (e.Button == MouseButtons.Right && KeyState.IsKeyDown(OpenTK.Input.Key.ControlLeft))
+            //{
+            //    _cameraController.OrbitAround(offsetX, offsetY, _camera.Position + _camera.Front * 2);
+            //}
+            else if (e.Button == MouseButtons.Right)
             {
-                _cameraController.OrbitAround(offsetX , offsetY , Vector3.Zero);
-            }
-            else if(e.Button == MouseButtons.Right)
-            {
-                _cameraController.Rotate(offsetX , offsetY);
+                _cameraController.Rotate(offsetX, offsetY);
             }
             _mouseX = e.X;
             _mouseY = e.Y;
 
-            //_coordinateLabel.Text = "X: " + _camera.Position.X + "\n" + "Y: " + _camera.Position.Y + "Z: " + _camera.Position.Z;
-            //statusBar.Text = KeyState.ToString();
+        }
+
+        private void GLControl_MouseClick(object sender, MouseEventArgs e)
+        {
+            //_mouseX = (float)e.X;
+            //_mouseY = (float)e.Y;
+            //_isFirstMouse = false;
         }
 
         private void GLControl_MouseDown(object sender, MouseEventArgs e)
         {
+            //if (e.Button == MouseButtons.Left)
+            //{
+            //    HalfWidth = this.ClientRectangle.Width / 2.0f;
+            //    HalfHeight = this.ClientRectangle.Height / 2.0f;
+
+            //    _mouseX = (e.X - HalfWidth) / HalfWidth;
+            //    _mouseY = (HalfHeight - e.Y) / HalfHeight;
+
+            //    mouseroll = true;
+            //}
+
             if (e.Button == MouseButtons.Middle && e.Clicks > 1)
             {
                 _cameraController.Reset();
@@ -280,12 +272,11 @@ namespace VertexBenderCS.Forms
 
         private void GLControl_KeyDown(object sender, KeyEventArgs e)
         {
-            KeyState = e.KeyData;
+            _cameraController.Navigate(KeyState);
         }
 
         private void GLControl_KeyUp(object sender, KeyEventArgs e)
         {
-            KeyState = Keys.None;
             if (e.KeyCode == Keys.F12)
             {
                 GrabScreenshot().Save(@"screenshot.png");
@@ -369,15 +360,12 @@ namespace VertexBenderCS.Forms
                 numericPosY.Value = new decimal(_activeMesh.Position.Y);
                 numericPosZ.Value = new decimal(_activeMesh.Position.Z);
 
-                //Quaternion to Euler angles.
                 var q = _activeMesh.Rotation;
-                var eX = Math.Atan2(-2 * (q.Y * q.Z - q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z);
-                var eY = Math.Asin(2 * (q.X * q.Z + q.W * q.Y));
-                var eZ = Math.Atan2(-2 * (q.X * q.Y - q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z);
-
-                numericRotX.Value = new decimal(MathHelper.RadiansToDegrees(eX));
-                numericRotY.Value = new decimal(MathHelper.RadiansToDegrees(eY));
-                numericRotZ.Value = new decimal(MathHelper.RadiansToDegrees(eZ));
+                var rot = _activeMesh.Rotation.EulerAngles();
+                
+                numericRotX.Value = new decimal(rot.X);
+                numericRotY.Value = new decimal(rot.Y);
+                numericRotZ.Value = new decimal(rot.Z);
 
                 numericScaleX.Value  = new decimal(_activeMesh.Scale.X);
                 numericScaleY.Value  = new decimal(_activeMesh.Scale.Y);
@@ -426,16 +414,6 @@ namespace VertexBenderCS.Forms
 
         public void InitTransformPanel()
         {
-
-            numericPosX.Controls[0].Visible = false;
-            numericPosY.Controls[0].Visible = false;
-            numericPosZ.Controls[0].Visible = false;
-            numericRotX.Controls[0].Visible = false;
-            numericRotY.Controls[0].Visible = false;
-            numericRotZ.Controls[0].Visible = false;
-            numericScaleX.Controls[0].Visible = false;
-            numericScaleY.Controls[0].Visible = false;
-            numericScaleZ.Controls[0].Visible = false;
             transformPanel.Visible = false;
 
             numericScaleX.ValueChanged += NumericScale_ValueChanged;
@@ -581,7 +559,7 @@ namespace VertexBenderCS.Forms
                 
                 _SceneGraph.AddObject(r1);
 
-                _Logger.Append(output.Info);
+                //Logger.Append(output.Info);
             }
         }
 
@@ -615,7 +593,7 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.AddObject(obj);
                 }
 
-                _Logger.Append(output.Info);
+                //Logger.Append(output.Info);
             }
         }
 
@@ -659,7 +637,7 @@ namespace VertexBenderCS.Forms
 
                 UpdateChart(output);
 
-                _Logger.Append(output.Info);
+               //Logger.Append(output.Info);
             }
         }
 
@@ -676,7 +654,7 @@ namespace VertexBenderCS.Forms
                 }
 
                 _activeMesh.SetColorBuffer(color);
-                _Logger.Append(output.Info);
+                //Logger.Append(output.Info);
             }
         }
 
@@ -771,6 +749,29 @@ namespace VertexBenderCS.Forms
         private void MenuExit_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void MenuImport_Click(object sender, EventArgs e)
+        {
+            var d = new OpenFileDialog();
+            d.ValidateNames = true;
+            d.Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* ";
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                var v = d.FileName.Substring(d.FileName.Length - 4);
+                if (v.ToLower() == ".off")
+                {
+                    var split = d.FileName.Split(new char[] { '\\'});
+                    var name = split[split.Length - 1];
+
+                    //_SceneGraph.Clean();
+                    var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
+                    obj.Mesh.Name = obj.Name;
+
+                    sceneGraphTree.SelectedNode = null;
+                    _SceneGraph.AddObject(obj);
+                }
+            }
         }
 
         #endregion

@@ -63,9 +63,11 @@
     <Compile Include="Core\CameraNew.cs" />
     <Compile Include="Core\DirectionalLight.cs" />
     <Compile Include="Core\IComponent.cs" />
+    <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\ObjectLoader.cs" />
     <Compile Include="Core\PrimitiveObjectFactory.cs" />
+    <Compile Include="Core\QuaternionExtensions.cs" />
     <Compile Include="Core\SceneGraph.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="GLApi\InstanceRenderer.cs" />
