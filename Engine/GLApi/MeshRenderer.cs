@@ -107,8 +107,6 @@ namespace Engine.GLApi
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * 4, indices, BufferUsageHint.StaticDraw);
 
-            
-
             //coord
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 0);
@@ -136,31 +134,53 @@ namespace Engine.GLApi
 
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
-            Shader.Use();
-            Shader.SetMat4("Model", ModelMatrix);
-            Shader.SetMat4("View", cam.View);
-            Shader.SetMat4("Projection", cam.Projection);
-            Shader.SetVec4("Color", Color);
-
-
             GL.BindVertexArray(_VAO);
 
             if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
             {
-                GL.PolygonMode(MaterialFace.Back, PolygonMode.Fill);
+                Shader = Shader.DefaultShader;
+                Shader.Use();
+                Shader.SetMat4("Model", ModelMatrix);
+                Shader.SetMat4("View", cam.View);
+                Shader.SetMat4("Projection", cam.Projection);
+                Shader.SetVec4("Color", Color);
+
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                GL.Enable(EnableCap.PolygonSmooth);
+
+                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+
             }
-            if((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
+            if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
-                GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
-                GL.PolygonOffset(1.0f, 1.0f);
-                GL.LineWidth(1.5f);
+                Shader = Shader.DefaultUnlitShader;
+                Shader.Use();
+                Shader.SetMat4("Model", ModelMatrix);
+                Shader.SetMat4("View", cam.View);
+                Shader.SetMat4("Projection", cam.Projection);
+                Shader.SetVec4("Color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+                GL.LineWidth(0.5f);
                 GL.Enable(EnableCap.LineSmooth);
+
+                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
             {
-                GL.PolygonMode(MaterialFace.Back, PolygonMode.Point);
+                Shader = Shader.DefaultUnlitShader;
+                Shader.Use();
+                Shader.SetMat4("Model", ModelMatrix);
+                Shader.SetMat4("View", cam.View);
+                Shader.SetMat4("Projection", cam.Projection);
+                Shader.SetVec4("Color", new Vector4(1.0f, 1.0f, 0.0f, 1.0f));
+
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
+                GL.PointSize(5);
+
+                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
             }
-            GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+
             GL.BindVertexArray(0);
 
             //int diffuse = 1;

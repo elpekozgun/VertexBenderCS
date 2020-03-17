@@ -42,7 +42,7 @@ namespace Engine.Core
             OnItemDeleted?.Invoke(item);
         }
 
-        public void RenderAll(Camera cam)
+        public void RenderAll(Camera cam, eRenderMode renderMode)
         {
             foreach (var item in SceneItems)
             {
@@ -51,7 +51,7 @@ namespace Engine.Core
                     var renderable = item as IRenderable;
 
                     SetDirectLight(renderable, cam);
-                    renderable.Render(cam, eRenderMode.shaded);
+                    renderable.Render(cam, renderMode);
                 }
             }
         }

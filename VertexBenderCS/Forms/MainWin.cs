@@ -53,17 +53,69 @@ namespace VertexBenderCS.Forms
         private bool                _isFirstMouse;
         private float               _mouseX;
         private float               _mouseY;
-        private System.Timers.Timer _Timer;
+        private System.Timers.Timer _timer;
+        private eRenderMode         _renderMode;
+        private bool                _isPerspective;
 
         private MeshRenderer            _activeMesh;
         private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
+        private Keys KeyState { get; set; }
+
 
         public MainWin()
         {
             InitializeComponent();
         }
 
-        private Keys KeyState { get; set; }
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            statusBar.BackColor = Color.FromArgb(50, 50, 50);
+            statusBar.ForeColor = Color.MediumAquamarine;
+            mainMenu.BackColor = Color.FromArgb(50, 50, 50);
+            mainMenu.Renderer = new ToolStripProfessionalRenderer(new CustomColorTable());
+            toolBar.Renderer = new CustomToolStripRenderer();
+
+            GL.ClearColor(Color.FromArgb(25, 25, 25));
+            GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.CullFace);
+
+            Text = "Vertex Bender Framework - " +
+                    //GL.GetString(StringName.Vendor) + " " +
+                    GL.GetString(StringName.Renderer) + " " +
+                    GL.GetString(StringName.Version);
+
+            GLControl_Resize(GLControl, EventArgs.Empty);
+
+            _mouseX = (int)(Width * 0.5);
+            _mouseY = (int)(Height * 0.5);
+            _isFirstMouse = true;
+
+            _timer = new System.Timers.Timer(8.0f);
+            _timer.Elapsed += Update;
+            _timer.Start();
+
+            _frmProcess = null;
+            _Logger = new Logger();
+            _SceneGraph = new SceneGraph();
+            _camera = new Camera(GLControl.Width, GLControl.Height);
+            _cameraController = new CameraController(_camera);
+            _IsoCurveOutputs = new Dictionary<Transform, IsoCurveOutput>();
+            _isPerspective = true;
+
+            _renderMode = eRenderMode.shaded;
+
+            InitTransformPanel();
+            SubscribeEvents();
+            
+            //SetupScene();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+        }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -114,6 +166,11 @@ namespace VertexBenderCS.Forms
             menuExit.Click += MenuExit_Click;
             menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
 
+            toolbarPoint.Click += ToolbarPoint_Click;
+            toolbarShaded.Click += ToolbarShaded_Click;
+            toolbarWireframe.Click += ToolbarWireframe_Click;
+            toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
+
             _Logger.OnItemLogged += Logger_OnItemLogged;
             _Logger.OnLogCleaned += Logger_OnLogCleaned;
 
@@ -123,8 +180,6 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
-
-
 
         private void Logger_OnLogCleaned(string obj)
         {
@@ -156,63 +211,6 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.AddObject(obj);
                 }
             }
-        }
-
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            statusBar.BackColor = Color.FromArgb(50, 50, 50);
-            statusBar.ForeColor = Color.MediumAquamarine;
-            mainMenu.BackColor = Color.FromArgb(50, 50, 50);
-            mainMenu.Renderer = new ToolStripProfessionalRenderer(new CustomColorTable());
-            toolBar.Renderer = new CustomToolStripRenderer();
-
-            GL.ClearColor(Color.FromArgb(25, 25, 25));
-            GL.Enable(EnableCap.DepthTest);
-
-            Text = "Vertex Bender Framework - " +
-                    //GL.GetString(StringName.Vendor) + " " +
-                    GL.GetString(StringName.Renderer);/*+ " " +
-                GL.GetString(StringName.Version);*/
-
-            GLControl_Resize(GLControl, EventArgs.Empty);
-
-
-            GL.ClearColor(Color.FromArgb(25, 25, 25));
-            GL.Enable(EnableCap.DepthTest);
-
-            Text = "Vertex Bender Framework - " +
-                    //GL.GetString(StringName.Vendor) + " " +
-                    GL.GetString(StringName.Renderer) + " " +
-                    GL.GetString(StringName.Version);
-
-            GLControl_Resize(GLControl, EventArgs.Empty);
-
-            _mouseX = (int)(Width * 0.5);
-            _mouseY = (int)(Height * 0.5);
-            _isFirstMouse = true;
-
-            _Timer = new System.Timers.Timer(8.0f);
-            _Timer.Elapsed += Update;
-            _Timer.Start();
-
-            _frmProcess = null;
-            _Logger = new Logger();
-            _SceneGraph = new SceneGraph();
-            _camera = new Camera(GLControl.Width, GLControl.Height);
-            _cameraController = new CameraController(_camera);
-            _IsoCurveOutputs = new Dictionary<Transform, IsoCurveOutput>();
-            
-            InitTransformPanel();
-            SubscribeEvents();
-            
-            //SetupScene();
-        }
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            base.OnClosing(e);
         }
 
         #region GlControl Events
@@ -290,7 +288,7 @@ namespace VertexBenderCS.Forms
             KeyState = Keys.None;
             if (e.KeyCode == Keys.F12)
             {
-                GrabScreenshot().Save(@"C:\users\ozgun\desktop\screenshot.png");
+                GrabScreenshot().Save(@"screenshot.png");
             }
         }
 
@@ -514,20 +512,15 @@ namespace VertexBenderCS.Forms
 
         private void Render()
         {
-            //lock (RenderLock)
-            {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.CullFace(CullFaceMode.Front);
 
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-                GL.CullFace(CullFaceMode.Back);
+            _camera.IsOrtho = !_isPerspective;
 
-                //lock(RenderLock)
-                {
-                    _SceneGraph.RenderAll(_camera);
-                }
+            _SceneGraph.RenderAll(_camera, _renderMode);
 
-                GL.Flush();
-                GLControl.SwapBuffers();
-            }
+            GL.Flush();
+            GLControl.SwapBuffers();
         }
 
         private Bitmap GrabScreenshot()
@@ -784,7 +777,46 @@ namespace VertexBenderCS.Forms
 
         #region Toolbar
 
+        private void ToolbarProjectionMode_Click(object sender, EventArgs e)
+        {
+            _isPerspective = !_isPerspective;
+            if (_isPerspective)
+            {
+                toolbarProjectionMode.Image = Resources.Perspective2;
+                return;
+            }
+            toolbarProjectionMode.Image = Resources.Ortho;
+        }
 
+        private void ToolbarWireframe_Click(object sender, EventArgs e)
+        {
+            if (toolbarWireframe.Checked)
+            {
+                _renderMode |= eRenderMode.wireFrame;
+                return;
+            }
+            _renderMode ^= eRenderMode.wireFrame;
+        }
+
+        private void ToolbarShaded_Click(object sender, EventArgs e)
+        {
+            if (toolbarShaded.Checked)
+            {
+                _renderMode |= eRenderMode.shaded;
+                return;
+            }
+            _renderMode ^= eRenderMode.shaded;
+        }
+
+        private void ToolbarPoint_Click(object sender, EventArgs e)
+        {
+            if (toolbarPoint.Checked)
+            {
+                _renderMode |= eRenderMode.pointCloud;
+                return;
+            }
+            _renderMode ^= eRenderMode.pointCloud;
+        }
 
         #endregion
 
