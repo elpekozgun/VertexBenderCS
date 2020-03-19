@@ -92,13 +92,13 @@ namespace Engine.Core
             _yaw += xoffset;
             _pitch += yoffset;
 
-            if (_pitch > 85.0f)
+            if (_pitch > 89.0f)
             {
-                _pitch = 85.0f;
+                _pitch = 89.0f;
             }
-            if (_pitch < -85.0f)
+            if (_pitch < -89.0f)
             {
-                _pitch = -85.0f;
+                _pitch = -89.0f;
             }
             //Logger.Log(_pitch.ToString());
             //Logger.Log(_yaw.ToString());

@@ -138,7 +138,6 @@ namespace Engine.GLApi
 
             if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
             {
-                Shader = Shader.DefaultShader;
                 Shader.Use();
                 Shader.SetMat4("Model", ModelMatrix);
                 Shader.SetMat4("View", cam.View);
@@ -153,32 +152,42 @@ namespace Engine.GLApi
             }
             if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
-                Shader = Shader.DefaultUnlitShader;
-                Shader.Use();
-                Shader.SetMat4("Model", ModelMatrix);
-                Shader.SetMat4("View", cam.View);
-                Shader.SetMat4("Projection", cam.Projection);
-                Shader.SetVec4("Color", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+                var unlit = Shader.DefaultUnlitShader;
+
+                unlit = Shader.DefaultUnlitShader;
+                unlit.Use();
+                unlit.SetMat4("Model", ModelMatrix);
+                unlit.SetMat4("View", cam.View);
+                unlit.SetMat4("Projection", cam.Projection);
+                unlit.SetVec4("Color", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+                var temp = Shader;
+                Shader = unlit;
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                 GL.LineWidth(2.0f);
                 //GL.Enable(EnableCap.LineSmooth);
 
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                Shader = temp;
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
             {
-                Shader = Shader.DefaultUnlitShader;
-                Shader.Use();
-                Shader.SetMat4("Model", ModelMatrix);
-                Shader.SetMat4("View", cam.View);
-                Shader.SetMat4("Projection", cam.Projection);
-                Shader.SetVec4("Color", new Vector4(1.0f, 1.0f, 0.0f, 1.0f));
+                var unlit = Shader.DefaultUnlitShader;
+
+                unlit.Use();
+                unlit.SetMat4("Model", ModelMatrix);
+                unlit.SetMat4("View", cam.View);
+                unlit.SetMat4("Projection", cam.Projection);
+                unlit.SetVec4("Color", new Vector4(1.0f, 1.0f, 0.0f, 1.0f));
+
+                var temp = Shader;
+                Shader = unlit;
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
                 GL.PointSize(5);
 
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                Shader = temp;
             }
 
             GL.BindVertexArray(0);

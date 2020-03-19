@@ -1,6 +1,7 @@
 ﻿using OpenTK;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Engine.Core
 {
@@ -155,7 +156,6 @@ namespace Engine.Core
             }
         }
 
-
         private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
         {
 
@@ -231,5 +231,40 @@ namespace Engine.Core
             return false;
         }
 
+        public List<Vertex> GetBoundaryVertices()
+        {
+            var boundaries = new HashSet<Vertex>();
+
+            for (int i = 0; i < Edges.Count; i++)
+            {
+                var e1 = Edges[i].Start;
+                var e2 = Edges[i].End;
+
+                int neighbor = 0;
+                for (int j = 0; j < Triangles.Count; j++)
+                {
+                    var t = Triangles[j];
+                    if (e1 == t.V1 || e1 == t.V2 || e1 == t.V3)
+                    {
+                        if (e2 == t.V1 || e2 == t.V2 || e2 == t.V3)
+                        {
+                            if (++neighbor == 2)
+                            {
+                                neighbor = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (neighbor == 1)
+                {
+                    boundaries.Add(Vertices[e1]);
+                    boundaries.Add(Vertices[e2]);
+                    neighbor = 0;
+                }
+            }
+            return boundaries.ToList();
+        }
+            
     }
 }

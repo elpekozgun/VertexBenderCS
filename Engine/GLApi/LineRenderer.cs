@@ -48,23 +48,22 @@ namespace Engine.GLApi
             Shader.SetMat4("Projection", cam.Projection);
             Shader.SetVec4("Color", Color);
 
-
             GL.CullFace(CullFaceMode.FrontAndBack);
             GL.BindVertexArray(_VAO);
 
-            GL.LineWidth(4);
-            GL.DrawArrays(PrimitiveType.Lines, 0, _vertices.Length);
-
-            //Shader.SetVec4("Color", new Vector4(1.0f,0.0f, 0.0f, 1.0f));
-
-            //GL.PointSize(5);
-            //GL.DrawArrays(PrimitiveType.Points, 0, _vertices.Length);
+            if ((mode & eRenderMode.shaded) == eRenderMode.shaded || (mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
+            {
+                GL.LineWidth(4);
+                GL.DrawArrays(PrimitiveType.Lines, 0, _vertices.Length);
+            }
+            if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
+            {
+                Shader.SetVec4("Color", new Vector4(1.0f, 1.0f, 0.0f, 1.0f));
+                GL.PointSize(5);
+                GL.DrawArrays(PrimitiveType.Points, 0, _vertices.Length);
+            }
 
             GL.BindVertexArray(0);
-            //if (!RenderWithDepth)
-            //{
-            //    GL.Enable(EnableCap.DepthTest);
-            //}
         }
 
         public void Dispose()

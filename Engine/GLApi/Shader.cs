@@ -15,16 +15,16 @@ namespace Engine.GLApi
 
         private static Shader _defaultShader = ShaderBuilder.CreateShader
         (
-            "shaded", 
-            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader)
+            "shaded",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader)
         );
 
         private static Shader _defaultUnlit = ShaderBuilder.CreateShader
         (
-            "shaded",
-            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"D:\DEV\repo\VertexBenderCS\VertexBenderCS\Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader)
+            "unlit",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader)
         );
         
         public static Shader DefaultShader => _defaultShader;
@@ -33,7 +33,7 @@ namespace Engine.GLApi
         #endregion
 
 
-        public string Name { get; set; }
+        public string Name { get; set; } 
         private readonly int _id;
 
         public Shader(string name, int id)

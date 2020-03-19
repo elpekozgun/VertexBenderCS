@@ -109,14 +109,32 @@ namespace VertexBenderCS.Forms
 
             InitTransformPanel();
             SubscribeEvents();
-            
+#if DEBUG
             SetupTestScene();
+#endif
         }
 
         private void SetupTestScene()
         {
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"),"test");
+
+
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\face.off"),"test");
             _SceneGraph.AddObject(mesh);
+
+            var necati = mesh.Mesh.GetBoundaryVertices();
+            var verts = new List<Vector3>();
+
+            //necati.Sort( (x, y) => {return (int)(x.Coord.X - y.Coord.X);  } );
+
+            // TODO: Ok seems like _SceneGraph list needs to be a priority queue.
+            for (int i = 0; i < necati.Count; i++)
+            {
+                verts.Add(necati[i].Coord);
+            }
+
+            LineRenderer line = new LineRenderer(verts);
+            _SceneGraph.AddObject(line);
+
         }
 
         protected override void OnClosing(CancelEventArgs e)
