@@ -26,9 +26,17 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader),
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader)
         );
-        
+
+        private static Shader _defaultIndicator = ShaderBuilder.CreateShader
+        (
+            "unlit",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorFragment.glsl", ShaderType.FragmentShader)
+        );
+
         public static Shader DefaultShader => _defaultShader;
         public static Shader DefaultUnlitShader=> _defaultUnlit;
+        public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion
 

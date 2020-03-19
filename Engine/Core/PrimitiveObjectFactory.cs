@@ -8,7 +8,7 @@ namespace Engine.Core
 {
     public static class PrimitiveObjectFactory
     {
-        public static Mesh CreateCube(float size)
+        public static Mesh CreateCube2(float size)
         {
             Mesh cube = new Mesh();
 
@@ -37,6 +37,55 @@ namespace Engine.Core
             cube.AddTriangle(4, 5, 0);
 
             cube.CalculateVertexNormals();
+
+            return cube;
+        }
+
+        public static Mesh CreateCube(float size)
+        {
+            Mesh cube = new Mesh();
+
+            cube.AddVertex(-size, -size, -size, 0.0f, 0.0f, -1.0f);
+            cube.AddVertex(size, -size, -size, 0.0f, 0.0f, -1.0f);
+            cube.AddVertex(size, size, -size, 0.0f, 0.0f, -1.0f);
+            cube.AddVertex(size, size, -size, 0.0f, 0.0f, -1.0f);
+            cube.AddVertex(-size, size, -size, 0.0f, 0.0f, -1.0f);
+            cube.AddVertex(-size, -size, -size, 0.0f, 0.0f, -1.0f);
+
+            cube.AddVertex(-size, -size, size, 0.0f, 0.0f, 1.0f);
+            cube.AddVertex(size, -size, size, 0.0f, 0.0f, 1.0f);
+            cube.AddVertex(size, size, size, 0.0f, 0.0f, 1.0f);
+            cube.AddVertex(size, size, size, 0.0f, 0.0f, 1.0f);
+            cube.AddVertex(-size, size, size, 0.0f, 0.0f, 1.0f);
+            cube.AddVertex(-size, -size, size, 0.0f, 0.0f, 1.0f);
+
+            cube.AddVertex(-size, size, size, -1.0f, 0.0f, 0.0f);
+            cube.AddVertex(-size, size, -size, -1.0f, 0.0f, 0.0f);
+            cube.AddVertex(-size, -size, -size, -1.0f, 0.0f, 0.0f);
+            cube.AddVertex(-size, -size, -size, -1.0f, 0.0f, 0.0f);
+            cube.AddVertex(-size, -size, size, -1.0f, 0.0f, 0.0f);
+            cube.AddVertex(-size, size, size, -1.0f, 0.0f, 0.0f);
+
+            cube.AddVertex(size, size, size, 1.0f, 0.0f, 0.0f);
+            cube.AddVertex(size, size, -size, 1.0f, 0.0f, 0.0f);
+            cube.AddVertex(size, -size, -size, 1.0f, 0.0f, 0.0f);
+            cube.AddVertex(size, -size, -size, 1.0f, 0.0f, 0.0f);
+            cube.AddVertex(size, -size, size, 1.0f, 0.0f, 0.0f);
+            cube.AddVertex(size, size, size, 1.0f, 0.0f, 0.0f);
+
+            cube.AddVertex(-size, -size, -size, 0.0f, -1.0f, 0.0f);
+            cube.AddVertex(size, -size, -size, 0.0f, -1.0f, 0.0f);
+            cube.AddVertex(size, -size, size, 0.0f, -1.0f, 0.0f);
+            cube.AddVertex(size, -size, size, 0.0f, -1.0f, 0.0f);
+            cube.AddVertex(-size, -size, size, 0.0f, -1.0f, 0.0f);
+            cube.AddVertex(-size, -size, -size, 0.0f, -1.0f, 0.0f);
+
+            cube.AddVertex(-size, size, -size, 0.0f, 1.0f, 0.0f);
+            cube.AddVertex(size, size, -size, 0.0f, 1.0f, 0.0f);
+            cube.AddVertex(size, size, size, 0.0f, 1.0f, 0.0f);
+            cube.AddVertex(size, size, size, 0.0f, 1.0f, 0.0f);
+            cube.AddVertex(-size, size, size, 0.0f, 1.0f, 0.0f);
+            cube.AddVertex(-size, size, -size, 0.0f, 1.0f, 0.0f);
 
             return cube;
         }

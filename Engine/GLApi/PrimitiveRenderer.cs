@@ -9,46 +9,18 @@ using OpenTK;
 
 namespace Engine.GLApi
 {
-    public enum eRenderMode : byte
-    {
-        shaded = 1,
-        wireFrame = 2,
-        pointCloud = 4
-    }
 
-    public struct GpuVertex
-    {
-        public Vector3 Coord;
-        public Vector3 Normal;
-        public Vector3 Color;
-
-        public static int Size
-        {
-            get
-            {
-                return Vector3.SizeInBytes * 3;
-            }
-        }
-    }
-
-    public struct GpuTexture
-    {
-
-    }
-
-    public class MeshRenderer : Transform, IDisposable, IRenderable
+    public class PrimitiveRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
 
         private GpuVertex[] vertices;
-        private int[] indices;
 
         private bool _initialized;
 
         private int _VAO;
         private int _VBO;
-        private int _EBO;
 
         public Mesh Mesh { get; set; }
 
@@ -66,19 +38,9 @@ namespace Engine.GLApi
                     Color = new Vector3(0.0f, 0.0f, 0.0f)
                 };
             }
-
-            indices = new int[mesh.Triangles.Count * 3];
-            for (int i = 0; i < mesh.Triangles.Count; i++)
-            {
-                var tri = mesh.Triangles[i];
-
-                indices[i * 3] = tri.V1;
-                indices[i * 3 + 1] = tri.V2;
-                indices[i * 3 + 2] = tri.V3;
-            }
         }
 
-        public MeshRenderer(Mesh mesh, string name = "") 
+        public PrimitiveRenderer(Mesh mesh, string name = "")
             : base(name)
         {
             ExtractVertices(mesh);
@@ -88,24 +50,20 @@ namespace Engine.GLApi
             Shader = Shader.DefaultShader;
         }
 
-        public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
+        public PrimitiveRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
         {
             Shader = shader;
         }
 
         private void Setup()
         {
-            GL.GenVertexArrays(1,out _VAO);
+            GL.GenVertexArrays(1, out _VAO);
             GL.GenBuffers(1, out _VBO);
-            GL.GenBuffers(1, out _EBO);
 
             GL.BindVertexArray(_VAO);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, _VBO);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * GpuVertex.Size, vertices, BufferUsageHint.StaticDraw);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * 4, indices, BufferUsageHint.StaticDraw);
 
             //coord
             GL.EnableVertexAttribArray(0);
@@ -120,7 +78,7 @@ namespace Engine.GLApi
             GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
 
             GL.BindVertexArray(0);
-                        
+
         }
 
         public void SetColorBuffer(Vector3[] color)
@@ -136,7 +94,9 @@ namespace Engine.GLApi
         {
             GL.BindVertexArray(_VAO);
 
-            if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
+            GL.Disable(EnableCap.CullFace);
+
+            if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
                 Shader.Use();
                 Shader.SetMat4("Model", ModelMatrix);
@@ -145,9 +105,9 @@ namespace Engine.GLApi
                 Shader.SetVec4("Color", Color);
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                GL.Enable(EnableCap.PolygonSmooth);
+                //GL.Enable(EnableCap.PolygonSmooth);
 
-                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length); 
 
             }
             if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
@@ -167,7 +127,7 @@ namespace Engine.GLApi
                 GL.LineWidth(2.0f);
                 //GL.Enable(EnableCap.LineSmooth);
 
-                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                GL.DrawArrays(PrimitiveType.Lines, 0, vertices.Length);
                 Shader = temp;
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
@@ -186,9 +146,11 @@ namespace Engine.GLApi
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
                 GL.PointSize(5);
 
-                GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
                 Shader = temp;
             }
+
+            GL.Enable(EnableCap.CullFace);
 
             GL.BindVertexArray(0);
 
@@ -207,7 +169,6 @@ namespace Engine.GLApi
                 {
                     GL.DeleteVertexArray(_VAO);
                     GL.DeleteBuffer(_VBO);
-                    GL.DeleteBuffer(_EBO);
                     _initialized = false;
                 }
             }

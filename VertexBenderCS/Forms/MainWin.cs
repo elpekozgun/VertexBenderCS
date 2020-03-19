@@ -56,6 +56,8 @@ namespace VertexBenderCS.Forms
         private System.Timers.Timer _timer;
         private eRenderMode         _renderMode;
         private bool                _isPerspective;
+        private Stopwatch           _Watch;
+
 
         private MeshRenderer            _activeMesh;
         private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
@@ -71,6 +73,8 @@ namespace VertexBenderCS.Forms
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+
+
 
             statusBar.BackColor = Color.FromArgb(50, 50, 50);
             statusBar.ForeColor = Color.MediumAquamarine;
@@ -116,8 +120,6 @@ namespace VertexBenderCS.Forms
 
         private void SetupTestScene()
         {
-
-
             var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\face.off"),"test");
             _SceneGraph.AddObject(mesh);
 
@@ -147,7 +149,6 @@ namespace VertexBenderCS.Forms
             GLControl.Invalidate();
 
             _cameraController.Navigate(KeyState);
-            
             KeyState = OpenTK.Input.Keyboard.GetState();
             MouseState = OpenTK.Input.Mouse.GetCursorState();
             MouseState = OpenTK.Input.Mouse.GetState();
@@ -206,6 +207,161 @@ namespace VertexBenderCS.Forms
             });
         }
 
+
+        #region Process Output Displayers
+
+        private void DisplayShortestPathOutput(ShortestPathOutput output)
+        {
+            if (_activeMesh != null)
+            {
+                //foreach (var child in _activeMesh.Children)
+                //{
+                //    _SceneGraph.DeleteObject(child);
+                //}
+
+                List<Vector3> lines1 = new List<Vector3>();
+                for (int i = 0; i < output.Path.Count - 1; i++)
+                {
+                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i]].Coord);
+                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i + 1]].Coord);
+                }
+
+                var r1 = new LineRenderer(lines1, output.Type.ToString() + " path");
+                r1.Parent = _activeMesh;
+
+                r1.Position = _activeMesh.Position;
+                r1.Rotation = _activeMesh.Rotation;
+                r1.Scale = _activeMesh.Scale;
+
+                r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                if (output.Method == eShortestPathMethod.Astar)
+                {
+                    r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                }
+
+                _SceneGraph.AddObject(r1);
+
+                //Logger.Append(output.Info);
+            }
+        }
+
+        private void DisplaySamplingOutput(SampleOutput output)
+        {
+            if (_activeMesh != null)
+            {
+                foreach (var child in _activeMesh.Children)
+                {
+                    _SceneGraph.DeleteObject(child);
+                }
+
+                List<PrimitiveRenderer> points = new List<PrimitiveRenderer>();
+                for (int i = 0; i < output.SampleIndices.Count; i++)
+                {
+                    PrimitiveRenderer obj = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultIndicator, "sample-" + i + 1)
+                    {
+                        //Color = new Vector4(output.SamplePoints[i].Coord * 0.5f, 1.0f)
+                        Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
+                    };
+                    obj.Position = output.SamplePoints[i].Coord;
+
+                    //obj.Position = new Vector3(_activeMesh.ModelMatrix * new Vector4(obj.Position));
+                    obj.Position += _activeMesh.Position;
+
+
+                    // bad block but keep it for now..
+                    obj.Parent = _activeMesh;
+
+                    points.Add(obj);
+                    _SceneGraph.AddObject(obj);
+                }
+
+                //Logger.Append(output.Info);
+            }
+        }
+
+        private void DisplayIsoCurveOutput(IsoCurveOutput output)
+        {
+            if (_activeMesh != null)
+            {
+                if (_IsoCurveOutputs.ContainsKey(_activeMesh))
+                {
+                    _IsoCurveOutputs.Remove(_activeMesh);
+                }
+                _IsoCurveOutputs.Add(_activeMesh, output);
+
+                foreach (var child in _activeMesh.Children)
+                {
+                    _SceneGraph.DeleteObject(child);
+                }
+
+                PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultIndicator, "source")
+                {
+                    Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f)
+                };
+                indicator.Position = _activeMesh.Mesh.Vertices[output.SourceIndex].Coord;
+
+                indicator.Parent = _activeMesh;
+                _SceneGraph.AddObject(indicator);
+
+
+                for (int i = 0; i < output.IsoCurveDistances.Length; i++)
+                {
+                    var line = new LineRenderer(output.IsoCurves[i], "sample-" + i);
+                    line.Position = _activeMesh.Position;
+                    line.Rotation = _activeMesh.Rotation;
+                    line.Scale = _activeMesh.Scale;
+
+                    line.Parent = _activeMesh;
+                    _SceneGraph.AddObject(line);
+
+                    line.Color = new Vector4(1, 0, 0, 1);
+                }
+
+                UpdateChart(output);
+
+                //Logger.Append(output.Info);
+            }
+        }
+
+        private void DisplayAverageGeodesicOutput(AverageGeodesicOutput output)
+        {
+            if (_activeMesh != null)
+            {
+                float max = output.Distances.Max();
+
+                var color = new Vector3[output.Distances.Length];
+                for (int i = 0; i < color.Length; i++)
+                {
+                    color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f;
+                }
+
+                _activeMesh.SetColorBuffer(color);
+                //Logger.Append(output.Info);
+            }
+        }
+
+        private void ShortestPathOnResultReturned(IOutput output)
+        {
+            switch (output.Type)
+            {
+                case eOutputType.shortestPath:
+                    DisplayShortestPathOutput((ShortestPathOutput)output);
+                    break;
+                case eOutputType.Sampling:
+                    DisplaySamplingOutput((SampleOutput)output);
+                    break;
+                case eOutputType.IsoCurve:
+                    DisplayIsoCurveOutput((IsoCurveOutput)output);
+                    break;
+                case eOutputType.AverageGeodesicDistance:
+                    DisplayAverageGeodesicOutput((AverageGeodesicOutput)output);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        #endregion
 
         #region GlControl Events
 
@@ -546,157 +702,6 @@ namespace VertexBenderCS.Forms
 
         #region Menu Items
 
-        private void DisplayShortestPathOutput(ShortestPathOutput output)
-        {
-            if (_activeMesh != null)
-            {
-                //foreach (var child in _activeMesh.Children)
-                //{
-                //    _SceneGraph.DeleteObject(child);
-                //}
-
-                List<Vector3> lines1 = new List<Vector3>();
-                for (int i = 0; i < output.Path.Count - 1; i++)
-                {
-                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i]].Coord);
-                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i + 1]].Coord);
-                }
-
-                var r1 = new LineRenderer(lines1, output.Type.ToString() + " path");
-                r1.Parent = _activeMesh;
-
-                r1.Position = _activeMesh.Position;
-                r1.Rotation = _activeMesh.Rotation;
-                r1.Scale = _activeMesh.Scale;
-
-                r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                if (output.Method == eShortestPathMethod.Astar)
-                {
-                    r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-                }
-                
-                _SceneGraph.AddObject(r1);
-
-                //Logger.Append(output.Info);
-            }
-        }
-
-        private void DisplaySamplingOutput(SampleOutput output)
-        {
-            if (_activeMesh != null)
-            {
-                foreach (var child in _activeMesh.Children)
-                {
-                    _SceneGraph.DeleteObject(child);
-                }
-
-                List<MeshRenderer> points = new List<MeshRenderer>();
-                for (int i = 0; i < output.SampleIndices.Count; i++)
-                {
-                    MeshRenderer obj = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader, "sample-" + i + 1)
-                    {
-                        //Color = new Vector4(output.SamplePoints[i].Coord * 0.5f, 1.0f)
-                        Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
-                    };
-                    obj.Position =  output.SamplePoints[i].Coord;
-
-                    //obj.Position = new Vector3(_activeMesh.ModelMatrix * new Vector4(obj.Position));
-                    obj.Position += _activeMesh.Position;
-
-                    
-                    // bad block but keep it for now..
-                    obj.Parent = _activeMesh;
-
-                    points.Add(obj);
-                    _SceneGraph.AddObject(obj);
-                }
-
-                //Logger.Append(output.Info);
-            }
-        }
-
-        private void DisplayIsoCurveOutput(IsoCurveOutput output)
-        {
-            if (_activeMesh != null)
-            {
-                if (_IsoCurveOutputs.ContainsKey(_activeMesh))
-                {
-                    _IsoCurveOutputs.Remove(_activeMesh);
-                }
-                _IsoCurveOutputs.Add(_activeMesh, output);
-
-                foreach (var child in _activeMesh.Children)
-                {
-                    _SceneGraph.DeleteObject(child);
-                }
-
-                MeshRenderer gizmo = new MeshRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultUnlitShader, "source")
-                {
-                    Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f)
-                };
-                gizmo.Position = _activeMesh.Mesh.Vertices[output.SourceIndex].Coord;
-
-                gizmo.Parent = _activeMesh;
-                _SceneGraph.AddObject(gizmo);
-
-
-                for (int i = 0; i < output.IsoCurveDistances.Length; i++)
-                {
-                    var line = new LineRenderer(output.IsoCurves[i], "sample-" + i);
-                    line.Position = _activeMesh.Position;
-                    line.Rotation = _activeMesh.Rotation;
-                    line.Scale = _activeMesh.Scale;
-                    
-                    line.Parent = _activeMesh;
-                    _SceneGraph.AddObject(line);
-
-                    line.Color = new Vector4(1, 0, 0, 1);
-                }
-
-                UpdateChart(output);
-
-               //Logger.Append(output.Info);
-            }
-        }
-
-        private void DisplayAverageGeodesicOutput(AverageGeodesicOutput output)
-        {
-            if (_activeMesh != null)
-            {
-                float max = output.Distances.Max();
-
-                var color = new Vector3[output.Distances.Length];
-                for (int i = 0; i < color.Length; i++)
-                {
-                    color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f;
-                }
-
-                _activeMesh.SetColorBuffer(color);
-                //Logger.Append(output.Info);
-            }
-        }
-
-        private void ShortestPathOnResultReturned(IOutput output)
-        {
-            switch (output.Type)
-            {
-                case eOutputType.shortestPath:
-                    DisplayShortestPathOutput((ShortestPathOutput)output);
-                    break;
-                case eOutputType.Sampling:
-                    DisplaySamplingOutput((SampleOutput)output);
-                    break;
-                case eOutputType.IsoCurve:
-                    DisplayIsoCurveOutput((IsoCurveOutput)output);
-                    break;
-                case eOutputType.AverageGeodesicDistance:
-                    DisplayAverageGeodesicOutput((AverageGeodesicOutput)output);
-                    break;
-                default:
-                    break;
-            }
-        }
-
         private void menuProcessSP_Click(object sender, EventArgs e)
         {
 
@@ -784,6 +789,7 @@ namespace VertexBenderCS.Forms
 
                     //_SceneGraph.Clean();
                     var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
+                    obj.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
                     obj.Mesh.Name = obj.Name;
 
                     sceneGraphTree.SelectedNode = null;

@@ -32,7 +32,7 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl();
+            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(32,24,0,8));
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();

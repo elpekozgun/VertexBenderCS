@@ -8,11 +8,11 @@ namespace Engine.Core
     public struct Vertex
     {
 
-        public Vertex(int id, float x, float y, float z)
+        public Vertex(int id, float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
         {
             Id = id;
             Coord = new Vector3(x,y,z);
-            Normal = new Vector3(0, 0, 0);
+            Normal = new Vector3(nx, ny, nz);
                 
             Tris = new List<int>();
             Verts = new List<int>();
@@ -29,6 +29,17 @@ namespace Engine.Core
             Verts = new List<int>();
             Edges = new List<int>();
         }
+        public Vertex(int id, Vector3 coord, Vector3 normal)
+        {
+            Id = id;
+            Coord = coord;
+            Normal = normal;
+
+            Tris = new List<int>();
+            Verts = new List<int>();
+            Edges = new List<int>();
+        }
+
 
         public Vector3 Coord;
         public Vector3 Normal;
@@ -123,11 +134,11 @@ namespace Engine.Core
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);
         }
-        internal void AddVertex(float x, float y, float z)
+        internal void AddVertex(float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
         {
             int id = Vertices.Count;
 
-            Vertices.Add(new Vertex(id, x, y, z));
+            Vertices.Add(new Vertex(id, x, y, z, nx, ny, nz));
         }
 
         internal Vector3 CalculateTriangleNormals(Triangle tri)
