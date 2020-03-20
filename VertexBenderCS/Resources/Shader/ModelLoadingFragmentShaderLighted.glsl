@@ -60,6 +60,7 @@ uniform Material material;
 uniform DirectLight directLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform SpotLight spotlight;
+uniform bool IsBlinnPhong;
 
 vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir);
 vec3 CalculatePointLight(PointLight light, vec3 normal,vec3 fragPos, vec3 viewDir);
@@ -90,8 +91,17 @@ vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir)
 
 	float diff = max(dot(normal,lightdir),0.0f);
 
-	vec3 reflectDir = reflect(-lightdir,normal);
-	float spec = pow( max(dot( viewDir,reflectDir),0.0f),material.shineness);
+	float spec = 0;
+	if(IsBlinnPhong)
+	{
+		vec3 halfway = normalize(lightdir + viewDir);
+		spec = pow( max(dot(normal,halfway),0.0f),material.shineness * 4.0f); //well for now assume blinn-phong expo is 4 times weaker than phong.
+	}
+	else
+	{
+		vec3 reflectDir = reflect(-lightdir,normal);
+		spec = pow( max(dot( viewDir,reflectDir),0.0f),material.shineness);
+	}
 
 	vec3 ambient = light.ambient; //* vec3(texture(material.texture_diffuse1,TexCoord));
 	vec3 diffuse = light.diffuse * diff; // * diff * vec3(texture(material.texture_diffuse1, TexCoord));

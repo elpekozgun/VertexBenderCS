@@ -71,7 +71,7 @@
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\ObjectLoader.cs" />
     <Compile Include="Core\PrimitiveObjectFactory.cs" />
-    <Compile Include="Core\QuaternionExtensions.cs" />
+    <Compile Include="Core\MathExtensions.cs" />
     <Compile Include="Core\SceneGraph.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="GLApi\InstanceRenderer.cs" />

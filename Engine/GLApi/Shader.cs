@@ -29,7 +29,7 @@ namespace Engine.GLApi
 
         private static Shader _defaultIndicator = ShaderBuilder.CreateShader
         (
-            "unlit",
+            "Indicator",
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorVertex.glsl", ShaderType.VertexShader),
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorFragment.glsl", ShaderType.FragmentShader)
         );
@@ -53,6 +53,11 @@ namespace Engine.GLApi
         public void Use()
         {
             GL.UseProgram(_id);
+        }
+
+        public void SetBool(string name, bool value)
+        {
+            GL.Uniform1(GL.GetUniformLocation(_id, name), value == true ? 1 : 0);
         }
 
         public void SetInt(string name, int value)

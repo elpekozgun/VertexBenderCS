@@ -7,6 +7,7 @@ using OpenTK;
 using PriorityQueues;
 using System.Diagnostics;
 using System.Threading;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace Engine.Processing
 {
@@ -16,6 +17,13 @@ namespace Engine.Processing
         MinHeap = 0x2,
         Fibonacci= 0x4,
         Astar = 0x8
+    }
+
+    public enum eParameterizationMethod : byte
+    {
+        Uniform = 0,
+        Harmonic,
+        MeanValue
     }
 
     public static class Algorithm
@@ -692,6 +700,48 @@ namespace Engine.Processing
         }
 
         #endregion
+
+
+        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, float weight = 0.5f)
+        {
+
+            var boundaryVertices = mesh.GetBoundaryVertices();
+
+            // Find a way to extract the internal boundary vertices.
+
+            /*
+            
+                      Sum     (wij) * (vi - vj) = 0;
+                (i,j in neighbors)
+             
+                uniform     =>  wij = 0.5f, 1.0f etc
+                Harmonic    =>  wij = (cot(aij) + cot(bij)) * 0.5                             aij and bij are the angles seeing the same edge on different triangles  
+                MeanValue   =>  wij = (tan(gij * 0.5) + tan(dij * 0.5)) / ( 2 * ||vi - vj||)  gij and dij are angle at vertex of different triangles.
+             
+             */
+
+
+            float value = weight;
+            if (method == eParameterizationMethod.Harmonic)
+            {
+
+            }
+            else if(method == eParameterizationMethod.MeanValue)
+            {
+
+            }
+
+
+
+
+            Matrix<float> M = CreateMatrix.Diagonal<float>(boundaryVertices.Count, boundaryVertices.Count, 1.0f);
+            
+
+
+
+
+            return new DiscParameterizeOutput();
+        }
 
     }
 

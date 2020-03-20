@@ -271,7 +271,6 @@ namespace Engine.Core
                 {
                     boundaries.Add(Vertices[e1]);
                     boundaries.Add(Vertices[e2]);
-                    neighbor = 0;
                 }
             }
             return boundaries.ToList();

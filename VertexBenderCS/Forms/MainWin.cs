@@ -82,6 +82,7 @@ namespace VertexBenderCS.Forms
             mainMenu.Renderer = new ToolStripProfessionalRenderer(new CustomColorTable());
             toolBar.Renderer = new CustomToolStripRenderer();
 
+
             GL.ClearColor(Color.FromArgb(25, 25, 25));
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
@@ -120,22 +121,28 @@ namespace VertexBenderCS.Forms
 
         private void SetupTestScene()
         {
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\face.off"),"test");
+
+            var primitive = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(1), "cube");
+            primitive.Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+            _SceneGraph.AddObject(primitive);
+
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low.off"), "test");
             _SceneGraph.AddObject(mesh);
 
-            var necati = mesh.Mesh.GetBoundaryVertices();
-            var verts = new List<Vector3>();
+            Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform);
 
-            //necati.Sort( (x, y) => {return (int)(x.Coord.X - y.Coord.X);  } );
 
-            // TODO: Ok seems like _SceneGraph list needs to be a priority queue.
-            for (int i = 0; i < necati.Count; i++)
+            var boundaries = mesh.Mesh.GetBoundaryVertices();
+            
+            // do instanced rendering.
+            for (int i = 0; i < boundaries.Count; i++)
             {
-                verts.Add(necati[i].Coord);
-            }
+                PrimitiveRenderer line = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f));
 
-            LineRenderer line = new LineRenderer(verts);
-            _SceneGraph.AddObject(line);
+                line.Position = boundaries[i].Coord;
+                line.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                _SceneGraph.AddObject(line);
+            }
 
         }
 
@@ -177,6 +184,7 @@ namespace VertexBenderCS.Forms
             toolbarShaded.Click += ToolbarShaded_Click;
             toolbarWireframe.Click += ToolbarWireframe_Click;
             toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
+            toolbarIsBlinn.Click += ToolbarIsBlinn_Click;
 
             Logger.OnItemLogged += Logger_OnItemLogged;
             Logger.OnLogCleaned += Logger_OnLogCleaned;
@@ -841,6 +849,14 @@ namespace VertexBenderCS.Forms
                 return;
             }
             _renderMode ^= eRenderMode.pointCloud;
+        }
+
+        private void ToolbarIsBlinn_Click(object sender, EventArgs e)
+        {
+            if (_SceneGraph != null)
+            {
+                _SceneGraph.IsBlinnPhong = !_SceneGraph.IsBlinnPhong;
+            }
         }
 
         #endregion

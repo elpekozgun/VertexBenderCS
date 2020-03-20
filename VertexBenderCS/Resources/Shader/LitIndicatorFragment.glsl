@@ -97,12 +97,8 @@ vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir)
 	vec3 diffuse = light.diffuse * diff; // * diff * vec3(texture(material.texture_diffuse1, TexCoord));
 	vec3 specular = light.specular * spec; // * spec * vec3(texture(material.texture_specular1,TexCoord));
 
-//	vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse1,TexCoord));
-//	vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse1, TexCoord));
-//	vec3 specular = light.specular * spec * vec3(texture(material.texture_specular1,TexCoord));
-//	return (max(ambient + diffuse + specular,vec3(0.0f)));
-
-	return (max(FragmentColor * 0.1 + diffuse + specular,vec3(0.0f)));
+	return (max(FragmentColor * 0.5 + diffuse + 2 * specular,vec3(0.0f)));
+//	return (max(FragmentColor * 0.5 + diffuse + specular,vec3(0.0f)));
 
 }
 

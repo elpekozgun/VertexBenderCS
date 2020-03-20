@@ -105,4 +105,10 @@ namespace Engine.Processing
 
 
     }
+
+    public struct DiscParameterizeOutput
+    {
+
+    }
+
 }

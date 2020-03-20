@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Engine.Core
 {
-    public static class QuaternionExtensions
+    public static class MathExtensions
     {
         public static Vector3 EulerAngles(this Quaternion q)
         {
@@ -16,6 +16,25 @@ namespace Engine.Core
             var eZ = MathHelper.RadiansToDegrees((float)Math.Atan2(-2 * (q.X * q.Y - q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z));
 
             return new Vector3(eX, eY, eZ);
+        }
+
+        public static Vertex GetClosestVertex(this Vertex source, List<Vertex> oneRingNeighborhood)
+        {
+            float minDistance = float.MaxValue;
+            Vertex closest = source;
+
+            foreach (var item in oneRingNeighborhood)
+            {
+                var dist = Vector3.Distance(source.Coord, item.Coord);
+
+                if (minDistance < dist)
+                {
+                    minDistance = dist;
+                    closest = item;
+                }
+            }
+
+            return closest;
         }
 
     }

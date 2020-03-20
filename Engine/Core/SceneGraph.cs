@@ -15,9 +15,12 @@ namespace Engine.Core
         public Action<Transform> OnItemDeleted;
         public Action OnSceneCleared;
 
+        public bool IsBlinnPhong;
+
         public SceneGraph()
         {
             SceneItems = new List<Transform>();
+            IsBlinnPhong = true;
         }
 
         public void Clean()
@@ -60,11 +63,12 @@ namespace Engine.Core
         {
             obj.Shader.Use();
             obj.Shader.SetVec3("cameraPosition", cam.Position);
-            obj.Shader.SetVec3("directLight.direction", -0.2f, -1.0f, 0.0f);
+            obj.Shader.SetVec3("directLight.direction", -0.1f, -1.0f, 0.1f);
             obj.Shader.SetVec3("directLight.ambient", 0.25f, 0.25f, 0.25f);
             obj.Shader.SetVec3("directLight.diffuse", 0.5f, 0.5f, 0.4f);
             obj.Shader.SetVec3("directLight.specular", 0.1f, 0.1f, 0.1f);
-            obj.Shader.SetFloat("material.shineness", 2.0f);
+            obj.Shader.SetBool("IsBlinnPhong", IsBlinnPhong);
+            obj.Shader.SetFloat("material.shineness", 32.0f);
         }
 
     }

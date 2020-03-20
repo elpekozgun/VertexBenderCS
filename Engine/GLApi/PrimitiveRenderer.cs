@@ -47,7 +47,7 @@ namespace Engine.GLApi
             Setup();
             _initialized = true;
             Mesh = mesh;
-            Shader = Shader.DefaultShader;
+            Shader = Shader.DefaultIndicator;
         }
 
         public PrimitiveRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
@@ -127,7 +127,7 @@ namespace Engine.GLApi
                 GL.LineWidth(2.0f);
                 //GL.Enable(EnableCap.LineSmooth);
 
-                GL.DrawArrays(PrimitiveType.Lines, 0, vertices.Length);
+                GL.DrawArrays(PrimitiveType.LineStrip, 0, vertices.Length); // vertices.Length);
                 Shader = temp;
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)

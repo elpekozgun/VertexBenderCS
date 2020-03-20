@@ -32,7 +32,7 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(32,24,0,8));
+            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -45,7 +45,7 @@
             this.toolbarPoint = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+            this.toolbarIsBlinn = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton7 = new System.Windows.Forms.ToolStripButton();
             this.BottomToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.TopToolStripPanel = new System.Windows.Forms.ToolStripPanel();
@@ -239,7 +239,7 @@
             this.toolbarPoint,
             this.toolStripSeparator4,
             this.toolStripButton2,
-            this.toolStripButton3,
+            this.toolbarIsBlinn,
             this.toolStripButton7});
             this.toolBar.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolBar.Location = new System.Drawing.Point(0, 24);
@@ -304,16 +304,16 @@
             this.toolStripButton2.Size = new System.Drawing.Size(52, 67);
             this.toolStripButton2.Text = "Show Grid";
             // 
-            // toolStripButton3
+            // toolbarIsBlinn
             // 
-            this.toolStripButton3.CheckOnClick = true;
-            this.toolStripButton3.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton3.Image = global::VertexBenderCS.Resources.showLight;
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(52, 67);
-            this.toolStripButton3.Text = "Toggle Lights";
-            this.toolStripButton3.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.toolbarIsBlinn.CheckOnClick = true;
+            this.toolbarIsBlinn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolbarIsBlinn.Image = global::VertexBenderCS.Resources.showLight;
+            this.toolbarIsBlinn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolbarIsBlinn.Name = "toolbarIsBlinn";
+            this.toolbarIsBlinn.Size = new System.Drawing.Size(52, 67);
+            this.toolbarIsBlinn.Text = "Toggle Lights";
+            this.toolbarIsBlinn.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
             // toolStripButton7
             // 
@@ -1029,7 +1029,7 @@
         private System.Windows.Forms.TextBox Log;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
-        private System.Windows.Forms.ToolStripButton toolStripButton3;
+        private System.Windows.Forms.ToolStripButton toolbarIsBlinn;
         private System.Windows.Forms.ToolStripButton toolStripButton7;
         private System.Windows.Forms.Panel transformPanel;
         private System.Windows.Forms.Label labelScale;
