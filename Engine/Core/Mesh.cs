@@ -40,6 +40,14 @@ namespace Engine.Core
             Edges = new List<int>();
         }
 
+        public Vertex CopyToPlaneXY()
+        {
+            Vertex v = new Vertex(this.Id, new Vector3(this.Coord.X, this.Coord.Y, 0), Vector3.UnitZ);
+            v.Verts = this.Verts;
+            v.Tris = this.Tris;
+            v.Edges = this.Edges;
+            return v;
+        }
 
         public Vector3 Coord;
         public Vector3 Normal;

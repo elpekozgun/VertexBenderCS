@@ -122,27 +122,133 @@ namespace VertexBenderCS.Forms
         private void SetupTestScene()
         {
 
-            var primitive = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(1), "cube");
-            primitive.Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
-            _SceneGraph.AddObject(primitive);
+            //var primitive = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(1), "cube")
+            //{
+            //    Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f)
+            //};
+            //_SceneGraph.AddObject(primitive);
 
             var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low.off"), "test");
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"), "test");
             _SceneGraph.AddObject(mesh);
 
-            Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform);
-
+            //Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform);
 
             var boundaries = mesh.Mesh.GetBoundaryVertices();
-            
-            // do instanced rendering.
-            for (int i = 0; i < boundaries.Count; i++)
-            {
-                PrimitiveRenderer line = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f));
+            var allBoundries = new List<Dictionary<int,Vertex>>();
+            Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
 
-                line.Position = boundaries[i].Coord;
-                line.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-                _SceneGraph.AddObject(line);
+
+
+            for (int i = 0; i < allBoundries.Count; i++)
+            {
+                foreach (var boundary in allBoundries[i])
+                {
+                    PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f))
+                    {
+                        Position = boundary.Value.Coord,
+                        Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+                    };
+                    if (i == 0)
+                    {
+                        indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                    }
+                    _SceneGraph.AddObject(indicator);
+                }
             }
+
+
+            //var box = Box3.CalculateBoundingBox(allBoundries[0]);
+
+            //PrimitiveRenderer ind1 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind1")
+            //{
+            //    Position = new Vector3(box.Left, box.Bottom, box.Front),
+            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind2 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind2")
+            //{
+            //    Position = new Vector3(box.Right, box.Bottom, box.Front),
+            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind3 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f),"ind3")
+            //{
+            //    Position = new Vector3(box.Left, box.Bottom, box.Back),
+            //    Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind4 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f),"ind4")
+            //{
+            //    Position = new Vector3(box.Right, box.Bottom, box.Back),
+            //    Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind5 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind5")
+            //{
+            //    Position = new Vector3(box.Left, box.Top, box.Front),
+            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind6 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind6")
+            //{
+            //    Position = new Vector3(box.Right, box.Top, box.Front),
+            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind7 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind7")
+            //{
+            //    Position = new Vector3(box.Left, box.Top, box.Back),
+            //    Color = new Vector4(1.0f, 0.0f, 1.0f, 1.0f)
+            //};
+
+            //PrimitiveRenderer ind8 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind8")
+            //{
+            //    Position = new Vector3(box.Right, box.Top, box.Back),
+            //    Color = new Vector4(1.0f, 0.0f, 1.0f, 1.0f)
+            //};
+
+            //_SceneGraph.AddObject(ind1);
+            //_SceneGraph.AddObject(ind2);
+            //_SceneGraph.AddObject(ind3);
+            //_SceneGraph.AddObject(ind4);
+            //_SceneGraph.AddObject(ind5);
+            //_SceneGraph.AddObject(ind6);
+            //_SceneGraph.AddObject(ind7);
+            //_SceneGraph.AddObject(ind8);
+
+
+            var output = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform, 2.0f, false);
+
+            //var outputmesh = new Mesh();
+
+            //for (int i = 0; i < output.Output.Count; i++)
+            //{
+            //    outputmesh.Vertices.Add(new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y)));
+            //}
+            //var renderer = new PrimitiveRenderer(outputmesh, "asd");
+            //renderer.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+            //_SceneGraph.AddObject(renderer);
+
+            for (int i = 0; i < output.Output.Count; i++)
+            {
+                PrimitiveRenderer ind = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f), "ind8")
+                {
+                    Position = new Vector3(output.Output[i].X, 0, output.Output[i].Y),
+                    Color = new Vector4(1.0f, 0.0f, 1.0f, 1.0f)
+                };
+                _SceneGraph.AddObject(ind);
+            }
+
+            //// do instanced rendering.
+            //for (int i = 0; i < boundaries.Count; i++)
+            //{
+            //    PrimitiveRenderer line = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f));
+
+            //    line.Position = boundaries[i].Coord;
+            //    line.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+            //    _SceneGraph.AddObject(line);
+            //}
 
         }
 

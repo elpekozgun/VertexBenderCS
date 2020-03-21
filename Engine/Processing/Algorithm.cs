@@ -123,7 +123,7 @@ namespace Engine.Processing
 
             return new ShortestPathOutput(eShortestPathMethod.Array, shortestDists[target], path, _watch.ElapsedMilliseconds);
         }
-        
+
         public static ShortestPathOutput DijkstraFibonacciHeap(Mesh mesh, int src, int target, bool earlyTerminate = false)
         {
             var graph = new Graph(mesh);
@@ -335,7 +335,7 @@ namespace Engine.Processing
 
                 farthestPoints.Add(graph.Nodes[u.id]);
                 farthestIndices.Add(graph.Nodes[u.id].Id);
-                updateProgress((int)(100 * ((float)i /  (float)sampleCount)));
+                updateProgress((int)(100 * ((float)i / (float)sampleCount)));
             }
             _watch.Stop();
             updateProgress(100);
@@ -346,7 +346,7 @@ namespace Engine.Processing
                 Logger.Log($"Farthest 2 Points -> Duration: {farthestIndices[0]} {farthestIndices[1]} ");
             }
 
-            return new SampleOutput(farthestPoints, farthestIndices,_watch.ElapsedMilliseconds);
+            return new SampleOutput(farthestPoints, farthestIndices, _watch.ElapsedMilliseconds);
         }
 
         public static List<float> GaussianCurvature(Mesh mesh)
@@ -375,7 +375,7 @@ namespace Engine.Processing
             _watch.Start();
 
             float[] distances = new float[graph.Nodes.Count];
-            
+
             var samples = FarthestPointSampling(graph, sampleCount, startIndex, updateProgress);
 
             for (int i = 0; i < samples.SampleIndices.Count; i++)
@@ -522,7 +522,7 @@ namespace Engine.Processing
                     isoCurve.Add(p1);
                     isoCurve.Add(p2);
 
-                    updateProgress( (int)(100 * ((float) (i * mesh.Triangles.Count + j) / (float)(mesh.Triangles.Count * k))));
+                    updateProgress((int)(100 * ((float)(i * mesh.Triangles.Count + j) / (float)(mesh.Triangles.Count * k))));
                 }
                 isoCurveDistances[i] = isoCurveLength;
 
@@ -618,9 +618,9 @@ namespace Engine.Processing
             }
 
             return retVal;
-            
+
         }
-        
+
         private static float[] DijkstraFibonacciHeap(Graph graph, int src)
         {
             var heap = new FibonacciHeap<HeapNode, float>(PriorityQueueType.Minimum);
@@ -659,10 +659,10 @@ namespace Engine.Processing
 
             return retVal;
         }
-        
+
         private static float[] DijkstraMinHeap(Graph graph, int src)
         {
-            var que = new PriorityQueues.BinaryHeap<HeapNode,float>(PriorityQueueType.Minimum);
+            var que = new PriorityQueues.BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
             var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
 
             for (int i = 0; i < graph.Nodes.Count; i++)
@@ -701,11 +701,74 @@ namespace Engine.Processing
 
         #endregion
 
+        public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int,Vertex>> totalBoundaries)
+        {
 
-        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, float weight = 0.5f)
+            var candidateItems = new Dictionary<int, Vertex>();
+            foreach (var item in candidates)
+            {
+                candidateItems.Add(item.Id, item);
+            }
+
+            while (candidateItems.Count > 0)
+            {
+                var itemList = new List<Vertex>();
+                var boundary = new Dictionary<int, Vertex>();
+
+                RecursivelyAddNeighbor(candidateItems.First().Value, ref candidateItems, ref boundary);
+
+                //foreach (var item in boundary)
+                //{
+                //    itemList.Add(item.Value);
+                //}
+                totalBoundaries.Add(boundary);
+            }
+            totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
+        }
+
+        private static void RecursivelyAddNeighbor(Vertex source, ref Dictionary<int,Vertex> candidates, ref Dictionary<int,Vertex> boundary)
+        {
+            foreach (var neighbor in source.Verts)
+            {
+                if (candidates.TryGetValue(neighbor, out Vertex result))
+                {
+                    if (!boundary.ContainsKey(result.Id))
+                    {
+                        boundary.Add(result.Id, result);
+                        candidates.Remove(result.Id);
+                        RecursivelyAddNeighbor(result, ref candidates, ref boundary);
+                    }
+                }
+            }
+        }
+
+        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, float weight = 0.5f, bool includeHoles = false)
         {
 
             var boundaryVertices = mesh.GetBoundaryVertices();
+
+            var allBoundaries = new List<Dictionary<int,Vertex>>();
+            RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
+
+            //Dictionary<int,bool> areBoundaries = new Dictionary<int, bool>();
+
+            //for (int i = 0; i < allBoundaries.Count; i++)
+            //{
+            //    for (int j = 0; j < allBoundaries[i].Count; j++)
+            //    {
+            //        areBoundaries.Add(allBoundaries[i][j].Id, true);
+            //    }
+            //    if (!includeHoles)
+            //    {
+            //        break;
+            //    }
+            //}
+
+
+            Matrix<float> W = CreateMatrix.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
+            Vector<float> Bx = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
+            Vector<float> By = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
+            
 
             // Find a way to extract the internal boundary vertices.
 
@@ -720,8 +783,6 @@ namespace Engine.Processing
              
              */
 
-
-            float value = weight;
             if (method == eParameterizationMethod.Harmonic)
             {
 
@@ -730,19 +791,89 @@ namespace Engine.Processing
             {
 
             }
+            else
+            {
+                FillMatrix(ref W, mesh, allBoundaries[0], weight);
+            }
 
 
+            FillVector(ref Bx, ref By, allBoundaries[0]);
 
 
-            Matrix<float> M = CreateMatrix.Diagonal<float>(boundaryVertices.Count, boundaryVertices.Count, 1.0f);
-            
+            // DIEDED THING
+            var Winverse = W.Inverse();
 
+            var Xx = Winverse * Bx;
+            var Xy = Winverse * By;
 
+            var list = new List<Vector2>();
+            for (int i = 0; i < Xx.Count; i++)
+            {
+                list.Add(new Vector2(Xx[i], Xy[i]));
+            }
 
-
-            return new DiscParameterizeOutput();
+            return new DiscParameterizeOutput(list);
         }
 
+        private static void FillVector(ref Vector<float> vectorX, ref Vector<float> vectorY, Dictionary<int,Vertex> boundaries)
+        {
+            //TODO: Need to assign these boundary coordinates to disc.
+
+            var disc = MakeDiscTopology(boundaries);
+            int k = 0;
+            for (int i = 0; i < vectorX.Count; i++)
+            {
+                if (boundaries.ContainsKey(i))
+                {
+                    //vectorX[i] = boundaries[i].Coord.X;
+                    //vectorY[i] = boundaries[i].Coord.Z;
+                    vectorX[i] = disc[k].X;
+                    vectorY[i] = disc[k].Y;
+                    k++;
+                    continue;
+                }
+                vectorX[i] = 0;
+                vectorY[i] = 0;
+            }
+        }
+
+        private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, Dictionary<int,Vertex> boundaries, float weight)
+        {
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                if (boundaries.ContainsKey(i))
+                {
+                    matrix[i, i] = weight;
+                }
+                else
+                {
+                    matrix[i,i] = mesh.Vertices[i].Verts.Count * -weight;
+                    for (int j = 0; j < mesh.Vertices[i].Verts.Count; j++)
+                    {
+                        matrix[i, mesh.Vertices[i].Verts[j]] = weight;
+                    }
+                }
+            }
+        }
+
+        public static List<Vector2> MakeDiscTopology(Dictionary<int,Vertex> vertices)
+        {
+            var angle = MathHelper.TwoPi / vertices.Count;
+
+            List<Vector2> DiskPoints = new List<Vector2>();
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                DiskPoints.Add(new Vector2( (float)Math.Cos(angle * i), (float)Math.Sin(angle * i)));
+            }
+
+
+            return DiskPoints;
+        }
+
+
     }
+
+
 
 }

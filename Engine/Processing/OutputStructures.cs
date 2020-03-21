@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -108,7 +109,12 @@ namespace Engine.Processing
 
     public struct DiscParameterizeOutput
     {
+        public List<OpenTK.Vector2> Output;
 
+        public DiscParameterizeOutput(List<Vector2> output)
+        {
+            Output = output;
+        }
     }
 
 }
