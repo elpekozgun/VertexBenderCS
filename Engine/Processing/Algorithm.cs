@@ -701,6 +701,40 @@ namespace Engine.Processing
 
         #endregion
 
+        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, float weight = 0.5f, bool includeHoles = false)
+        {
+
+            var boundaryVertices = mesh.GetBoundaryVertices();
+
+            var allBoundaries = new List<Dictionary<int,Vertex>>();
+            RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
+
+            Matrix<float> W = CreateMatrix.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
+            Vector<float> Bx = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
+            Vector<float> By = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
+
+
+            FillMatrix(ref W, mesh, allBoundaries, method, weight);
+            FillVectors(ref Bx, ref By, allBoundaries);
+
+
+            // DIEDED THING
+            _watch.Reset();
+            _watch.Start();
+            var Xx = W.Solve(Bx);
+            var Xy = W.Solve(By);
+            _watch.Stop();
+            Logger.Log("Matrix Solved in: " + W.ColumnCount + " " + _watch.ElapsedMilliseconds + " ms");
+
+            var list = new List<Vector2>();
+            for (int i = 0; i < Xx.Count; i++)
+            {
+                list.Add(new Vector2(Xx[i], Xy[i]));
+            }
+
+            return new DiscParameterizeOutput(list);
+        }
+
         public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int,Vertex>> totalBoundaries)
         {
 
@@ -742,135 +776,147 @@ namespace Engine.Processing
             }
         }
 
-        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, float weight = 0.5f, bool includeHoles = false)
+        private static void FillVectors(ref Vector<float> vectorX, ref Vector<float> vectorY, List<Dictionary<int,Vertex>> allBoundaries)
         {
-
-            var boundaryVertices = mesh.GetBoundaryVertices();
-
-            var allBoundaries = new List<Dictionary<int,Vertex>>();
-            RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
-
-            //Dictionary<int,bool> areBoundaries = new Dictionary<int, bool>();
-
-            //for (int i = 0; i < allBoundaries.Count; i++)
-            //{
-            //    for (int j = 0; j < allBoundaries[i].Count; j++)
-            //    {
-            //        areBoundaries.Add(allBoundaries[i][j].Id, true);
-            //    }
-            //    if (!includeHoles)
-            //    {
-            //        break;
-            //    }
-            //}
-
-
-            Matrix<float> W = CreateMatrix.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
-            Vector<float> Bx = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
-            Vector<float> By = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
+            var disc = MakeDiscTopology(allBoundaries[0]); //only make outmost boundary disk.
             
-
-            // Find a way to extract the internal boundary vertices.
-
-            /*
-            
-                      Sum     (wij) * (vi - vj) = 0;
-                (i,j in neighbors)
-             
-                uniform     =>  wij = 0.5f, 1.0f etc
-                Harmonic    =>  wij = (cot(aij) + cot(bij)) * 0.5                             aij and bij are the angles seeing the same edge on different triangles  
-                MeanValue   =>  wij = (tan(gij * 0.5) + tan(dij * 0.5)) / ( 2 * ||vi - vj||)  gij and dij are angle at vertex of different triangles.
-             
-             */
-
-            if (method == eParameterizationMethod.Harmonic)
-            {
-
-            }
-            else if(method == eParameterizationMethod.MeanValue)
-            {
-
-            }
-            else
-            {
-                FillMatrix(ref W, mesh, allBoundaries[0], weight);
-            }
-
-
-            FillVector(ref Bx, ref By, allBoundaries[0]);
-
-
-            // DIEDED THING
-            var Winverse = W.Inverse();
-
-            var Xx = Winverse * Bx;
-            var Xy = Winverse * By;
-
-            var list = new List<Vector2>();
-            for (int i = 0; i < Xx.Count; i++)
-            {
-                list.Add(new Vector2(Xx[i], Xy[i]));
-            }
-
-            return new DiscParameterizeOutput(list);
-        }
-
-        private static void FillVector(ref Vector<float> vectorX, ref Vector<float> vectorY, Dictionary<int,Vertex> boundaries)
-        {
-            //TODO: Need to assign these boundary coordinates to disc.
-
-            var disc = MakeDiscTopology(boundaries);
-            int k = 0;
             for (int i = 0; i < vectorX.Count; i++)
             {
-                if (boundaries.ContainsKey(i))
-                {
-                    //vectorX[i] = boundaries[i].Coord.X;
-                    //vectorY[i] = boundaries[i].Coord.Z;
-                    vectorX[i] = disc[k].X;
-                    vectorY[i] = disc[k].Y;
-                    k++;
-                    continue;
-                }
-                vectorX[i] = 0;
-                vectorY[i] = 0;
-            }
-        }
+                int boundaryIndex = -1;
 
-        private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, Dictionary<int,Vertex> boundaries, float weight)
-        {
-            for (int i = 0; i < mesh.Vertices.Count; i++)
-            {
-                if (boundaries.ContainsKey(i))
+                for (int j = 0; j < allBoundaries.Count; j++)
                 {
-                    matrix[i, i] = weight;
+                    if (allBoundaries[j].ContainsKey(i))
+                    {
+                        boundaryIndex = j;
+                        break;
+                    }
+                }
+
+                if (boundaryIndex == 0)
+                {
+                    vectorX[i] = disc[i].X;
+                    vectorY[i] = disc[i].Y;
+                }
+                else
+                if (boundaryIndex >= 0)
+                {
+                    vectorX[i] = allBoundaries[boundaryIndex][i].Coord.X;
+                    vectorY[i] = allBoundaries[boundaryIndex][i].Coord.Z;
                 }
                 else
                 {
-                    matrix[i,i] = mesh.Vertices[i].Verts.Count * -weight;
+                    vectorX[i] = 0;
+                    vectorY[i] = 0;
+                }
+            }
+
+
+            //var disc = MakeDiscTopology(boundaries[0]); //only make outmost boundary disk.
+            //for (int i = 0; i < vectorX.Count; i++)
+            //{
+            //    if (boundaries.ContainsKey(i))
+            //    {
+            //        //vectorX[i] = boundaries[i].Coord.X;
+            //        //vectorY[i] = boundaries[i].Coord.Z;
+            //        vectorX[i] = disc[i].X;
+            //        vectorY[i] = disc[i].Y;
+            //        continue;
+            //    }
+            //    vectorX[i] = 0;
+            //    vectorY[i] = 0;
+            //}
+        }
+
+        private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, List<Dictionary<int,Vertex>> allBoundaries, eParameterizationMethod method, float weight)
+        {
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                bool boundaryIndex = false;
+                foreach (var boundary in allBoundaries)
+                {
+                    if(boundary.ContainsKey(i))
+                    {
+                        boundaryIndex = true;
+                        break;
+                    }
+                }
+
+                if (boundaryIndex)
+                {
+                    matrix[i, i] = 1;
+                }
+                else
+                {
                     for (int j = 0; j < mesh.Vertices[i].Verts.Count; j++)
                     {
+                        CalculateWeight(mesh, method, i, mesh.Vertices[i].Verts[j], ref weight);
                         matrix[i, mesh.Vertices[i].Verts[j]] = weight;
+                        matrix[i, i] -= weight;
                     }
                 }
             }
         }
 
-        public static List<Vector2> MakeDiscTopology(Dictionary<int,Vertex> vertices)
+        private static Dictionary<int, Vector2> MakeDiscTopology(Dictionary<int,Vertex> vertices)
         {
-            var angle = MathHelper.TwoPi / vertices.Count;
+            Dictionary<int, Vector2> DiskPoints = new Dictionary<int, Vector2>();
 
-            List<Vector2> DiskPoints = new List<Vector2>();
+            var box = Box3.CalculateBoundingBox(vertices);
+            box.Top = 0;
+            box.Bottom = 0;
 
-            for (int i = 0; i < vertices.Count; i++)
+            foreach (var item in vertices)
             {
-                DiskPoints.Add(new Vector2( (float)Math.Cos(angle * i), (float)Math.Sin(angle * i)));
+                var v = RayCaster.Cast(box.Center, new Vector3(item.Value.Coord.X, 0, item.Value.Coord.Z), box.Size, 0.001f);
+                DiskPoints.Add(item.Key, new Vector2(v.X, v.Z));    
             }
 
-
             return DiskPoints;
+
         }
 
+        private static void CalculateWeight(Mesh mesh, eParameterizationMethod method, int i, int j, ref float weight)
+        {
+            if (method == eParameterizationMethod.Uniform)
+            {
+                return;
+            }
+
+            var vi = mesh.Vertices[i];
+            var vj = mesh.Vertices[j];
+
+            var tris = new List<Triangle>();
+            foreach (var triId in vi.Tris)
+            {
+                var tri = mesh.Triangles[triId];
+                if (tri.V1 == j || tri.V2 == j || tri.V3 == j)
+                {
+                    tris.Add(tri);
+                }
+            }
+
+            weight = 0.0f;
+            if (method == eParameterizationMethod.Harmonic)
+            {
+                foreach (var tri in tris)
+                {
+                    var third = tri.GetThirdVertexId(i, j);
+                    var angle = mesh.GetTriangleAngle(tri.Id, third);
+                    weight += (float)(1.0 / Math.Tan(angle));
+                }
+                weight *= 0.5f;
+            }
+            else if(method == eParameterizationMethod.MeanValue)
+            {
+                foreach (var tri in tris)
+                {
+                    var angle = mesh.GetTriangleAngle(tri.Id, i);
+                    weight += (float)Math.Tan(angle * 0.5f);
+                }
+                weight /= (2.0f * Vector3.Distance(vi.Coord, vj.Coord));
+            }
+        }
 
     }
 

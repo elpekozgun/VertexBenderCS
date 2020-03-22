@@ -91,7 +91,15 @@ namespace Engine.Core
             V2 = v2;
             V3 = v3;
         }
-        
+
+        public int GetThirdVertexId(int i, int j)
+        {
+            List<int> verts = new List<int>() { V1, V2, V3 };
+            verts.Remove(i);
+            verts.Remove(j);
+            return verts[0];
+        }
+
     }
 
     public class Mesh
@@ -195,6 +203,7 @@ namespace Engine.Core
             return (float)angle;
         }
 
+       
         internal float GetTriangleAngle(int triID, int vertexId)
         {
             Triangle tri = Triangles[triID];

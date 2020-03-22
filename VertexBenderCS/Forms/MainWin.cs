@@ -46,7 +46,6 @@ namespace VertexBenderCS.Forms
         private Camera              _camera;
         private CameraController    _cameraController;
         private SceneGraph          _SceneGraph;
-        //private Logger              _Logger;
 
         private FrmProcess          _frmProcess;
 
@@ -56,8 +55,6 @@ namespace VertexBenderCS.Forms
         private System.Timers.Timer _timer;
         private eRenderMode         _renderMode;
         private bool                _isPerspective;
-        private Stopwatch           _Watch;
-
 
         private MeshRenderer            _activeMesh;
         private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
@@ -74,8 +71,20 @@ namespace VertexBenderCS.Forms
         {
             base.OnLoad(e);
 
+            PrepareUI();
+            SubscribeEvents();
+#if DEBUG
+            SetupTestScene();
+#endif
+        }
 
-
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+        }
+        
+        public void PrepareUI()
+        {
             statusBar.BackColor = Color.FromArgb(50, 50, 50);
             statusBar.ForeColor = Color.MediumAquamarine;
             mainMenu.BackColor = Color.FromArgb(50, 50, 50);
@@ -113,22 +122,49 @@ namespace VertexBenderCS.Forms
             _renderMode = eRenderMode.shaded;
 
             InitTransformPanel();
-            SubscribeEvents();
-#if DEBUG
-            SetupTestScene();
-#endif
+        }
+
+        public void SubscribeEvents()
+        {
+            GLControl.MouseClick += GLControl_MouseClick;
+            GLControl.KeyDown += GLControl_KeyDown;
+            GLControl.KeyUp += GLControl_KeyUp;
+            GLControl.Resize += GLControl_Resize;
+            GLControl.Paint += GLControl_Paint;
+            GLControl.MouseDown += GLControl_MouseDown;
+            GLControl.MouseMove += GLControl_MouseMove;
+            GLControl.MouseWheel += GLControl_MouseWheel;
+            
+            menuImportOff.Click += MenuImport_Click;
+
+            menuProcessSP.Click += menuProcessSP_Click;
+            menuProcessGC.Click += menuProcessGC_Click;
+            menuProcessDescriptor.Click += menuProcessDescriptor_Click;
+            menuExit.Click += MenuExit_Click;
+            menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
+
+            toolbarPoint.Click += ToolbarPoint_Click;
+            toolbarShaded.Click += ToolbarShaded_Click;
+            toolbarWireframe.Click += ToolbarWireframe_Click;
+            toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
+            toolbarIsBlinn.Click += ToolbarIsBlinn_Click;
+
+            Logger.OnItemLogged += Logger_OnItemLogged;
+            Logger.OnLogCleaned += Logger_OnLogCleaned;
+
+            sceneGraphTree.AfterSelect += SceneGraphTree_AfterSelect;
+            sceneGraphTree.KeyDown += SceneGraphTree_KeyDown;
+            _SceneGraph.OnItemAdded += SceneGraph_OnItemAdded;
+            _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
+            _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
 
         private void SetupTestScene()
         {
 
-            //var primitive = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(1), "cube")
-            //{
-            //    Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f)
-            //};
-            //_SceneGraph.AddObject(primitive);
-
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low.off"), "test");
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low-cry.off"), "test");
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry-eyeless.off"), "test");
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"), "test");
             _SceneGraph.AddObject(mesh);
 
@@ -137,7 +173,6 @@ namespace VertexBenderCS.Forms
             var boundaries = mesh.Mesh.GetBoundaryVertices();
             var allBoundries = new List<Dictionary<int,Vertex>>();
             Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
-
 
 
             for (int i = 0; i < allBoundries.Count; i++)
@@ -156,7 +191,6 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.AddObject(indicator);
                 }
             }
-
 
             //var box = Box3.CalculateBoundingBox(allBoundries[0]);
 
@@ -217,92 +251,42 @@ namespace VertexBenderCS.Forms
             //_SceneGraph.AddObject(ind7);
             //_SceneGraph.AddObject(ind8);
 
+            var output = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Harmonic, 1.0f, false);
 
-            var output = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform, 2.0f, false);
-
-            //var outputmesh = new Mesh();
-
-            //for (int i = 0; i < output.Output.Count; i++)
-            //{
-            //    outputmesh.Vertices.Add(new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y)));
-            //}
-            //var renderer = new PrimitiveRenderer(outputmesh, "asd");
-            //renderer.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-            //_SceneGraph.AddObject(renderer);
+            var outputmesh = new Mesh();
 
             for (int i = 0; i < output.Output.Count; i++)
             {
-                PrimitiveRenderer ind = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f), "ind8")
-                {
-                    Position = new Vector3(output.Output[i].X, 0, output.Output[i].Y),
-                    Color = new Vector4(1.0f, 0.0f, 1.0f, 1.0f)
-                };
-                _SceneGraph.AddObject(ind);
+                var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y));
+                outputmesh.Vertices.Add(v);
             }
+            outputmesh.Triangles = mesh.Mesh.Triangles;
 
-            //// do instanced rendering.
-            //for (int i = 0; i < boundaries.Count; i++)
-            //{
-            //    PrimitiveRenderer line = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f));
+            var renderer = new MeshRenderer(outputmesh, "asd");
+            renderer.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+            _SceneGraph.AddObject(renderer);
 
-            //    line.Position = boundaries[i].Coord;
-            //    line.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-            //    _SceneGraph.AddObject(line);
-            //}
 
-        }
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            base.OnClosing(e);
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {
-            GLControl.Invalidate();
+            GLControl.Invoke((MethodInvoker)delegate ()
+            {
+                GLControl.Invalidate();
+                GLControl.Update();
 
-            _cameraController.Navigate(KeyState);
-            KeyState = OpenTK.Input.Keyboard.GetState();
-            MouseState = OpenTK.Input.Mouse.GetCursorState();
-            MouseState = OpenTK.Input.Mouse.GetState();
-        }
-        
-        public void SubscribeEvents()
-        {
-            GLControl.MouseClick += GLControl_MouseClick;
-            GLControl.KeyDown += GLControl_KeyDown;
-            GLControl.KeyUp += GLControl_KeyUp;
-            GLControl.Resize += GLControl_Resize;
-            GLControl.Paint += GLControl_Paint;
-            GLControl.MouseDown += GLControl_MouseDown;
-            GLControl.MouseMove += GLControl_MouseMove;
-            GLControl.MouseWheel += GLControl_MouseWheel;
-            
-            menuImportOff.Click += MenuImport_Click;
-
-            menuProcessSP.Click += menuProcessSP_Click;
-            menuProcessGC.Click += menuProcessGC_Click;
-            menuProcessDescriptor.Click += menuProcessDescriptor_Click;
-            menuExit.Click += MenuExit_Click;
-            menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
-
-            toolbarPoint.Click += ToolbarPoint_Click;
-            toolbarShaded.Click += ToolbarShaded_Click;
-            toolbarWireframe.Click += ToolbarWireframe_Click;
-            toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
-            toolbarIsBlinn.Click += ToolbarIsBlinn_Click;
-
-            Logger.OnItemLogged += Logger_OnItemLogged;
-            Logger.OnLogCleaned += Logger_OnLogCleaned;
-
-            sceneGraphTree.AfterSelect += SceneGraphTree_AfterSelect;
-            sceneGraphTree.KeyDown += SceneGraphTree_KeyDown;
-            _SceneGraph.OnItemAdded += SceneGraph_OnItemAdded;
-            _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
-            _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
+                if (GLControl.Focused)
+                {
+                    _cameraController.Navigate(KeyState);
+                    KeyState = OpenTK.Input.Keyboard.GetState();
+                    MouseState = OpenTK.Input.Mouse.GetCursorState();
+                    MouseState = OpenTK.Input.Mouse.GetState();
+                }
+            });
         }
 
-
+        #region Logger
 
         private void Logger_OnLogCleaned(string obj)
         {
@@ -321,6 +305,7 @@ namespace VertexBenderCS.Forms
             });
         }
 
+        #endregion
 
         #region Process Output Displayers
 

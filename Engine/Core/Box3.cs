@@ -75,6 +75,29 @@ namespace Engine.Core
             }
         }
 
+        public float LongestDimension
+        {
+            get
+            {
+                var v1 = Math.Abs(Top - Bottom);
+                var v2 = Math.Abs(Front - Back);
+                var v3 = Math.Abs(Right - Left);
+
+                var max = v1 > v2 ? v1 : v2;
+                max = v3 > max ? v3 : max;
+
+                return max;
+            }
+        }
+
+        public float Size
+        {
+            get
+            {
+                return (float)Math.Sqrt(0.25 * ((Top - Bottom) * (Top - Bottom) + (Front - Back) * (Front - Back) + (Right - Left) * (Right - Left)));
+            }
+        }
+
         public Vector3 Center
         {
             get
