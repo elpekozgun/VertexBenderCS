@@ -14,12 +14,14 @@ namespace VertexBenderCS.Forms
     public enum eProcessCoreType
     {
         ShortestPath,
-        Descriptor
+        Descriptor,
+        Parametrization
     }
 
     public partial class FrmProcess : Form
     {
-        private eShortestPathMethod _method;
+        private eShortestPathMethod _shortestPathmethod;
+        private eParameterizationMethod _parametrizationMethod;
         private Mesh _mesh;
 
         private BackgroundWorker _worker;
@@ -50,30 +52,44 @@ namespace VertexBenderCS.Forms
             numericSource.Maximum = _mesh.Vertices.Count - 1;
             numericTarget.Maximum = _mesh.Vertices.Count - 1;
             labelMaxVertex.Text = (_mesh.Vertices.Count - 1).ToString();
-            cmbMethod.DataSource = Enum.GetValues(typeof(eShortestPathMethod));
+            cmbShortestPathMethod.DataSource = Enum.GetValues(typeof(eShortestPathMethod));
+            cmbDisk.DataSource = Enum.GetValues(typeof(eParameterizationMethod));
 
             if (type == eProcessCoreType.ShortestPath)
             {
                 tabProcess.TabPages.Remove(tabDescriptor);
+                tabProcess.TabPages.Remove(tabParametrization);
             }
             else if (type == eProcessCoreType.Descriptor)
             {
                 tabProcess.TabPages.Remove(tabSPH);
                 tabProcess.TabPages.Remove(tabGm);
+                tabProcess.TabPages.Remove(tabParametrization);
+            }
+            else if (type == eProcessCoreType.Parametrization)
+            {
+                tabProcess.TabPages.Remove(tabSPH);
+                tabProcess.TabPages.Remove(tabGm);
+                tabProcess.TabPages.Remove(tabDescriptor);
             }
 
             numericSource.Controls[0].Visible = false;
             numericTarget.Controls[0].Visible = false;
             numericStartIndex.Controls[0].Visible = false;
             numericSampleCount.Controls[0].Visible  = false;
+            numericWeight.Controls[0].Visible = false;
 
         }
 
         private void SubscribeEvents()
         {
             btnStart.Click += BtnStart_Click;
-            cmbMethod.SelectedIndexChanged += CmbMethod_SelectedIndexChanged;
+            cmbShortestPathMethod.SelectedIndexChanged += CmbShortestPathMethod_SelectedIndexChanged;
+            cmbDisk.SelectedIndexChanged += CmbDisk_SelectedIndexChanged;
+
+            radioDisk.CheckedChanged += RadioDisk_CheckedChanged;
         }
+
 
         private void UpdateControls(bool isActive)
         {
@@ -108,7 +124,7 @@ namespace VertexBenderCS.Forms
             var tab = (TabPage)e.Argument;
             if (tab == tabSPH)
             {
-                e.Result = Algorithm.ShortestPath(_mesh, (int)(numericSource.Value), (int)numericTarget.Value, _method, true);
+                e.Result = Algorithm.ShortestPath(_mesh, (int)(numericSource.Value), (int)numericTarget.Value, _shortestPathmethod, true);
             }
             else if (tab == tabGm)
             {
@@ -151,6 +167,24 @@ namespace VertexBenderCS.Forms
                     );
                 }
             }
+            else if (tab == tabParametrization)
+            {
+                if (radioDisk.Checked)
+                {
+                    e.Result = Algorithm.ParameterizeMeshToDisc
+                    (
+                        _mesh,
+                        _parametrizationMethod,
+                        UpdateProgress,
+                        (float)numericWeight.Value,
+                        true
+                    );
+                }
+                else if (radioSphere.Checked)
+                {
+
+                }
+            }
         }
 
         private void UpdateProgress(int percentage)
@@ -180,10 +214,32 @@ namespace VertexBenderCS.Forms
             progressBar1.Value = Math.Min(e.ProgressPercentage + 10, 100);
         }
 
-        private void CmbMethod_SelectedIndexChanged(object sender, EventArgs e)
+        private void CmbShortestPathMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _method = (eShortestPathMethod)cmbMethod.SelectedItem;
+            _shortestPathmethod = (eShortestPathMethod)cmbShortestPathMethod.SelectedItem;
         }
-        
+
+        private void CmbDisk_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _parametrizationMethod = (eParameterizationMethod)cmbDisk.SelectedItem;
+            if (_parametrizationMethod != eParameterizationMethod.Uniform || !radioDisk.Checked)
+            {
+                labelDiskWeight.Enabled = false;
+                numericWeight.Enabled = false;
+                return;
+            }
+            labelDiskWeight.Enabled = true;
+            numericWeight.Enabled = true;
+        }
+
+        private void RadioDisk_CheckedChanged(object sender, EventArgs e)
+        {
+            cmbDisk.Enabled = radioDisk.Checked;
+            labelDiskWeight.Enabled = radioDisk.Checked;
+            numericWeight.Enabled = radioDisk.Checked;
+            labelDiskMethod.Enabled = radioDisk.Checked;
+            CmbDisk_SelectedIndexChanged(sender, e);
+        }
+
     }
 }

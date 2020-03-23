@@ -701,65 +701,6 @@ namespace Engine.Processing
 
         #endregion
 
-        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, float weight = 0.5f, bool includeHoles = false)
-        {
-
-            var boundaryVertices = mesh.GetBoundaryVertices();
-
-            var allBoundaries = new List<Dictionary<int,Vertex>>();
-            RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
-
-            Matrix<float> W = CreateMatrix.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
-            Vector<float> Bx = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
-            Vector<float> By = CreateVector.Dense(mesh.Vertices.Count, 0.0f);
-
-
-            FillMatrix(ref W, mesh, allBoundaries, method, weight);
-            FillVectors(ref Bx, ref By, allBoundaries);
-
-
-            // DIEDED THING
-            _watch.Reset();
-            _watch.Start();
-            var Xx = W.Solve(Bx);
-            var Xy = W.Solve(By);
-            _watch.Stop();
-            Logger.Log("Matrix Solved in: " + W.ColumnCount + " " + _watch.ElapsedMilliseconds + " ms");
-
-            var list = new List<Vector2>();
-            for (int i = 0; i < Xx.Count; i++)
-            {
-                list.Add(new Vector2(Xx[i], Xy[i]));
-            }
-
-            return new DiscParameterizeOutput(list);
-        }
-
-        public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int,Vertex>> totalBoundaries)
-        {
-
-            var candidateItems = new Dictionary<int, Vertex>();
-            foreach (var item in candidates)
-            {
-                candidateItems.Add(item.Id, item);
-            }
-
-            while (candidateItems.Count > 0)
-            {
-                var itemList = new List<Vertex>();
-                var boundary = new Dictionary<int, Vertex>();
-
-                RecursivelyAddNeighbor(candidateItems.First().Value, ref candidateItems, ref boundary);
-
-                //foreach (var item in boundary)
-                //{
-                //    itemList.Add(item.Value);
-                //}
-                totalBoundaries.Add(boundary);
-            }
-            totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
-        }
-
         private static void RecursivelyAddNeighbor(Vertex source, ref Dictionary<int,Vertex> candidates, ref Dictionary<int,Vertex> boundary)
         {
             foreach (var neighbor in source.Verts)
@@ -918,8 +859,80 @@ namespace Engine.Processing
             }
         }
 
-    }
+        public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int,Vertex>> totalBoundaries)
+        {
 
+            var candidateItems = new Dictionary<int, Vertex>();
+            foreach (var item in candidates)
+            {
+                candidateItems.Add(item.Id, item);
+            }
+
+            while (candidateItems.Count > 0)
+            {
+                var itemList = new List<Vertex>();
+                var boundary = new Dictionary<int, Vertex>();
+
+                RecursivelyAddNeighbor(candidateItems.First().Value, ref candidateItems, ref boundary);
+
+                //foreach (var item in boundary)
+                //{
+                //    itemList.Add(item.Value);
+                //}
+                totalBoundaries.Add(boundary);
+            }
+            totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
+        }
+
+        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, Action<int> updateProgress, float weight = 0.5f, bool includeHoles = false)
+        {
+
+            var boundaryVertices = mesh.GetBoundaryVertices();
+
+            var allBoundaries = new List<Dictionary<int,Vertex>>();
+            RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
+
+            updateProgress(20);
+
+            MathNet.Numerics.Control.UseNativeOpenBLAS();
+            Matrix<float> W = Matrix<float>.Build.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
+            Vector<float> Bx = Vector<float>.Build.Dense(mesh.Vertices.Count, 0.0f);
+            Vector<float> By = Vector<float>.Build.Dense(mesh.Vertices.Count, 0.0f);
+
+
+            FillMatrix(ref W, mesh, allBoundaries, method, weight);
+            FillVectors(ref Bx, ref By, allBoundaries);
+
+
+            _watch.Reset();
+            _watch.Start();
+
+            var inv = W.Inverse();
+            var Xx = inv * Bx;
+            var Xy = inv * By;
+
+            updateProgress(80);
+
+            _watch.Stop();
+            Logger.Log($"Matrix of size {W.ColumnCount} x {W.ColumnCount} Solved in: {_watch.ElapsedMilliseconds} ms");
+
+
+            var list = new List<Vector2>();
+            for (int i = 0; i < Xx.Count; i++)
+            {
+                list.Add(new Vector2(Xx[i], Xy[i]));
+            }
+            updateProgress(100);
+
+            return new DiscParameterizeOutput(list);
+        }
+
+        public static void ParameterizeMeshToSphere(Mesh mesh)
+        {
+
+        }
+
+    }
 
 
 }

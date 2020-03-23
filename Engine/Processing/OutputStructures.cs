@@ -12,7 +12,9 @@ namespace Engine.Processing
         Sampling,
         IsoCurve,
         AverageGeodesicDistance,
-        GeodesicMatrix
+        GeodesicMatrix,
+        DiscParametrization,
+        SphereParametrization
     }
 
     public interface IOutput
@@ -107,14 +109,44 @@ namespace Engine.Processing
 
     }
 
-    public struct DiscParameterizeOutput
+    public struct DiscParameterizeOutput : IOutput
     {
-        public List<OpenTK.Vector2> Output;
+        public List<Vector2> Output;
 
         public DiscParameterizeOutput(List<Vector2> output)
         {
             Output = output;
         }
+
+        public eOutputType Type => eOutputType.DiscParametrization;
+
+        public Vector2[] NormalizedUVCoords()
+        {
+            Vector2[] UVcoords = new Vector2[Output.Count];
+
+            float minY = float.MaxValue;
+            float minX = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+
+            for (int i = 0; i < Output.Count; i++)
+            {
+                minY = Output[i].Y < minY ? Output[i].Y : minY;
+                minX = Output[i].X < minX ? Output[i].X : minX;
+                maxX = Output[i].X > maxX ? Output[i].X : maxX;
+                maxY = Output[i].Y > maxY ? Output[i].Y : maxY;
+            }
+
+            var normalizer = Math.Max(maxX - minX, maxY - minY);
+
+            for (int i = 0; i < Output.Count; i++)
+            {
+                UVcoords[i] = new Vector2(Output[i].X - minX, Output[i].Y - minY) / normalizer;
+            }
+
+            return UVcoords;
+        }
+
     }
 
 }

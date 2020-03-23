@@ -140,6 +140,7 @@ namespace VertexBenderCS.Forms
             menuProcessSP.Click += menuProcessSP_Click;
             menuProcessGC.Click += menuProcessGC_Click;
             menuProcessDescriptor.Click += menuProcessDescriptor_Click;
+            menuProcessParametrization.Click += MenuProcessParametrization_Click;
             menuExit.Click += MenuExit_Click;
             menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
 
@@ -159,38 +160,42 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
 
+
+
         private void SetupTestScene()
         {
 
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low-cry.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry-eyeless.off"), "test");
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face.off"), "test");
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry.off"), "test");
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\centaur.off"), "test");
-            _SceneGraph.AddObject(mesh);
+            //_SceneGraph.AddObject(mesh);
 
             //Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform);
 
-            var boundaries = mesh.Mesh.GetBoundaryVertices();
-            var allBoundries = new List<Dictionary<int,Vertex>>();
-            Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
+            //var boundaries = mesh.Mesh.GetBoundaryVertices();
+            //var allBoundries = new List<Dictionary<int,Vertex>>();
+            //Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
 
 
-            for (int i = 0; i < allBoundries.Count; i++)
-            {
-                foreach (var boundary in allBoundries[i])
-                {
-                    PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f))
-                    {
-                        Position = boundary.Value.Coord,
-                        Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-                    };
-                    if (i == 0)
-                    {
-                        indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                    }
-                    _SceneGraph.AddObject(indicator);
-                }
-            }
+            //for (int i = 0; i < allBoundries.Count; i++)
+            //{
+            //    foreach (var boundary in allBoundries[i])
+            //    {
+            //        PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f))
+            //        {
+            //            Position = boundary.Value.Coord,
+            //            Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+            //        };
+            //        if (i == 0)
+            //        {
+            //            indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+            //        }
+            //        _SceneGraph.AddObject(indicator);
+            //    }
+            //}
 
             //var box = Box3.CalculateBoundingBox(allBoundries[0]);
 
@@ -251,20 +256,27 @@ namespace VertexBenderCS.Forms
             //_SceneGraph.AddObject(ind7);
             //_SceneGraph.AddObject(ind8);
 
-            var output = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Harmonic, 1.0f, false);
+            //var output = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.MeanValue, 1.0f, false);
 
-            var outputmesh = new Mesh();
+            //var outputmesh = new Mesh();
 
-            for (int i = 0; i < output.Output.Count; i++)
-            {
-                var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y));
-                outputmesh.Vertices.Add(v);
-            }
-            outputmesh.Triangles = mesh.Mesh.Triangles;
+            //for (int i = 0; i < output.Output.Count; i++)
+            //{
+            //    var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y), Vector3.UnitY);
+            //    outputmesh.Vertices.Add(v);
+            //}
+            //outputmesh.Triangles = mesh.Mesh.Triangles;
 
-            var renderer = new MeshRenderer(outputmesh, "asd");
-            renderer.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-            _SceneGraph.AddObject(renderer);
+            //var renderer = new MeshRenderer(outputmesh, "asd")
+            //{
+            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+            //};
+
+            
+            //mesh.SetTextureBuffer(output.NormalizedUVCoords());
+            //renderer.SetTextureBuffer(output.NormalizedUVCoords());
+
+            //_SceneGraph.AddObject(renderer);
 
 
         }
@@ -439,7 +451,61 @@ namespace VertexBenderCS.Forms
             }
         }
 
-        private void ShortestPathOnResultReturned(IOutput output)
+        private void DisplayDiscParametrizationOutput(DiscParameterizeOutput output)
+        {
+            if (_activeMesh != null)
+            {
+                foreach (var child in _activeMesh.Children)
+                {
+                    _SceneGraph.DeleteObject(child);
+                }
+
+                var boundaries = _activeMesh.Mesh.GetBoundaryVertices();
+                var allBoundries = new List<Dictionary<int, Vertex>>();
+                Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
+
+
+                for (int i = 0; i < allBoundries.Count; i++)
+                {
+                    foreach (var boundary in allBoundries[i])
+                    {
+                        PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f))
+                        {
+                            Position = boundary.Value.Coord,
+                            Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+                        };
+                        if (i == 0)
+                        {
+                            indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                        }
+                        _SceneGraph.AddObject(indicator);
+                    }
+                }
+
+                var outputmesh = new Mesh();
+
+                for (int i = 0; i < output.Output.Count; i++)
+                {
+                    var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y), Vector3.UnitY);
+                    outputmesh.Vertices.Add(v);
+                }
+                outputmesh.Triangles = _activeMesh.Mesh.Triangles;
+
+                var renderer = new MeshRenderer(outputmesh, "asd")
+                {
+                    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+                    Position = _activeMesh.Position + new Vector3(0.2f, 0.0f, 0.0f)
+                };
+
+                _activeMesh.SetTextureBuffer(output.NormalizedUVCoords());
+                renderer.SetTextureBuffer(output.NormalizedUVCoords());
+
+                _SceneGraph.AddObject(renderer);
+
+            }
+        }
+
+        private void ProcessResultReturned(IOutput output)
         {
             switch (output.Type)
             {
@@ -454,6 +520,9 @@ namespace VertexBenderCS.Forms
                     break;
                 case eOutputType.AverageGeodesicDistance:
                     DisplayAverageGeodesicOutput((AverageGeodesicOutput)output);
+                    break;
+                case eOutputType.DiscParametrization:
+                    DisplayDiscParametrizationOutput((DiscParameterizeOutput)output);
                     break;
                 default:
                     break;
@@ -808,7 +877,7 @@ namespace VertexBenderCS.Forms
             {
                 var mesh = _activeMesh.Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
-                _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
+                _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
             }
             else
@@ -849,7 +918,18 @@ namespace VertexBenderCS.Forms
             {
                 var mesh = _activeMesh.Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.Descriptor);
-                _frmProcess.OnResultReturned += ShortestPathOnResultReturned;
+                _frmProcess.OnResultReturned += ProcessResultReturned;
+                _frmProcess.ShowDialog();
+            }
+        }
+
+        private void MenuProcessParametrization_Click(object sender, EventArgs e)
+        {
+            if (_activeMesh != null)
+            {
+                var mesh = _activeMesh.Mesh;
+                _frmProcess = new FrmProcess(mesh, eProcessCoreType.Parametrization);
+                _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
             }
         }
@@ -867,6 +947,8 @@ namespace VertexBenderCS.Forms
             }
 
         }
+
+
 
         private void MenuExit_Click(object sender, EventArgs e)
         {
@@ -896,6 +978,8 @@ namespace VertexBenderCS.Forms
                 }
             }
         }
+
+
 
         #endregion
 

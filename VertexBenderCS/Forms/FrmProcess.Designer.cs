@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.cmbMethod = new System.Windows.Forms.ComboBox();
+            this.cmbShortestPathMethod = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.labelMaxVertex = new System.Windows.Forms.Label();
@@ -50,6 +50,13 @@
             this.radioFPS = new System.Windows.Forms.RadioButton();
             this.labelSampleCount = new System.Windows.Forms.Label();
             this.numericSampleCount = new System.Windows.Forms.NumericUpDown();
+            this.tabParametrization = new System.Windows.Forms.TabPage();
+            this.labelDiskWeight = new System.Windows.Forms.Label();
+            this.numericWeight = new System.Windows.Forms.NumericUpDown();
+            this.radioSphere = new System.Windows.Forms.RadioButton();
+            this.radioDisk = new System.Windows.Forms.RadioButton();
+            this.labelDiskMethod = new System.Windows.Forms.Label();
+            this.cmbDisk = new System.Windows.Forms.ComboBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.numericSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericTarget)).BeginInit();
@@ -60,22 +67,24 @@
             this.tabDescriptor.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStartIndex)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericSampleCount)).BeginInit();
+            this.tabParametrization.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericWeight)).BeginInit();
             this.SuspendLayout();
             // 
-            // cmbMethod
+            // cmbShortestPathMethod
             // 
-            this.cmbMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbMethod.FormattingEnabled = true;
-            this.cmbMethod.Items.AddRange(new object[] {
+            this.cmbShortestPathMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbShortestPathMethod.FormattingEnabled = true;
+            this.cmbShortestPathMethod.Items.AddRange(new object[] {
             "Array",
             "Minimum Heap",
             "Fibonacci",
             "A*",
             "All"});
-            this.cmbMethod.Location = new System.Drawing.Point(141, 52);
-            this.cmbMethod.Name = "cmbMethod";
-            this.cmbMethod.Size = new System.Drawing.Size(80, 23);
-            this.cmbMethod.TabIndex = 0;
+            this.cmbShortestPathMethod.Location = new System.Drawing.Point(141, 52);
+            this.cmbShortestPathMethod.Name = "cmbShortestPathMethod";
+            this.cmbShortestPathMethod.Size = new System.Drawing.Size(80, 23);
+            this.cmbShortestPathMethod.TabIndex = 0;
             // 
             // label1
             // 
@@ -167,6 +176,7 @@
             this.tabProcess.Controls.Add(this.tabSPH);
             this.tabProcess.Controls.Add(this.tabGm);
             this.tabProcess.Controls.Add(this.tabDescriptor);
+            this.tabProcess.Controls.Add(this.tabParametrization);
             this.tabProcess.Font = new System.Drawing.Font("Ebrima", 9F);
             this.tabProcess.Location = new System.Drawing.Point(-2, 33);
             this.tabProcess.Name = "tabProcess";
@@ -179,7 +189,7 @@
             this.tabSPH.Controls.Add(this.label1);
             this.tabSPH.Controls.Add(this.numericTarget);
             this.tabSPH.Controls.Add(this.label2);
-            this.tabSPH.Controls.Add(this.cmbMethod);
+            this.tabSPH.Controls.Add(this.cmbShortestPathMethod);
             this.tabSPH.Controls.Add(this.label5);
             this.tabSPH.Controls.Add(this.numericSource);
             this.tabSPH.Location = new System.Drawing.Point(4, 24);
@@ -325,6 +335,101 @@
             0,
             0});
             // 
+            // tabParametrization
+            // 
+            this.tabParametrization.Controls.Add(this.labelDiskWeight);
+            this.tabParametrization.Controls.Add(this.numericWeight);
+            this.tabParametrization.Controls.Add(this.radioSphere);
+            this.tabParametrization.Controls.Add(this.radioDisk);
+            this.tabParametrization.Controls.Add(this.labelDiskMethod);
+            this.tabParametrization.Controls.Add(this.cmbDisk);
+            this.tabParametrization.Location = new System.Drawing.Point(4, 24);
+            this.tabParametrization.Name = "tabParametrization";
+            this.tabParametrization.Size = new System.Drawing.Size(277, 277);
+            this.tabParametrization.TabIndex = 3;
+            this.tabParametrization.Text = "Parametrization";
+            this.tabParametrization.UseVisualStyleBackColor = true;
+            // 
+            // labelDiskWeight
+            // 
+            this.labelDiskWeight.AutoSize = true;
+            this.labelDiskWeight.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.labelDiskWeight.Location = new System.Drawing.Point(30, 90);
+            this.labelDiskWeight.Name = "labelDiskWeight";
+            this.labelDiskWeight.Size = new System.Drawing.Size(48, 15);
+            this.labelDiskWeight.TabIndex = 18;
+            this.labelDiskWeight.Text = "Weight:";
+            this.labelDiskWeight.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // numericWeight
+            // 
+            this.numericWeight.DecimalPlaces = 1;
+            this.numericWeight.Location = new System.Drawing.Point(103, 88);
+            this.numericWeight.Maximum = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            this.numericWeight.Name = "numericWeight";
+            this.numericWeight.Size = new System.Drawing.Size(55, 24);
+            this.numericWeight.TabIndex = 17;
+            this.numericWeight.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // radioSphere
+            // 
+            this.radioSphere.AutoSize = true;
+            this.radioSphere.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.radioSphere.Location = new System.Drawing.Point(14, 137);
+            this.radioSphere.Name = "radioSphere";
+            this.radioSphere.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.radioSphere.Size = new System.Drawing.Size(146, 19);
+            this.radioSphere.TabIndex = 16;
+            this.radioSphere.Text = "Sphere Parametrization";
+            this.radioSphere.UseVisualStyleBackColor = true;
+            // 
+            // radioDisk
+            // 
+            this.radioDisk.AutoSize = true;
+            this.radioDisk.Checked = true;
+            this.radioDisk.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.radioDisk.Location = new System.Drawing.Point(28, 34);
+            this.radioDisk.Name = "radioDisk";
+            this.radioDisk.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.radioDisk.Size = new System.Drawing.Size(132, 19);
+            this.radioDisk.TabIndex = 15;
+            this.radioDisk.TabStop = true;
+            this.radioDisk.Text = "Disk Parametrization";
+            this.radioDisk.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.radioDisk.UseVisualStyleBackColor = true;
+            // 
+            // labelDiskMethod
+            // 
+            this.labelDiskMethod.AutoSize = true;
+            this.labelDiskMethod.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.labelDiskMethod.Location = new System.Drawing.Point(30, 62);
+            this.labelDiskMethod.Name = "labelDiskMethod";
+            this.labelDiskMethod.Size = new System.Drawing.Size(52, 15);
+            this.labelDiskMethod.TabIndex = 5;
+            this.labelDiskMethod.Text = "Method:";
+            this.labelDiskMethod.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // cmbDisk
+            // 
+            this.cmbDisk.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbDisk.FormattingEnabled = true;
+            this.cmbDisk.Items.AddRange(new object[] {
+            "Uniform",
+            "Harmonic",
+            "MeanValue"});
+            this.cmbDisk.Location = new System.Drawing.Point(103, 59);
+            this.cmbDisk.Name = "cmbDisk";
+            this.cmbDisk.Size = new System.Drawing.Size(80, 23);
+            this.cmbDisk.TabIndex = 4;
+            // 
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
@@ -363,6 +468,9 @@
             this.tabDescriptor.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericStartIndex)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericSampleCount)).EndInit();
+            this.tabParametrization.ResumeLayout(false);
+            this.tabParametrization.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericWeight)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -370,7 +478,7 @@
 
         #endregion
 
-        private System.Windows.Forms.ComboBox cmbMethod;
+        private System.Windows.Forms.ComboBox cmbShortestPathMethod;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label labelMaxVertex;
@@ -393,5 +501,12 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.NumericUpDown numericStartIndex;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TabPage tabParametrization;
+        private System.Windows.Forms.Label labelDiskWeight;
+        private System.Windows.Forms.NumericUpDown numericWeight;
+        private System.Windows.Forms.RadioButton radioSphere;
+        private System.Windows.Forms.RadioButton radioDisk;
+        private System.Windows.Forms.Label labelDiskMethod;
+        private System.Windows.Forms.ComboBox cmbDisk;
     }
 }

@@ -200,5 +200,10 @@
   <ItemGroup>
     <None Include="Resources\Image\grid.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Image\UV1024.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

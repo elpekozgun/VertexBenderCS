@@ -32,7 +32,7 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
+            this.GLControl = new OpenTK.GLControl();
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -70,7 +70,7 @@
             this.processMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessSP = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessGC = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuProcessDescriptor = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuProcessParametrization = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.editMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
@@ -100,6 +100,7 @@
             this.labelPosition = new System.Windows.Forms.Label();
             this.numericPosX = new System.Windows.Forms.NumericUpDown();
             this.labelTransform = new System.Windows.Forms.Label();
+            this.menuProcessDescriptor = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -513,7 +514,8 @@
             this.processMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuProcessSP,
             this.menuProcessGC,
-            this.menuProcessDescriptor});
+            this.menuProcessDescriptor,
+            this.menuProcessParametrization});
             this.processMenu.Font = new System.Drawing.Font("Ebrima", 9F);
             this.processMenu.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.processMenu.Name = "processMenu";
@@ -537,13 +539,13 @@
             this.menuProcessGC.Size = new System.Drawing.Size(244, 22);
             this.menuProcessGC.Text = "&Gaussian Curvature";
             // 
-            // menuProcessDescriptor
+            // menuProcessParametrization
             // 
-            this.menuProcessDescriptor.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.menuProcessDescriptor.Name = "menuProcessDescriptor";
-            this.menuProcessDescriptor.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
-            this.menuProcessDescriptor.Size = new System.Drawing.Size(244, 22);
-            this.menuProcessDescriptor.Text = "Sampling and &Descriptors";
+            this.menuProcessParametrization.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuProcessParametrization.Name = "menuProcessParametrization";
+            this.menuProcessParametrization.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D4)));
+            this.menuProcessParametrization.Size = new System.Drawing.Size(244, 22);
+            this.menuProcessParametrization.Text = "&Parametrization";
             // 
             // aboutMenu
             // 
@@ -934,6 +936,14 @@
             this.labelTransform.TabIndex = 0;
             this.labelTransform.Text = "Name";
             // 
+            // menuProcessDescriptor
+            // 
+            this.menuProcessDescriptor.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuProcessDescriptor.Name = "menuProcessDescriptor";
+            this.menuProcessDescriptor.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
+            this.menuProcessDescriptor.Size = new System.Drawing.Size(244, 22);
+            this.menuProcessDescriptor.Text = "Sampling and &Descriptors";
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -1007,7 +1017,7 @@
         private System.Windows.Forms.ToolStripMenuItem processMenu;
         private System.Windows.Forms.ToolStripMenuItem menuProcessSP;
         private System.Windows.Forms.ToolStripMenuItem menuProcessGC;
-        private System.Windows.Forms.ToolStripMenuItem menuProcessDescriptor;
+        private System.Windows.Forms.ToolStripMenuItem menuProcessParametrization;
         private System.Windows.Forms.ToolStripMenuItem aboutMenu;
         private System.Windows.Forms.ToolStripMenuItem editMenu;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
@@ -1049,6 +1059,7 @@
         private System.Windows.Forms.Label labelYPos;
         private System.Windows.Forms.Label labelXpos;
         private System.Windows.Forms.ToolStripMenuItem menuIsoCurveExport;
+        private System.Windows.Forms.ToolStripMenuItem menuProcessDescriptor;
     }
 }
 

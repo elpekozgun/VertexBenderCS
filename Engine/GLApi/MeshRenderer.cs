@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Engine.GLApi
 {
@@ -21,12 +23,13 @@ namespace Engine.GLApi
         public Vector3 Coord;
         public Vector3 Normal;
         public Vector3 Color;
+        public Vector2 TexCoord;
 
         public static int Size
         {
             get
             {
-                return Vector3.SizeInBytes * 3;
+                return Vector3.SizeInBytes * 3 + Vector2.SizeInBytes;
             }
         }
     }
@@ -49,6 +52,7 @@ namespace Engine.GLApi
         private int _VAO;
         private int _VBO;
         private int _EBO;
+        private int diffuseID;
 
         public Mesh Mesh { get; set; }
 
@@ -63,7 +67,8 @@ namespace Engine.GLApi
                 {
                     Coord = mesh.Vertices[i].Coord,
                     Normal = mesh.Vertices[i].Normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = new Vector3(0.0f, 0.0f, 0.0f),
+                    TexCoord = new Vector2(0.0f, 0.0f)
                 };
             }
 
@@ -82,10 +87,12 @@ namespace Engine.GLApi
             : base(name)
         {
             ExtractVertices(mesh);
+            diffuseID = LoadTexture(@"Resources\Image\UV1024.png");
             Setup();
             _initialized = true;
             Mesh = mesh;
             Shader = Shader.DefaultShader;
+
         }
 
         public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
@@ -119,9 +126,37 @@ namespace Engine.GLApi
             GL.EnableVertexAttribArray(2);
             GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
 
+            //texCoord
+            GL.EnableVertexAttribArray(3);
+            GL.VertexAttribPointer(3, 2, VertexAttribPointerType.Float, false, GpuVertex.Size, 36);
+
             GL.BindVertexArray(0);
                         
         }
+
+        private int LoadTexture(string file)
+        {
+            Bitmap bmp = new Bitmap(file);
+
+            //GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
+
+            int tex = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, tex);
+
+            BitmapData data = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0, OpenTK.Graphics.OpenGL4.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+            bmp.UnlockBits(data);
+
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+
+            bmp.Dispose();
+            return tex;
+        }
+
 
         public void SetColorBuffer(Vector3[] color)
         {
@@ -132,17 +167,31 @@ namespace Engine.GLApi
             Setup();
         }
 
+        public void SetTextureBuffer(Vector2[] texcoord)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].TexCoord = new Vector2(MathHelper.Clamp(texcoord[i].X, 0 , 1), MathHelper.Clamp(texcoord[i].Y, 0, 1));
+            }
+            Setup();
+        }
+
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, diffuseID);
+
             GL.BindVertexArray(_VAO);
 
             if ((mode & eRenderMode.shaded)== eRenderMode.shaded)
             {
                 Shader.Use();
+                Shader.SetInt("material.diffuse", (int)TextureUnit.Texture0);
                 Shader.SetMat4("Model", ModelMatrix);
                 Shader.SetMat4("View", cam.View);
                 Shader.SetMat4("Projection", cam.Projection);
                 Shader.SetVec4("Color", Color);
+
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.Enable(EnableCap.PolygonSmooth);
@@ -191,6 +240,7 @@ namespace Engine.GLApi
             }
 
             GL.BindVertexArray(0);
+            GL.ActiveTexture(TextureUnit.Texture0);
 
             //int diffuse = 1;
             //int specular = 1;
