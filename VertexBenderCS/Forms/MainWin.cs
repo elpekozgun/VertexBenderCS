@@ -165,6 +165,15 @@ namespace VertexBenderCS.Forms
         private void SetupTestScene()
         {
 
+            var pyramidRenderer = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(2, 2, new Vector3(0.4f, 0.1f, 0.4f)), Shader.DefaultShader, "pyramid");
+            _SceneGraph.AddObject(pyramidRenderer);
+
+            var pyramidRenderer2 = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(2, 2, new Vector3(0.4f, 0.1f, 0.4f)), Shader.DefaultShader, "pyramid");
+            _SceneGraph.AddObject(pyramidRenderer2);
+
+            var pyramidRenderer3 = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(2, 2, new Vector3(0.4f, 0.1f, 0.4f)), Shader.DefaultShader, "pyramid");
+            _SceneGraph.AddObject(pyramidRenderer3);
+
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low-cry.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry-eyeless.off"), "test");
@@ -272,7 +281,7 @@ namespace VertexBenderCS.Forms
             //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
             //};
 
-            
+
             //mesh.SetTextureBuffer(output.NormalizedUVCoords());
             //renderer.SetTextureBuffer(output.NormalizedUVCoords());
 
@@ -368,7 +377,7 @@ namespace VertexBenderCS.Forms
                 List<PrimitiveRenderer> points = new List<PrimitiveRenderer>();
                 for (int i = 0; i < output.SampleIndices.Count; i++)
                 {
-                    PrimitiveRenderer obj = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultIndicator, "sample-" + i + 1)
+                    PrimitiveRenderer obj = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.05f), Shader.DefaultShader, "sample-" + i + 1)
                     {
                         //Color = new Vector4(output.SamplePoints[i].Coord * 0.5f, 1.0f)
                         Color = new Vector4(0.0f, 0.0f, 1.0f, 1.0f)
@@ -405,7 +414,7 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.DeleteObject(child);
                 }
 
-                PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.05f), Shader.DefaultIndicator, "source")
+                PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.05f), Shader.DefaultShader, "source")
                 {
                     Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f)
                 };
@@ -460,27 +469,27 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.DeleteObject(child);
                 }
 
-                var boundaries = _activeMesh.Mesh.GetBoundaryVertices();
-                var allBoundries = new List<Dictionary<int, Vertex>>();
-                Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
+                //var boundaries = _activeMesh.Mesh.GetBoundaryVertices();
+                //var allBoundries = new List<Dictionary<int, Vertex>>();
+                //Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
 
 
-                for (int i = 0; i < allBoundries.Count; i++)
-                {
-                    foreach (var boundary in allBoundries[i])
-                    {
-                        PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f))
-                        {
-                            Position = boundary.Value.Coord,
-                            Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-                        };
-                        if (i == 0)
-                        {
-                            indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-                        }
-                        _SceneGraph.AddObject(indicator);
-                    }
-                }
+                //for (int i = 0; i < allBoundries.Count; i++)
+                //{
+                //    foreach (var boundary in allBoundries[i])
+                //    {
+                //        PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f))
+                //        {
+                //            Position = boundary.Value.Coord,
+                //            Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+                //        };
+                //        if (i == 0)
+                //        {
+                //            indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                //        }
+                //        _SceneGraph.AddObject(indicator);
+                //    }
+                //}
 
                 var outputmesh = new Mesh();
 
@@ -493,9 +502,15 @@ namespace VertexBenderCS.Forms
 
                 var renderer = new MeshRenderer(outputmesh, "asd")
                 {
-                    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+                    //Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
                     Position = _activeMesh.Position + new Vector3(0.2f, 0.0f, 0.0f)
                 };
+
+                //var tex = Texture.LoadTexture(@"Resources\Image\UV1024.png", eTextureType.Diffuse);
+                var tex = Texture.LoadTexture(@"Resources\Image\tile.png", eTextureType.Diffuse);
+                _activeMesh.DiffuseTexture = tex;
+                renderer.DiffuseTexture = tex;
+                
 
                 _activeMesh.SetTextureBuffer(output.NormalizedUVCoords());
                 renderer.SetTextureBuffer(output.NormalizedUVCoords());
@@ -948,8 +963,6 @@ namespace VertexBenderCS.Forms
 
         }
 
-
-
         private void MenuExit_Click(object sender, EventArgs e)
         {
             Close();
@@ -970,7 +983,7 @@ namespace VertexBenderCS.Forms
 
                     //_SceneGraph.Clean();
                     var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
-                    obj.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                    obj.Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
                     obj.Mesh.Name = obj.Name;
 
                     sceneGraphTree.SelectedNode = null;

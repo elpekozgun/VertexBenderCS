@@ -16,27 +16,27 @@ namespace Engine.GLApi
         private static Shader _defaultShader = ShaderBuilder.CreateShader
         (
             "shaded",
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ModelLoadingVertexShaderWithLight.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ModelLoadingFragmentShaderLighted.glsl", ShaderType.FragmentShader)
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\StandardVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\StandardFragment.glsl", ShaderType.FragmentShader)
         );
 
         private static Shader _defaultUnlit = ShaderBuilder.CreateShader
         (
             "unlit",
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\WireframeVertex.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\WireframeFragment.glsl", ShaderType.FragmentShader)
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\UnlitVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\UnlitFragment.glsl", ShaderType.FragmentShader)
         );
 
-        private static Shader _defaultIndicator = ShaderBuilder.CreateShader
-        (
-            "Indicator",
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorVertex.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorFragment.glsl", ShaderType.FragmentShader)
-        );
+        //private static Shader _defaultIndicator = ShaderBuilder.CreateShader
+        //(
+        //    "Indicator",
+        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorVertex.glsl", ShaderType.VertexShader),
+        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorFragment.glsl", ShaderType.FragmentShader)
+        //);
 
         public static Shader DefaultShader => _defaultShader;
         public static Shader DefaultUnlitShader=> _defaultUnlit;
-        public static Shader DefaultIndicator => _defaultIndicator;
+        //public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion
 

@@ -719,54 +719,43 @@ namespace Engine.Processing
 
         private static void FillVectors(ref Vector<float> vectorX, ref Vector<float> vectorY, List<Dictionary<int,Vertex>> allBoundaries)
         {
-            var disc = MakeDiscTopology(allBoundaries[0]); //only make outmost boundary disk.
-            
-            for (int i = 0; i < vectorX.Count; i++)
+            if (allBoundaries.Count > 0)
             {
-                int boundaryIndex = -1;
 
-                for (int j = 0; j < allBoundaries.Count; j++)
+                var disc = MakeDiscTopology(allBoundaries[0]); //only make outmost boundary disk.
+
+                for (int i = 0; i < vectorX.Count; i++)
                 {
-                    if (allBoundaries[j].ContainsKey(i))
+                    int boundaryIndex = -1;
+
+                    for (int j = 0; j < allBoundaries.Count; j++)
                     {
-                        boundaryIndex = j;
-                        break;
+                        if (allBoundaries[j].ContainsKey(i))
+                        {
+                            boundaryIndex = j;
+                            break;
+                        }
+                    }
+
+                    if (boundaryIndex == 0)
+                    {
+                        vectorX[i] = disc[i].X;
+                        vectorY[i] = disc[i].Y;
+                    }
+                    else
+                    if (boundaryIndex >= 0)
+                    {
+                        vectorX[i] = allBoundaries[boundaryIndex][i].Coord.X;
+                        vectorY[i] = allBoundaries[boundaryIndex][i].Coord.Z;
+                    }
+                    else
+                    {
+                        vectorX[i] = 0;
+                        vectorY[i] = 0;
                     }
                 }
-
-                if (boundaryIndex == 0)
-                {
-                    vectorX[i] = disc[i].X;
-                    vectorY[i] = disc[i].Y;
-                }
-                else
-                if (boundaryIndex >= 0)
-                {
-                    vectorX[i] = allBoundaries[boundaryIndex][i].Coord.X;
-                    vectorY[i] = allBoundaries[boundaryIndex][i].Coord.Z;
-                }
-                else
-                {
-                    vectorX[i] = 0;
-                    vectorY[i] = 0;
-                }
             }
-
-
-            //var disc = MakeDiscTopology(boundaries[0]); //only make outmost boundary disk.
-            //for (int i = 0; i < vectorX.Count; i++)
-            //{
-            //    if (boundaries.ContainsKey(i))
-            //    {
-            //        //vectorX[i] = boundaries[i].Coord.X;
-            //        //vectorY[i] = boundaries[i].Coord.Z;
-            //        vectorX[i] = disc[i].X;
-            //        vectorY[i] = disc[i].Y;
-            //        continue;
-            //    }
-            //    vectorX[i] = 0;
-            //    vectorY[i] = 0;
-            //}
+            
         }
 
         private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, List<Dictionary<int,Vertex>> allBoundaries, eParameterizationMethod method, float weight)
@@ -911,6 +900,9 @@ namespace Engine.Processing
             var Xx = inv * Bx;
             var Xy = inv * By;
 
+            //var Xx = W.Solve(Bx);
+            //var Xy = W.Solve(By);
+
             updateProgress(80);
 
             _watch.Stop();
@@ -929,6 +921,17 @@ namespace Engine.Processing
 
         public static void ParameterizeMeshToSphere(Mesh mesh)
         {
+            /*
+                1- get center.
+                2- check star shape
+                    - if star, move each vertex to the center of their 1 ring neihgborhood
+                3- send rays from center to each vertex to form unit sphere
+                4- gg
+
+             */
+
+
+
 
         }
 

@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Engine.GLApi
 {
@@ -14,6 +16,7 @@ namespace Engine.GLApi
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
+        public Texture DiffuseTexture { get; set; }
 
         private GpuVertex[] vertices;
 
@@ -44,10 +47,11 @@ namespace Engine.GLApi
             : base(name)
         {
             ExtractVertices(mesh);
+            DiffuseTexture = Texture.LoadTexture(@"Resources\Image\Blank1024.png", eTextureType.Diffuse);
             Setup();
             _initialized = true;
             Mesh = mesh;
-            Shader = Shader.DefaultIndicator;
+            Shader = Shader.DefaultShader;
         }
 
         public PrimitiveRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
@@ -92,6 +96,9 @@ namespace Engine.GLApi
 
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
+
             GL.BindVertexArray(_VAO);
 
             GL.Disable(EnableCap.CullFace);
@@ -99,6 +106,7 @@ namespace Engine.GLApi
             if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
                 Shader.Use();
+                Shader.SetInt("material.diffuse", (int)TextureUnit.Texture0);
                 Shader.SetMat4("Model", ModelMatrix);
                 Shader.SetMat4("View", cam.View);
                 Shader.SetMat4("Projection", cam.Projection);
@@ -153,6 +161,7 @@ namespace Engine.GLApi
             GL.Enable(EnableCap.CullFace);
 
             GL.BindVertexArray(0);
+            GL.ActiveTexture(TextureUnit.Texture0);
 
             //int diffuse = 1;
             //int specular = 1;

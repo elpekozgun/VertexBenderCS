@@ -5,6 +5,11 @@ in vec3 FragmentPosition;
 in vec3 FragmentNormal;
 in vec3 FragmentColor;
 
+#include "Light.glsl"
+
+#define NR_POINT_LIGHTS 3
+
+
 struct Material
 {
 	sampler2D diffuse;	//ambient and diffuse colors are almost the same for textures.
@@ -12,58 +17,14 @@ struct Material
 	float shineness;
 };
 
-struct DirectLight
-{
-	vec3 direction;
-	
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
-};
-
-struct PointLight
-{
-	vec3 position;
-	
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
-
-	float Kconstant;
-	float Klinear;
-	float Kquad;
-};
-
-struct SpotLight
-{
-	vec3 position;
-	vec3 direction;
-	
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
-
-	float cutOff;
-	float outerCutOff;
-
-	float Kconstant;
-	float Klinear;
-	float Kquad;
-};
-
-#define NR_POINT_LIGHTS 3
-
-out vec4 FragColor;
-
 uniform vec3 cameraPosition;
 uniform Material material;
 uniform DirectLight directLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform SpotLight spotlight;
+uniform vec4 Color;
 
-vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir);
-vec3 CalculatePointLight(PointLight light, vec3 normal,vec3 fragPos, vec3 viewDir);
-vec3 CalculateSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+out vec4 FragColor;
 
 void main()
 {
@@ -86,24 +47,32 @@ void main()
 
 vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir)
 {
-	vec3 lightdir = normalize(-light.direction);
+	vec3 lightDir = normalize(-light.direction);
 
-	float diff = max(dot(normal,lightdir),0.0f);
+	float diff = max(dot(normal,lightDir),0.0f);
 
-	vec3 reflectDir = reflect(-lightdir,normal);
-	float spec = pow( max(dot( viewDir,reflectDir),0.0f),material.shineness);
+	float spec = 0.0f;
+	if(IsBlinnPhong)
+	{
+		vec3 halfwayDir = normalize(viewDir + lightDir);
+		spec = pow( max(dot(normal, halfwayDir),0.0f),material.shineness * 4);
+	}
+	else
+	{
+		vec3 reflectDir = reflect(-lightDir,normal);
+		spec = pow( max(dot(viewDir, reflectDir),0.0f),material.shineness);
+	}
 
 	vec3 ambient = light.ambient * vec3(texture(material.diffuse,TexCoord));
 	vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoord));
-	vec3 specular = light.specular * spec;// * vec3(texture(material.specular,TexCoord));
+	vec3 specular = light.specular * spec;// * vec3(max(texture(material.specular,TexCoord),1.0f));
 	
 	if(FragmentColor.x != 0.0f || FragmentColor.y != 0.0f || FragmentColor.z != 0)
 	{
-		return (max(FragmentColor + specular,vec3(0.0f)));
+		return (max(FragmentColor + diffuse * 0.2f + specular,vec3(0.0f)));
 	}
 
-
-	return (max(ambient + diffuse + specular,vec3(0.0f)));
+	return (max(Color.xyz + ambient + diffuse + specular,vec3(0.0f)));
 }
 
 vec3 CalculatePointLight(PointLight light, vec3 normal,vec3 fragPos, vec3 viewDir)

@@ -10,7 +10,6 @@ out vec3 FragmentPosition;
 out vec3 FragmentNormal;
 out vec3 FragmentColor;
 
-
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;

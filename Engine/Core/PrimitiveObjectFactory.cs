@@ -8,7 +8,7 @@ namespace Engine.Core
 {
     public static class PrimitiveObjectFactory
     {
-        public static Mesh CreateCube2(float size)
+        public static Mesh CubeIndexed(float size)
         {
             Mesh cube = new Mesh();
 
@@ -41,7 +41,7 @@ namespace Engine.Core
             return cube;
         }
 
-        public static Mesh CreateCube(float size)
+        public static Mesh Cube(float size)
         {
             Mesh cube = new Mesh();
 
@@ -90,6 +90,172 @@ namespace Engine.Core
             return cube;
         }
 
+        public static Mesh Pyramid(float size, float height, OpenTK.Vector2 offset)
+        {
+            Mesh pyramid = new Mesh();
+
+            OpenTK.Vector3 v1 = new OpenTK.Vector3(-size, 0, size);
+            OpenTK.Vector3 v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            OpenTK.Vector3 v3 = new OpenTK.Vector3(-size, 0, -size);
+            var normal = OpenTK.Vector3.Cross
+            (
+                v3 - v2,
+                v1 - v2
+            ).Normalized();
+            pyramid.AddVertex(v1, normal);
+            pyramid.AddVertex(v2, normal);
+            pyramid.AddVertex(v3, normal);
+
+
+            v1 = new OpenTK.Vector3(-size, 0, -size);
+            v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            v3 = new OpenTK.Vector3(size, 0, -size);
+            normal = OpenTK.Vector3.Cross
+            (
+                v3 - v2,
+                v1 - v2
+            ).Normalized();
+            pyramid.AddVertex(v1, normal);
+            pyramid.AddVertex(v2, normal);
+            pyramid.AddVertex(v3, normal);
+
+            v1 = new OpenTK.Vector3(size, 0, -size);
+            v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            v3 = new OpenTK.Vector3(size, 0, size);
+            normal = OpenTK.Vector3.Cross
+            (
+                v3 - v2,
+                v1 - v2
+            ).Normalized();
+            pyramid.AddVertex(v1, normal);
+            pyramid.AddVertex(v2, normal);
+            pyramid.AddVertex(v3, normal);
+
+            v1 = new OpenTK.Vector3(size, 0, size);
+            v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            v3 = new OpenTK.Vector3(-size, 0, size);
+            normal = OpenTK.Vector3.Cross
+            (
+                v3 - v2,
+                v1 - v2
+            ).Normalized();
+            pyramid.AddVertex(v1, normal);
+            pyramid.AddVertex(v2, normal);
+            pyramid.AddVertex(v3, normal);
+
+
+            v1 = new OpenTK.Vector3(-size, 0, size);
+            v2 = new OpenTK.Vector3(size, 0, size);
+            v3 = new OpenTK.Vector3(size, 0, -size);
+            normal = OpenTK.Vector3.Cross
+            (
+                v3 - v2,
+                v1 - v2
+            ).Normalized();
+            pyramid.AddVertex(v1, normal);
+            pyramid.AddVertex(v2, normal);
+            pyramid.AddVertex(v3, normal);
+
+            v1 = new OpenTK.Vector3(size, 0, -size);
+            v2 = new OpenTK.Vector3(-size, 0, -size);
+            v3 = new OpenTK.Vector3(-size, 0, size);
+            normal = OpenTK.Vector3.Cross
+            (
+                v3 - v2,
+                v1 - v2
+            ).Normalized();
+            pyramid.AddVertex(v1, normal);
+            pyramid.AddVertex(v2, normal);
+            pyramid.AddVertex(v3, normal);
+
+
+            return pyramid;
+        }
+
+        public static Mesh PyramidNoBottom(float size, float height, OpenTK.Vector3 offset)
+        {
+            Mesh pyramid = new Mesh();
+
+            var a = OpenTK.Matrix3.CreateRotationY(OpenTK.MathHelper.PiOver4);
+
+            //var v1 = a * new OpenTK.Vector3(-size, 0, size);
+            //var v2 = a * new OpenTK.Vector3(size, 0, size);
+            //var v3 = a * new OpenTK.Vector3(size, 0, -size);
+            //var v4 = a * new OpenTK.Vector3(-size, 0, -size);
+            //var v5 = a * new OpenTK.Vector3(offset.X, height + offset.Y, offset.Z);
+
+            //pyramid.AddVertex(v1.X, v1.Y, v1.Z);
+            //pyramid.AddVertex(v2.X, v2.Y, v2.Z);
+            //pyramid.AddVertex(v3.X, v3.Y, v3.Z);
+            //pyramid.AddVertex(v4.X, v4.Y, v4.Z);
+            //pyramid.AddVertex(v5.X, v5.Y, v5.Z);
+
+            pyramid.AddVertex(-size, 0, size);
+            pyramid.AddVertex(size, 0, size);
+            pyramid.AddVertex(size, 0, -size);
+            pyramid.AddVertex(-size, 0, -size);
+            pyramid.AddVertex(offset.X, height + offset.Y, offset.Z);
+
+            pyramid.AddTriangle(0, 4, 1);
+            pyramid.AddTriangle(1, 4, 2);
+            pyramid.AddTriangle(2, 4, 3);
+            pyramid.AddTriangle(3, 4, 0);
+
+            pyramid.CalculateVertexNormals();
+
+
+            //OpenTK.Vector3 v1 = new OpenTK.Vector3(-size, 0, size);
+            //OpenTK.Vector3 v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            //OpenTK.Vector3 v3 = new OpenTK.Vector3(-size, 0, -size);
+            //var normal = OpenTK.Vector3.Cross
+            //(
+            //    v3 - v2,
+            //    v1 - v2
+            //).Normalized();
+            //pyramid.AddVertex(v1, normal);
+            //pyramid.AddVertex(v2, normal);
+            //pyramid.AddVertex(v3, normal);
+
+
+            //v1 = new OpenTK.Vector3(-size, 0, -size);
+            //v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            //v3 = new OpenTK.Vector3(size, 0, -size);
+            //normal = OpenTK.Vector3.Cross
+            //(
+            //    v3 - v2,
+            //    v1 - v2
+            //).Normalized();
+            //pyramid.AddVertex(v1, normal);
+            //pyramid.AddVertex(v2, normal);
+            //pyramid.AddVertex(v3, normal);
+
+            //v1 = new OpenTK.Vector3(size, 0, -size);
+            //v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            //v3 = new OpenTK.Vector3(size, 0, size);
+            //normal = OpenTK.Vector3.Cross
+            //(
+            //    v3 - v2,
+            //    v1 - v2
+            //).Normalized();
+            //pyramid.AddVertex(v1, normal);
+            //pyramid.AddVertex(v2, normal);
+            //pyramid.AddVertex(v3, normal);
+
+            //v1 = new OpenTK.Vector3(size, 0, size);
+            //v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
+            //v3 = new OpenTK.Vector3(-size, 0, size);
+            //normal = OpenTK.Vector3.Cross
+            //(
+            //    v3 - v2,
+            //    v1 - v2
+            //).Normalized();
+            //pyramid.AddVertex(v1, normal);
+            //pyramid.AddVertex(v2, normal);
+            //pyramid.AddVertex(v3, normal);
+
+            return pyramid;
+        }
+
         public static Mesh CreateSphere(float radius, int recursionLevel)
         {
 
@@ -98,7 +264,7 @@ namespace Engine.Core
 
             Dictionary<int, int> indexCache = new Dictionary<int, int>();
 
-            var cube = CreateCube((float)Math.Sqrt(2 * radius * radius));
+            var cube = Cube((float)Math.Sqrt(2 * radius * radius));
 
             for (int i = 0; i < recursionLevel; i++)
             {

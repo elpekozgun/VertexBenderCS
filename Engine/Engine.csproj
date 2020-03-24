@@ -76,13 +76,17 @@
     <Compile Include="Core\RayCaster.cs" />
     <Compile Include="Core\SceneGraph.cs" />
     <Compile Include="Core\Transform.cs" />
+    <Compile Include="GLApi\GpuVertex.cs" />
     <Compile Include="GLApi\InstanceRenderer.cs" />
     <Compile Include="GLApi\IRenderable.cs" />
     <Compile Include="GLApi\LineRenderer.cs" />
+    <Compile Include="GLApi\Material.cs" />
     <Compile Include="GLApi\MeshRenderer.cs" />
     <Compile Include="GLApi\PrimitiveRenderer.cs" />
+    <Compile Include="GLApi\Renderer.cs" />
     <Compile Include="GLApi\Shader.cs" />
     <Compile Include="GLApi\ShaderBuilder.cs" />
+    <Compile Include="GLApi\Texture.cs" />
     <Compile Include="Processing\Algorithm.cs" />
     <Compile Include="Processing\Graph.cs" />
     <Compile Include="Processing\HeapNode.cs" />

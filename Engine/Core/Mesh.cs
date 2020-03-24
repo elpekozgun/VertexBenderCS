@@ -156,6 +156,12 @@ namespace Engine.Core
 
             Vertices.Add(new Vertex(id, x, y, z, nx, ny, nz));
         }
+        internal void AddVertex(Vector3 coord, Vector3 normal)
+        {
+            int id = Vertices.Count;
+
+            Vertices.Add(new Vertex(id, coord, normal));
+        }
 
         internal Vector3 CalculateTriangleNormals(Triangle tri)
         {
@@ -177,6 +183,7 @@ namespace Engine.Core
                 {
                     normal += CalculateTriangleNormals(Triangles[v.Tris[j]]);
                 }
+
                 v.Normal = normal.Normalized();
 
                 Vertices[i] = v;
@@ -202,7 +209,6 @@ namespace Engine.Core
 
             return (float)angle;
         }
-
        
         internal float GetTriangleAngle(int triID, int vertexId)
         {

@@ -61,12 +61,12 @@ namespace VertexBenderCS {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static byte[] fragment {
+        internal static System.Drawing.Bitmap Blank1024 {
             get {
-                object obj = ResourceManager.GetObject("fragment", resourceCulture);
-                return ((byte[])(obj));
+                object obj = ResourceManager.GetObject("Blank1024", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -87,26 +87,6 @@ namespace VertexBenderCS {
             get {
                 object obj = ResourceManager.GetObject("icon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ModelLoadingFragmentShaderLighted {
-            get {
-                object obj = ResourceManager.GetObject("ModelLoadingFragmentShaderLighted", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ModelLoadingVertexShaderWithLight {
-            get {
-                object obj = ResourceManager.GetObject("ModelLoadingVertexShaderWithLight", resourceCulture);
-                return ((byte[])(obj));
             }
         }
         
@@ -191,42 +171,12 @@ namespace VertexBenderCS {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] vertex {
-            get {
-                object obj = ResourceManager.GetObject("vertex", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Wireframe {
             get {
                 object obj = ResourceManager.GetObject("Wireframe", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] WireframeFragment {
-            get {
-                object obj = ResourceManager.GetObject("WireframeFragment", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] WireframeVertex {
-            get {
-                object obj = ResourceManager.GetObject("WireframeVertex", resourceCulture);
-                return ((byte[])(obj));
             }
         }
     }

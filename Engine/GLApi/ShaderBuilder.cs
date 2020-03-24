@@ -11,11 +11,22 @@ namespace Engine.GLApi
 {
     public static class ShaderBuilder
     {
+        public static string SHADERPATH = @"Resources\Shader\";
+
         public static int CreateShaderSource(string path, ShaderType type)
         {
             var id = GL.CreateShader(type);
-            var source = File.ReadAllText(path);
-            
+            var fileInput = File.ReadAllLines(path);
+
+            for (int i = 0; i < fileInput.Length; i++)
+            {
+                if (fileInput[i].Contains("#include"))
+                {
+                    var includeFile = fileInput[i].Split(new char[] { '"' }, StringSplitOptions.RemoveEmptyEntries).Last();
+                    fileInput[i] = File.ReadAllText(SHADERPATH + includeFile);
+                }
+            }
+            var source = string.Join("\n", fileInput);
 
             GL.ShaderSource(id, source);
             GL.CompileShader(id);
