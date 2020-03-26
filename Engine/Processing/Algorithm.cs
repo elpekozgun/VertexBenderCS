@@ -801,7 +801,7 @@ namespace Engine.Processing
             //    keys.Add(item.Key);
             //}
 
-            //var items = new Dictionary<int,Vector2>();
+            //var items = new Dictionary<int, Vector2>();
             //for (int i = 0; i < vertices.Count; i++)
             //{
             //    items.Add(keys[i], new Vector2((float)Math.Cos(angle * i), (float)Math.Sin(angle * i)));
@@ -907,12 +907,12 @@ namespace Engine.Processing
             _watch.Reset();
             _watch.Start();
 
-            var inv = W.Inverse();
-            var Xx = inv * Bx;
-            var Xy = inv * By;
+            //var inv = W.Inverse();
+            //var Xx = inv * Bx;
+            //var Xy = inv * By;
 
-            //var Xx = W.Solve(Bx);
-            //var Xy = W.Solve(By);
+            var Xx = W.Solve(Bx);
+            var Xy = W.Solve(By);
 
             updateProgress(80);
 
@@ -937,30 +937,22 @@ namespace Engine.Processing
 
             var meshCenter = mesh.Center();
 
-            List<Vector3> vertices = mesh.Vertices.Select(x => x.Coord).ToList();
-
-            for (int j = 0; j < mesh.Vertices.Count; j++)
-            {
-                var neighbors = mesh.Vertices[j].Verts;
-
-                Vector3 newCenter = Vector3.Zero;
-                for (int k = 0; k < neighbors.Count; k++)
-                {
-                    newCenter += vertices[neighbors[k]];
-                }
-                newCenter /= neighbors.Count;
-
-                vertices[j] = newCenter;
-            }
-
             List<Vector3> spherePoints = new List<Vector3>();
             List<Vector3> normals = new List<Vector3>();
-            for (int i = 0; i < vertices.Count; i++)
+            for (int i = 0; i < mesh.Vertices.Count; i++)
             {
-                var normal = (vertices[i] - meshCenter).Normalized();
+                var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
                 spherePoints.Add(RayCaster.Cast(meshCenter, normal, 0.5f, 0.5f).Normalized());
                 normals.Add(normal);
             }
+
+            var sphereCenter = Vector3.Zero;
+            for (int i = 0; i < spherePoints.Count; i++)
+            {
+                sphereCenter += spherePoints[i];
+            }
+
+            sphereCenter /= spherePoints.Count;
 
             for (int i = 0; i < iterationCount; i++)
             {
@@ -986,10 +978,62 @@ namespace Engine.Processing
             _watch.Stop();
             Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
 
-            return new SphereParameterizeOutput(spherePoints, normals);
+            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> {  mesh.Center() });
 
         }
  
+        public static SphereParameterizeOutput SphereTest(Mesh mesh, int iterationCount)
+        {
+            _watch.Reset();
+            _watch.Start();
+
+            var meshCenter = mesh.Center();
+
+
+            var box = Box3.CalculateBoundingBox(mesh.Vertices);
+            List<Vector3> spherePoints = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
+            List<Vector3> centerList = new List<Vector3>();
+
+            var radius = box.LongestDimension * 0.5f;
+
+            for (int j = 0; j < iterationCount; j++)
+            {
+                spherePoints.Clear();
+                normals.Clear();
+
+                for (int i = 0; i < mesh.Vertices.Count; i++)
+                {
+                    var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
+                    spherePoints.Add(meshCenter + normal * radius);
+                    normals.Add(normal);
+                }
+
+                if (j < iterationCount - 1)
+                {
+                    var sphereCenter = Vector3.Zero;
+
+                    for (int i = 0; i < spherePoints.Count; i++)
+                    {
+                        sphereCenter += spherePoints[i];
+                    }
+                    sphereCenter /= spherePoints.Count;
+
+
+                    meshCenter = sphereCenter;
+                    centerList.Add(meshCenter);
+                }
+
+
+            }
+
+
+            _watch.Stop();
+            Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
+
+            return new SphereParameterizeOutput(spherePoints, normals, centerList );
+        }
+
         public static CutSeamParameterizeOutput ParameterizeMeshCutSeam(Mesh mesh, Action<int> updateProgress)
         {
             Graph g = new Graph(mesh);
@@ -998,8 +1042,6 @@ namespace Engine.Processing
             var sp = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1], true);
 
             var boundaryVertices = new HashSet<Vertex>();
-
-            var asddas = mesh.GetBoundaryVertices();
 
             var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Id)).ToList();
 

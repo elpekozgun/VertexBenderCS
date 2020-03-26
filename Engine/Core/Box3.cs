@@ -45,6 +45,28 @@ namespace Engine.Core
             return new Box3(maxY, minY, maxX, minX, maxZ, minZ);
         }
 
+        public static Box3 CalculateBoundingBox(List<Vector3> vertices)
+        {
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float minZ = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            float maxZ = float.MinValue;
+
+            foreach (var item in vertices)
+            {
+                minX = minX > item.X ? item.X : minX;
+                minY = minY > item.Y ? item.Y : minY;
+                minZ = minZ > item.Z ? item.Z : minZ;
+                maxX = maxX < item.X ? item.X : maxX;
+                maxY = maxY < item.Y ? item.Y : maxY;
+                maxZ = maxZ < item.Z ? item.Z : maxZ;
+            }
+
+            return new Box3(maxY, minY, maxX, minX, maxZ, minZ);
+        }
+
         public static Box3 CalculateBoundingBox(Dictionary<int,Vertex> vertices)
         {
             float minX = float.MaxValue;

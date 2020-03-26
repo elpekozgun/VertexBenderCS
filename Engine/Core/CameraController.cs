@@ -70,7 +70,7 @@ namespace Engine.Core
         public void Zoom(int val)
         {
             Cam.OrthoSize =  new Vector2(Math.Max(Cam.OrthoSize.X - val * Cam.AspectRatio * MouseSensitivity, 0.0f) ,Math.Max(Cam.OrthoSize.Y - val * MouseSensitivity, 0.0f));
-            Cam.Position += (Cam.Front * val * MouseSensitivity);
+            Cam.Position += (Cam.Front * val * MouseSensitivity * 0.1f);
         }
 
         public void Pan(float xoffset, float yoffset)

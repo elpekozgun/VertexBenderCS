@@ -208,7 +208,7 @@ namespace Engine.GLApi
                 var temp = Shader;
                 Shader = unlit;
 
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
+                GL.PolygonMode(MaterialFace.Front, PolygonMode.Point);
                 GL.PointSize(5);
 
                 GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);

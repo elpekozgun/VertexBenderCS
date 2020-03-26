@@ -92,7 +92,7 @@ namespace VertexBenderCS.Forms
             toolBar.Renderer = new CustomToolStripRenderer();
 
 
-            GL.ClearColor(Color.FromArgb(25, 25, 25));
+            GL.ClearColor(Color.FromArgb(50,50,50));
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
 
@@ -180,21 +180,86 @@ namespace VertexBenderCS.Forms
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face.off"), "test");
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\dragon.off"), "test");
-            
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
+
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
 
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\9.off"), "test");
 
-            //mesh.Scale = 400.0f * Vector3.One;
+
             //mesh.Rotation = Quaternion.FromEulerAngles( -MathHelper.PiOver2, 0, -MathHelper.PiOver2);
 
-            var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\test3.off"), "tes");
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\MeshsegBenchmark-1.0\data\off\169.off"), "tes");
+            mesh.Scale = Vector3.One * 10;
 
-            var meshrend = new MeshRenderer(m.Cutmesh, "asdasd");
-            _SceneGraph.AddObject(meshrend);
-            _activeMesh = meshrend;
-            DisplayDiscParametrizationOutput(m.Disc);
-            DisplayShortestPathOutput(m.ShortestPath);
+            _activeMesh = mesh;
+
+            var center = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f),"center");
+            center.Position = mesh.Mesh.Center(); //- new Vector3(0, 0.04f, 0);
+
+
+            center.Color = new Vector4(1, 0, 0, 1);
+            _SceneGraph.AddObject(center);
+
+            var m2 = Algorithm.SphereTest(mesh.Mesh, 100);
+            var m3 = Algorithm.SphereTest(mesh.Mesh, 1);
+
+            var sphere2 = new Mesh();
+            var sphere3 = new Mesh();
+
+            for (int i = 0; i < m2.PointsOnSphere.Count; i++)
+            {
+                sphere2.Vertices.Add(new Vertex(i, m2.PointsOnSphere[i], m2.Normals[i]));
+                sphere3.Vertices.Add(new Vertex(i, m3.PointsOnSphere[i], m3.Normals[i]));
+            }
+            sphere2.Triangles = _activeMesh.Mesh.Triangles;
+            sphere3.Triangles = _activeMesh.Mesh.Triangles;
+
+            var renderer2 = new MeshRenderer(sphere2, "sphere")
+            {
+                Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+                Position = _activeMesh.Position + new Vector3(0.25f, 0.0f, 0.0f),
+                Scale = mesh.Scale
+            };
+
+            var renderer3 = new MeshRenderer(sphere3, "sphere")
+            {
+                Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+                Position = _activeMesh.Position + new Vector3(0.5f, 0.0f, 0.0f),
+                Scale = mesh.Scale
+            };
+
+            for (int i = 0; i < m2.Center.Count; i++)
+            {
+                var c2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "c2");
+                c2.Position = m2.Center[i];
+                c2.Color = new Vector4(1, 1, 0, 1);
+                _SceneGraph.AddObject(c2);
+            }
+
+            //var c2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "c2");
+            //c2.Position = m2.Center;
+            //c2.Color = new Vector4(1, 1, 0, 1);
+
+            //var c3 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "c3");
+            //c3.Position = m3.Center;
+            //c3.Color = new Vector4(0, 0, 1, 1);
+
+
+            //_SceneGraph.AddObject(c3);
+
+
+            _SceneGraph.AddObject(mesh);
+            _SceneGraph.AddObject(renderer2);
+            _SceneGraph.AddObject(renderer3);
+
+            //var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
+
+
+            //_SceneGraph.AddObject(meshrend);
+            //_activeMesh = meshrend;
+            //DisplayDiscParametrizationOutput(m.Disc);
+            //DisplayShortestPathOutput(m.ShortestPath);
 
 
             //Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform);

@@ -195,6 +195,11 @@ namespace Engine.Core
             }
         }
 
+        internal float TriangleArea(Vector3 v1, Vector3 v2, Vector3 v3)
+        {
+            return Vector3.Cross(v2 - v1, v2 - v3).Length / 2;
+        }
+
         private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
         {
 

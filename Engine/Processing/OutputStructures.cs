@@ -155,11 +155,13 @@ namespace Engine.Processing
     {
         public List<Vector3> PointsOnSphere;
         public List<Vector3> Normals;
+        public List<Vector3> Center;
 
-        public SphereParameterizeOutput(List<Vector3> pointsOnSphere, List<Vector3> normals)
+        public SphereParameterizeOutput(List<Vector3> pointsOnSphere, List<Vector3> normals, List<Vector3> center)
         {
             PointsOnSphere = pointsOnSphere;
             Normals = normals;
+            Center = center;
         }
 
         public eOutputType Type => eOutputType.SphereParametrization;
