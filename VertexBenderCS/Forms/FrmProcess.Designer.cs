@@ -51,6 +51,8 @@
             this.labelSampleCount = new System.Windows.Forms.Label();
             this.numericSampleCount = new System.Windows.Forms.NumericUpDown();
             this.tabParametrization = new System.Windows.Forms.TabPage();
+            this.label6 = new System.Windows.Forms.Label();
+            this.numericIteration = new System.Windows.Forms.NumericUpDown();
             this.labelDiskWeight = new System.Windows.Forms.Label();
             this.numericWeight = new System.Windows.Forms.NumericUpDown();
             this.radioSphere = new System.Windows.Forms.RadioButton();
@@ -58,6 +60,7 @@
             this.labelDiskMethod = new System.Windows.Forms.Label();
             this.cmbDisk = new System.Windows.Forms.ComboBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.radioCut = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.numericSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericTarget)).BeginInit();
             this.tabProcess.SuspendLayout();
@@ -68,6 +71,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericStartIndex)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericSampleCount)).BeginInit();
             this.tabParametrization.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericIteration)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericWeight)).BeginInit();
             this.SuspendLayout();
             // 
@@ -337,6 +341,9 @@
             // 
             // tabParametrization
             // 
+            this.tabParametrization.Controls.Add(this.radioCut);
+            this.tabParametrization.Controls.Add(this.label6);
+            this.tabParametrization.Controls.Add(this.numericIteration);
             this.tabParametrization.Controls.Add(this.labelDiskWeight);
             this.tabParametrization.Controls.Add(this.numericWeight);
             this.tabParametrization.Controls.Add(this.radioSphere);
@@ -350,11 +357,39 @@
             this.tabParametrization.Text = "Parametrization";
             this.tabParametrization.UseVisualStyleBackColor = true;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.label6.Location = new System.Drawing.Point(51, 167);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(89, 15);
+            this.label6.TabIndex = 20;
+            this.label6.Text = "Iteration Count:";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // numericIteration
+            // 
+            this.numericIteration.Location = new System.Drawing.Point(145, 163);
+            this.numericIteration.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.numericIteration.Name = "numericIteration";
+            this.numericIteration.Size = new System.Drawing.Size(55, 24);
+            this.numericIteration.TabIndex = 19;
+            this.numericIteration.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
             // labelDiskWeight
             // 
             this.labelDiskWeight.AutoSize = true;
             this.labelDiskWeight.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.labelDiskWeight.Location = new System.Drawing.Point(30, 90);
+            this.labelDiskWeight.Location = new System.Drawing.Point(89, 90);
             this.labelDiskWeight.Name = "labelDiskWeight";
             this.labelDiskWeight.Size = new System.Drawing.Size(48, 15);
             this.labelDiskWeight.TabIndex = 18;
@@ -364,7 +399,7 @@
             // numericWeight
             // 
             this.numericWeight.DecimalPlaces = 1;
-            this.numericWeight.Location = new System.Drawing.Point(103, 88);
+            this.numericWeight.Location = new System.Drawing.Point(145, 88);
             this.numericWeight.Maximum = new decimal(new int[] {
             10,
             0,
@@ -410,7 +445,7 @@
             // 
             this.labelDiskMethod.AutoSize = true;
             this.labelDiskMethod.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.labelDiskMethod.Location = new System.Drawing.Point(30, 62);
+            this.labelDiskMethod.Location = new System.Drawing.Point(86, 62);
             this.labelDiskMethod.Name = "labelDiskMethod";
             this.labelDiskMethod.Size = new System.Drawing.Size(52, 15);
             this.labelDiskMethod.TabIndex = 5;
@@ -425,7 +460,7 @@
             "Uniform",
             "Harmonic",
             "MeanValue"});
-            this.cmbDisk.Location = new System.Drawing.Point(103, 59);
+            this.cmbDisk.Location = new System.Drawing.Point(145, 59);
             this.cmbDisk.Name = "cmbDisk";
             this.cmbDisk.Size = new System.Drawing.Size(80, 23);
             this.cmbDisk.TabIndex = 4;
@@ -438,6 +473,18 @@
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(175, 24);
             this.progressBar1.TabIndex = 13;
+            // 
+            // radioCut
+            // 
+            this.radioCut.AutoSize = true;
+            this.radioCut.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.radioCut.Location = new System.Drawing.Point(32, 207);
+            this.radioCut.Name = "radioCut";
+            this.radioCut.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.radioCut.Size = new System.Drawing.Size(128, 19);
+            this.radioCut.TabIndex = 21;
+            this.radioCut.Text = "Cut Parametrization";
+            this.radioCut.UseVisualStyleBackColor = true;
             // 
             // FrmProcess
             // 
@@ -470,6 +517,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericSampleCount)).EndInit();
             this.tabParametrization.ResumeLayout(false);
             this.tabParametrization.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericIteration)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericWeight)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -508,5 +556,8 @@
         private System.Windows.Forms.RadioButton radioDisk;
         private System.Windows.Forms.Label labelDiskMethod;
         private System.Windows.Forms.ComboBox cmbDisk;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.NumericUpDown numericIteration;
+        private System.Windows.Forms.RadioButton radioCut;
     }
 }

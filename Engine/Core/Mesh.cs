@@ -163,6 +163,11 @@ namespace Engine.Core
             Vertices.Add(new Vertex(id, coord, normal));
         }
 
+        internal void AddVertex(Vertex v)
+        {
+            Vertices.Add(v);
+        }
+
         internal Vector3 CalculateTriangleNormals(Triangle tri)
         {
             var v1 = Vertices[tri.V1].Coord;

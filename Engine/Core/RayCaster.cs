@@ -14,7 +14,7 @@ namespace Engine.Core
             var d = (direction - origin).Normalized();
 
             var t = 0.0f;
-            while (t <= targetDistance)
+            while (t < targetDistance)
             {
                 t += step;
             }

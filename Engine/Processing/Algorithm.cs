@@ -340,7 +340,7 @@ namespace Engine.Processing
             _watch.Stop();
             updateProgress(100);
 
-            Logger.Log($"Farthest point sample -> Duration: {_watch.ElapsedMilliseconds} ms. SampleCount -> {farthestIndices} ");
+            Logger.Log($"Farthest point sample -> Duration: {_watch.ElapsedMilliseconds} ms. SampleCount -> {farthestIndices.Count} ");
             if (farthestIndices.Count > 1)
             {
                 Logger.Log($"Farthest 2 Points -> Duration: {farthestIndices[0]} {farthestIndices[1]} ");
@@ -699,8 +699,6 @@ namespace Engine.Processing
             return retVal;
         }
 
-        #endregion
-
         private static void RecursivelyAddNeighbor(Vertex source, ref Dictionary<int,Vertex> candidates, ref Dictionary<int,Vertex> boundary)
         {
             foreach (var neighbor in source.Verts)
@@ -796,10 +794,29 @@ namespace Engine.Processing
             box.Top = 0;
             box.Bottom = 0;
 
+            //var angle = MathHelper.TwoPi / vertices.Count;
+            //var keys = new List<int>();
+            //foreach (var item in vertices)
+            //{
+            //    keys.Add(item.Key);
+            //}
+
+            //var items = new Dictionary<int,Vector2>();
+            //for (int i = 0; i < vertices.Count; i++)
+            //{
+            //    items.Add(keys[i], new Vector2((float)Math.Cos(angle * i), (float)Math.Sin(angle * i)));
+            //}
+
+            //foreach (var item in items)
+            //{
+            //    var v = RayCaster.Cast(box.Center, new Vector3(item.Value.X, 0, item.Value.Y), box.Size, box.Size);
+            //    DiskPoints.Add(item.Key, new Vector2(v.X, v.Z));
+            //}
+
             foreach (var item in vertices)
             {
-                var v = RayCaster.Cast(box.Center, new Vector3(item.Value.Coord.X, 0, item.Value.Coord.Z), box.Size, 0.001f);
-                DiskPoints.Add(item.Key, new Vector2(v.X, v.Z));    
+                var v = RayCaster.Cast(box.Center, new Vector3(item.Value.Coord.X, 0, item.Value.Coord.Z), box.Size, box.Size);
+                DiskPoints.Add(item.Key, new Vector2(v.X, v.Z));
             }
 
             return DiskPoints;
@@ -848,14 +865,12 @@ namespace Engine.Processing
             }
         }
 
+        #endregion
+
         public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int,Vertex>> totalBoundaries)
         {
 
-            var candidateItems = new Dictionary<int, Vertex>();
-            foreach (var item in candidates)
-            {
-                candidateItems.Add(item.Id, item);
-            }
+            var candidateItems = candidates.Select(x => x).ToDictionary(x=>x.Id);
 
             while (candidateItems.Count > 0)
             {
@@ -864,10 +879,6 @@ namespace Engine.Processing
 
                 RecursivelyAddNeighbor(candidateItems.First().Value, ref candidateItems, ref boundary);
 
-                //foreach (var item in boundary)
-                //{
-                //    itemList.Add(item.Value);
-                //}
                 totalBoundaries.Add(boundary);
             }
             totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
@@ -919,20 +930,204 @@ namespace Engine.Processing
             return new DiscParameterizeOutput(list);
         }
 
-        public static void ParameterizeMeshToSphere(Mesh mesh)
+        public static SphereParameterizeOutput ParameterizeMeshToSphere(Mesh mesh, int iterationCount, Action<int> updateProgress)
         {
-            /*
-                1- get center.
-                2- check star shape
-                    - if star, move each vertex to the center of their 1 ring neihgborhood
-                3- send rays from center to each vertex to form unit sphere
-                4- gg
+            _watch.Reset();
+            _watch.Start();
 
-             */
+            var meshCenter = mesh.Center();
+
+            List<Vector3> vertices = mesh.Vertices.Select(x => x.Coord).ToList();
+
+            for (int j = 0; j < mesh.Vertices.Count; j++)
+            {
+                var neighbors = mesh.Vertices[j].Verts;
+
+                Vector3 newCenter = Vector3.Zero;
+                for (int k = 0; k < neighbors.Count; k++)
+                {
+                    newCenter += vertices[neighbors[k]];
+                }
+                newCenter /= neighbors.Count;
+
+                vertices[j] = newCenter;
+            }
+
+            List<Vector3> spherePoints = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var normal = (vertices[i] - meshCenter).Normalized();
+                spherePoints.Add(RayCaster.Cast(meshCenter, normal, 0.5f, 0.5f).Normalized());
+                normals.Add(normal);
+            }
+
+            for (int i = 0; i < iterationCount; i++)
+            {
+                for (int j = 0; j < spherePoints.Count; j++)
+                {
+                    var neighbors = mesh.Vertices[j].Verts;
+
+                    Vector3 newCenter = Vector3.Zero;
+                    for (int k = 0; k < neighbors.Count; k++)
+                    {
+                        newCenter += spherePoints[neighbors[k]];
+                    }
+                    newCenter /= neighbors.Count;
+
+                    spherePoints[j] = newCenter.Normalized();
+                    normals[j] = (spherePoints[j] - meshCenter).Normalized();
+                }
+                updateProgress((int)(100 * (float)(i) / iterationCount));
+            }
+            updateProgress(100);
 
 
+            _watch.Stop();
+            Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
+
+            return new SphereParameterizeOutput(spherePoints, normals);
+
+        }
+ 
+        public static CutSeamParameterizeOutput ParameterizeMeshCutSeam(Mesh mesh, Action<int> updateProgress)
+        {
+            Graph g = new Graph(mesh);
+
+            var sample = FarthestPointSampling(g, 2, 0, (a) => { });
+            var sp = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1], true);
+
+            var boundaryVertices = new HashSet<Vertex>();
+
+            var asddas = mesh.GetBoundaryVertices();
+
+            var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Id)).ToList();
+
+            var cutMesh = new Mesh
+            {
+                Vertices = new List<Vertex>(mesh.Vertices),
+                Triangles = new List<Triangle>(mesh.Triangles),
+                Edges = new List<Edge>(mesh.Edges)
+            };
+
+            for (int i = 1; i < sp.Path.Count - 1; i++)
+            {
+                var vi = cutMesh.Vertices[sp.Path[i]];
+
+                cutMesh.AddVertex(vi.Coord, vi.Normal);
+                var vj = cutMesh.Vertices[cutMesh.Vertices.Count - 1];
+                vj.Edges = new List<int>(vi.Edges);
+                vj.Verts = new List<int>(vi.Verts);
+                vj.Tris = new List<int>(vi.Tris);
+                cutMesh.Vertices[cutMesh.Vertices.Count - 1] = vj;
+            }
 
 
+            for (int i = 1; i < sp.Path.Count - 1; i++)
+            {
+                var vi = cutMesh.Vertices[sp.Path[i]];
+                var v1 = cutMesh.Vertices[sp.Path[i - 1]];
+                var vj = cutMesh.Vertices[cutMesh.Vertices.Count - sp.Path.Count + 1 + i];
+
+                var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
+
+                var trii = cutMesh.Triangles[commonTris[0]];
+                vi.Tris.Remove(trii.Id);
+                var idi = trii.GetThirdVertexId(vi.Id, v1.Id);
+
+                if (commonTris.Count > 1)
+                {
+
+                    var trij = cutMesh.Triangles[commonTris[1]];
+                    vj.Tris.Remove(trij.Id);
+
+                    var idj = trij.GetThirdVertexId(vi.Id, v1.Id);
+
+                    if (trij.V1 == vi.Id)
+                    {
+                        trij = new Triangle(trij.Id, vj.Id, trij.V2, trij.V3);
+                    }
+                    else if (trij.V2 == vi.Id)
+                    {
+                        trij = new Triangle(trij.Id, trij.V1, vj.Id, trij.V3);
+                    }
+                    else if (trij.V3 == vi.Id)
+                    {
+                        trij = new Triangle(trij.Id, trij.V1, trij.V2, vj.Id);
+                    }
+
+                    if (i != 1)
+                    {
+                        var v2 = cutMesh.Vertices[cutMesh.Vertices.Count - sp.Path.Count + 1 + i - 1];
+                        if (trij.V1 == v1.Id)
+                        {
+                            trij = new Triangle(trij.Id, v2.Id, trij.V2, trij.V3);
+                        }
+                        else if (trij.V2 == v1.Id)
+                        {
+                            trij = new Triangle(trij.Id, trij.V1, v2.Id, trij.V3);
+                        }
+                        else if (trij.V3 == v1.Id)
+                        {
+                            trij = new Triangle(trij.Id, trij.V1, trij.V2, v2.Id);
+                        }
+                    }
+                    cutMesh.Triangles[trij.Id] = trij;
+                    vj.Verts.Remove(idj);
+                }
+
+                vi.Verts.Remove(idi);
+            }
+
+            for (int i = 1; i < sp.Path.Count - 1; i++)
+            {
+                boundaryVertices.Add(cutMesh.Vertices[sp.Path[i]]);
+                boundaryVertices.Add(cutMesh.Vertices[cutMesh.Vertices.Count - sp.Path.Count + 1 + i]);
+            }
+
+
+            var allBoundaries = new List<Dictionary<int, Vertex>>();
+            allBoundaries.Add(boundaryVertices.ToDictionary(x => x.Id));
+
+            updateProgress(20);
+
+            MathNet.Numerics.Control.UseNativeOpenBLAS();
+            Matrix<float> W = Matrix<float>.Build.Dense(cutMesh.Vertices.Count, cutMesh.Vertices.Count, 0.0f);
+            Vector<float> Bx = Vector<float>.Build.Dense(cutMesh.Vertices.Count, 0.0f);
+            Vector<float> By = Vector<float>.Build.Dense(cutMesh.Vertices.Count, 0.0f);
+
+
+            FillMatrix(ref W, cutMesh, allBoundaries, eParameterizationMethod.MeanValue, 1.0f);
+            FillVectors(ref Bx, ref By, allBoundaries);
+
+
+            _watch.Reset();
+            _watch.Start();
+
+            var Xx = W.Solve(Bx);
+            var Xy = W.Solve(By);
+
+
+            //var inv = W.Inverse();
+            //var Xx = inv * Bx;
+            //var Xy = inv * By;
+
+            updateProgress(80);
+
+            _watch.Stop();
+            Logger.Log($"Matrix of size {W.ColumnCount} x {W.ColumnCount} Solved in: {_watch.ElapsedMilliseconds} ms");
+
+
+            var list = new List<Vector2>();
+            for (int i = 0; i < Xx.Count; i++)
+            {
+                list.Add(new Vector2(Xx[i], Xy[i]));
+            }
+            updateProgress(100);
+
+            DiscParameterizeOutput asd = new DiscParameterizeOutput(list);
+
+            return new CutSeamParameterizeOutput(cutMesh, asd, sp );
         }
 
     }

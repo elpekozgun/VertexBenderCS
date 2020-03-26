@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using Engine.Core;
+using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,7 +15,8 @@ namespace Engine.Processing
         AverageGeodesicDistance,
         GeodesicMatrix,
         DiscParametrization,
-        SphereParametrization
+        SphereParametrization,
+        CutSeamParameterization
     }
 
     public interface IOutput
@@ -147,6 +149,37 @@ namespace Engine.Processing
             return UVcoords;
         }
 
+    }
+
+    public struct SphereParameterizeOutput : IOutput
+    {
+        public List<Vector3> PointsOnSphere;
+        public List<Vector3> Normals;
+
+        public SphereParameterizeOutput(List<Vector3> pointsOnSphere, List<Vector3> normals)
+        {
+            PointsOnSphere = pointsOnSphere;
+            Normals = normals;
+        }
+
+        public eOutputType Type => eOutputType.SphereParametrization;
+    }
+
+    public struct CutSeamParameterizeOutput : IOutput
+    {
+
+        public DiscParameterizeOutput Disc;
+        public ShortestPathOutput ShortestPath;
+        public Engine.Core.Mesh Cutmesh;
+
+        public CutSeamParameterizeOutput(Mesh cutmesh, DiscParameterizeOutput disc, ShortestPathOutput shortestPath)
+        {
+            Cutmesh = cutmesh;
+            Disc = disc;
+            ShortestPath = shortestPath;
+        }
+
+        public eOutputType Type => eOutputType.CutSeamParameterization;
     }
 
 }
