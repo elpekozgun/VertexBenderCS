@@ -100,6 +100,26 @@ namespace Engine.Core
             return verts[0];
         }
 
+        public bool ContainsId(int id)
+        {
+            return V1 == id || V2 == id || V3 == id;
+        }
+
+        public void UpdateIndex(int id, int value)
+        {
+            if (V1 == id)
+            {
+                V1 = value;
+            }
+            else if (V2 == id)
+            {
+                V2 = value;
+            }
+            else if (V3 == id)
+            {
+                V3 = value;
+            }
+        }
     }
 
     public class Mesh

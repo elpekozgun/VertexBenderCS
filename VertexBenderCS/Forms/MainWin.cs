@@ -161,47 +161,21 @@ namespace VertexBenderCS.Forms
         }
 
 
-
-        private void SetupTestScene()
+        private void StarTest()
         {
-
-            //var pyramidRenderer = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(2, 2, new Vector3(0.4f, 0.1f, 0.4f)), Shader.DefaultShader, "pyramid");
-            //_SceneGraph.AddObject(pyramidRenderer);
-
-            //var pyramidRenderer2 = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(2, 2, new Vector3(0.4f, 0.1f, 0.4f)), Shader.DefaultShader, "pyramid");
-            //_SceneGraph.AddObject(pyramidRenderer2);
-
-            //var pyramidRenderer3 = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(2, 2, new Vector3(0.4f, 0.1f, 0.4f)), Shader.DefaultShader, "pyramid");
-            //_SceneGraph.AddObject(pyramidRenderer3);
-
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low.off"), "test");
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\facem-low-cry.off"), "test");
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry-eyeless.off"), "test");
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face-cry.off"), "test");
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\face.off"), "test");
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\timing\dragon.off"), "test");
-
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
-
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes2\9.off"), "test");
-
-
-            //mesh.Rotation = Quaternion.FromEulerAngles( -MathHelper.PiOver2, 0, -MathHelper.PiOver2);
-
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\test3.off"), "tes");
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\MeshsegBenchmark-1.0\data\off\169.off"), "tes");
-            mesh.Scale = Vector3.One * 10;
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\MeshsegBenchmark-1.0\data\off\169-2.off"), "test");
+            //mesh.Scale = Vector3.One * 10;
 
             _activeMesh = mesh;
 
-            var center = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f),"center");
+            var center = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "center");
             center.Position = mesh.Mesh.Center(); //- new Vector3(0, 0.04f, 0);
 
 
             center.Color = new Vector4(1, 0, 0, 1);
             _SceneGraph.AddObject(center);
 
-            var m2 = Algorithm.SphereTest(mesh.Mesh, 100);
+            var m2 = Algorithm.SphereTest(mesh.Mesh, 10);
             var m3 = Algorithm.SphereTest(mesh.Mesh, 1);
 
             var sphere2 = new Mesh();
@@ -215,18 +189,18 @@ namespace VertexBenderCS.Forms
             sphere2.Triangles = _activeMesh.Mesh.Triangles;
             sphere3.Triangles = _activeMesh.Mesh.Triangles;
 
-            var renderer2 = new MeshRenderer(sphere2, "sphere")
+            var renderer2 = new MeshRenderer(sphere2, "sphere2")
             {
                 Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                Position = _activeMesh.Position + new Vector3(0.25f, 0.0f, 0.0f),
-                Scale = mesh.Scale
+                Position = _activeMesh.Position + new Vector3(0.05f, 0.0f, 0.0f),
+                //Scale = mesh.Scale
             };
 
-            var renderer3 = new MeshRenderer(sphere3, "sphere")
+            var renderer3 = new MeshRenderer(sphere3, "sphere3")
             {
                 Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                Position = _activeMesh.Position + new Vector3(0.5f, 0.0f, 0.0f),
-                Scale = mesh.Scale
+                Position = _activeMesh.Position + new Vector3(0.1f, 0.0f, 0.0f),
+                // Scale = mesh.Scale
             };
 
             for (int i = 0; i < m2.Center.Count; i++)
@@ -252,126 +226,53 @@ namespace VertexBenderCS.Forms
             _SceneGraph.AddObject(mesh);
             _SceneGraph.AddObject(renderer2);
             _SceneGraph.AddObject(renderer3);
+        }
 
-            //var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
+        private void SetupTestScene()
+        {
 
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
+            var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
 
-            //_SceneGraph.AddObject(meshrend);
-            //_activeMesh = meshrend;
-            //DisplayDiscParametrizationOutput(m.Disc);
-            //DisplayShortestPathOutput(m.ShortestPath);
-
-
-            //Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Uniform);
-
-            //var boundaries = mesh.Mesh.GetBoundaryVertices();
-            //var allBoundries = new List<Dictionary<int,Vertex>>();
-            //Algorithm.RecursivelyFindAllBoundaries(boundaries, ref allBoundries);
+            var mesh2 = new MeshRenderer(m.Cutmesh, "cut");
 
 
-            //for (int i = 0; i < allBoundries.Count; i++)
-            //{
-            //    foreach (var boundary in allBoundries[i])
-            //    {
-            //        PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.001f))
-            //        {
-            //            Position = boundary.Value.Coord,
-            //            Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-            //        };
-            //        if (i == 0)
-            //        {
-            //            indicator.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-            //        }
-            //        _SceneGraph.AddObject(indicator);
-            //    }
-            //}
-
-            //var box = Box3.CalculateBoundingBox(allBoundries[0]);
-
-            //PrimitiveRenderer ind1 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind1")
-            //{
-            //    Position = new Vector3(box.Left, box.Bottom, box.Front),
-            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind2 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind2")
-            //{
-            //    Position = new Vector3(box.Right, box.Bottom, box.Front),
-            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind3 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f),"ind3")
-            //{
-            //    Position = new Vector3(box.Left, box.Bottom, box.Back),
-            //    Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind4 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f),"ind4")
-            //{
-            //    Position = new Vector3(box.Right, box.Bottom, box.Back),
-            //    Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind5 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind5")
-            //{
-            //    Position = new Vector3(box.Left, box.Top, box.Front),
-            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind6 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind6")
-            //{
-            //    Position = new Vector3(box.Right, box.Top, box.Front),
-            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind7 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind7")
-            //{
-            //    Position = new Vector3(box.Left, box.Top, box.Back),
-            //    Color = new Vector4(1.0f, 0.0f, 1.0f, 1.0f)
-            //};
-
-            //PrimitiveRenderer ind8 = new PrimitiveRenderer(PrimitiveObjectFactory.CreateCube(0.01f), "ind8")
-            //{
-            //    Position = new Vector3(box.Right, box.Top, box.Back),
-            //    Color = new Vector4(1.0f, 0.0f, 1.0f, 1.0f)
-            //};
-
-            //_SceneGraph.AddObject(ind1);
-            //_SceneGraph.AddObject(ind2);
-            //_SceneGraph.AddObject(ind3);
-            //_SceneGraph.AddObject(ind4);
-            //_SceneGraph.AddObject(ind5);
-            //_SceneGraph.AddObject(ind6);
-            //_SceneGraph.AddObject(ind7);
-            //_SceneGraph.AddObject(ind8);
-
-            //var output = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.MeanValue, 1.0f, false);
-
-            //var outputmesh = new Mesh();
-
-            //for (int i = 0; i < output.Output.Count; i++)
-            //{
-            //    var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y), Vector3.UnitY);
-            //    outputmesh.Vertices.Add(v);
-            //}
-            //outputmesh.Triangles = mesh.Mesh.Triangles;
-
-            //var renderer = new MeshRenderer(outputmesh, "asd")
-            //{
-            //    Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f)
-            //};
+            _SceneGraph.AddObject(mesh2);
+            _activeMesh = mesh2;
+            DisplayDiscParametrizationOutput(m.Disc);
+            DisplayShortestPathOutput(m.ShortestPath);
 
 
-            //mesh.SetTextureBuffer(output.NormalizedUVCoords());
-            //renderer.SetTextureBuffer(output.NormalizedUVCoords());
+            var a = m.Disc.Output;
+            var b = m.boundary.ToList();
+            //for (int i = 0; i < m.boundary.Count; i++)
+            {
+                var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+                cube.Position = new Vector3(a[b[1].Id].X, 0, a[b[1].Id].Y);
+                cube.Color = new Vector4(1, 0, 0, 1);
+                _SceneGraph.AddObject(cube);
 
-            //_SceneGraph.AddObject(renderer);
+                var cube2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+                cube2.Position = new Vector3(a[b[31].Id].X, 0, a[b[31].Id].Y);
+                cube2.Color = new Vector4(0, 1, 0, 1);
+                _SceneGraph.AddObject(cube2);
 
+                var cube3 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+                cube3.Position = new Vector3(a[b[45].Id].X, 0, a[b[45].Id].Y);
+                cube3.Color = new Vector4(0, 0, 1, 1);
+                _SceneGraph.AddObject(cube3);
+                
+                var cube4 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+                cube4.Position = new Vector3(a[b[61].Id].X, 0, a[b[61].Id].Y);
+                cube4.Color = new Vector4(1, 1, 0, 1);
+                _SceneGraph.AddObject(cube4);
+            }
 
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {
+
             GLControl.Invoke((MethodInvoker)delegate ()
             {
                 GLControl.Invalidate();
@@ -549,6 +450,20 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.DeleteObject(child);
                 }
 
+                //var boundaryVertices = _activeMesh.Mesh.GetBoundaryVertices();
+                //var allBoundaries = new List<Dictionary<int, Vertex>>();
+                //Algorithm.RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
+
+                //foreach (var item in allBoundaries)
+                //{
+                //    foreach (var i in item)
+                //    {
+                //        var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f));
+                //        cube.Position = i.Value.Coord;
+                //        cube.Color = new Vector4(1, 0, 0, 1);
+                //        _SceneGraph.AddObject(cube);
+                //    }
+                //}
 
                 var outputmesh = new Mesh();
 
@@ -569,7 +484,7 @@ namespace VertexBenderCS.Forms
                 //var tex = Texture.LoadTexture(@"Resources\Image\tile.png", eTextureType.Diffuse);
                 _activeMesh.DiffuseTexture = tex;
                 renderer.DiffuseTexture = tex;
-                
+
 
                 _activeMesh.SetTextureBuffer(output.NormalizedUVCoords());
                 renderer.SetTextureBuffer(output.NormalizedUVCoords());
@@ -621,13 +536,12 @@ namespace VertexBenderCS.Forms
             if (_activeMesh != null)
             {
 
-                var m = Algorithm.ParameterizeMeshCutSeam(_activeMesh.Mesh, (asd) => { });
-
-                var meshrend = new MeshRenderer(m.Cutmesh, "asdasd");
+                //var m = Algorithm.ParameterizeMeshCutSeam(_activeMesh.Mesh, (asd) => { });
+                var meshrend = new MeshRenderer(output.Cutmesh, "asdasd");
                 _SceneGraph.AddObject(meshrend);
                 _activeMesh = meshrend;
-                DisplayDiscParametrizationOutput(m.Disc);
-                DisplayShortestPathOutput(m.ShortestPath);
+                DisplayDiscParametrizationOutput(output.Disc);
+                DisplayShortestPathOutput(output.ShortestPath);
             }
         }
 

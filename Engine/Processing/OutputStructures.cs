@@ -173,9 +173,19 @@ namespace Engine.Processing
         public DiscParameterizeOutput Disc;
         public ShortestPathOutput ShortestPath;
         public Engine.Core.Mesh Cutmesh;
+        public HashSet<Vertex> boundary;
 
         public CutSeamParameterizeOutput(Mesh cutmesh, DiscParameterizeOutput disc, ShortestPathOutput shortestPath)
         {
+            this.boundary = new HashSet<Vertex>();
+            Cutmesh = cutmesh;
+            Disc = disc;
+            ShortestPath = shortestPath;
+        }
+
+        public CutSeamParameterizeOutput(Mesh cutmesh, DiscParameterizeOutput disc, ShortestPathOutput shortestPath, HashSet<Vertex> boundary)
+        {
+            this.boundary = boundary;
             Cutmesh = cutmesh;
             Disc = disc;
             ShortestPath = shortestPath;
