@@ -177,7 +177,8 @@ namespace VertexBenderCS.Forms
                         _parametrizationMethod,
                         UpdateProgress,
                         (float)numericWeight.Value,
-                        true
+                        checkFixate.Checked,
+                        checkUniformBoundary.Checked
                     );
                 }
                 else if (radioSphere.Checked)
@@ -186,14 +187,6 @@ namespace VertexBenderCS.Forms
                     (
                         _mesh,
                         (int)numericIteration.Value,
-                        UpdateProgress
-                    );
-                }
-                else if (radioCut.Checked)
-                {
-                    e.Result = Algorithm.ParameterizeMeshCutSeam
-                    (
-                        _mesh,
                         UpdateProgress
                     );
                 }

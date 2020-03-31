@@ -114,10 +114,14 @@ namespace Engine.Processing
     public struct DiscParameterizeOutput : IOutput
     {
         public List<Vector2> Output;
+        public Mesh Mesh;
+        public List<int> BoundaryPath;
 
-        public DiscParameterizeOutput(List<Vector2> output)
+        public DiscParameterizeOutput(List<Vector2> output, Mesh mesh, List<int> boundaryPath)
         {
+            Mesh = mesh;
             Output = output;
+            BoundaryPath = boundaryPath;
         }
 
         public eOutputType Type => eOutputType.DiscParametrization;
@@ -193,5 +197,22 @@ namespace Engine.Processing
 
         public eOutputType Type => eOutputType.CutSeamParameterization;
     }
+
+    public struct CutMeshOutput
+    {
+        public ShortestPathOutput ShortestPath;
+        public Engine.Core.Mesh Cutmesh;
+        public List<Dictionary<int,Vertex>> boundary;
+
+        public CutMeshOutput(Mesh cutmesh, ShortestPathOutput shortestPath, List<Dictionary<int,Vertex>> boundary)
+        {
+            this.boundary = boundary;
+            Cutmesh = cutmesh;
+            ShortestPath = shortestPath;
+        }
+
+    }
+        
+
 
 }

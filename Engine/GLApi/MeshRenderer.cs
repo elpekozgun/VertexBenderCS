@@ -26,15 +26,24 @@ namespace Engine.GLApi
         private GpuVertex[] vertices;
         private int[] indices;
 
+        public bool EnableCull;
+
         private bool _initialized;
 
         private int _VAO;
         private int _VBO;
         private int _EBO;
 
-        public Mesh Mesh { get; set; }
+        public Mesh Mesh { get; private set; }
 
         public Vector4 Color { get; set; }
+
+        public void SetMesh(Mesh mesh)
+        {
+            ExtractVertices(mesh);
+            Setup();
+            Mesh = mesh;
+        }
 
         private void ExtractVertices(Mesh mesh)
         {
@@ -70,7 +79,7 @@ namespace Engine.GLApi
             _initialized = true;
             Mesh = mesh;
             Shader = Shader.DefaultShader;
-
+            EnableCull = true;
         }
 
         public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
@@ -159,8 +168,15 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
+            if (!EnableCull)
+            {
+                GL.Disable(EnableCap.CullFace);
+            }
+
             if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
+
+
                 Shader.Use();
                 Shader.SetInt("material.diffuse", (int)TextureUnit.Texture0);
                 Shader.SetMat4("Model", ModelMatrix);
@@ -214,7 +230,10 @@ namespace Engine.GLApi
                 GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
                 Shader = temp;
             }
-
+            if (!EnableCull)
+            {
+                GL.Enable(EnableCap.CullFace);
+            }
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
 

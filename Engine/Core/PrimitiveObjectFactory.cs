@@ -287,6 +287,84 @@ namespace Engine.Core
             return cube;
         }
 
+        public static Mesh Sphere(float radius, int recursionLevel)
+        {
+            var sphere = Tetrahedron(radius);
+
+            while (recursionLevel > 0)
+            {
+                DivideFace(ref sphere);
+                recursionLevel--;
+            }
+
+            for (int i = 0; i < sphere.Vertices.Count; i++)
+            {
+                var normal = sphere.Vertices[i].Coord.Normalized();
+
+                sphere.Vertices[i] = new Vertex(sphere.Vertices[i].Id, normal * radius, normal)
+                {
+                    Verts = sphere.Vertices[i].Verts,
+                    Edges = sphere.Vertices[i].Edges,
+                    Tris = sphere.Vertices[i].Tris
+                };
+            }
+            return sphere;
+        }
+
+        public static Mesh Tetrahedron(float size)
+        {
+            Mesh tetrahedron = new Mesh();
+
+            size = 0.5f * size;
+
+            var sqrt3over2 = (float)Math.Sin(OpenTK.MathHelper.DegreesToRadians(60));
+
+            tetrahedron.AddVertex(0, -size * 0.5f, size);
+            tetrahedron.AddVertex(-size * sqrt3over2, -size * 0.5f, -size * 0.5f);
+            tetrahedron.AddVertex(size * sqrt3over2, -size * 0.5f, -size * 0.5f);
+            tetrahedron.AddVertex(0, size, 0);
+            
+            tetrahedron.AddTriangle(0, 1, 3);
+            tetrahedron.AddTriangle(3, 1, 2);
+            tetrahedron.AddTriangle(2, 0, 3);
+            tetrahedron.AddTriangle(2, 1, 0);
+
+            tetrahedron.CalculateVertexNormals();
+
+            return tetrahedron;
+        }
+        
+        private static void DivideFace(ref Mesh mesh)
+        {
+            var copyMesh = mesh.Copy();
+
+            for (int i = 0; i < mesh.Triangles.Count; i++)
+            {
+                var item = mesh.Triangles[i];
+
+                copyMesh.AddVertex((mesh.Vertices[item.V1].Coord + mesh.Vertices[item.V2].Coord) * 0.5f, OpenTK.Vector3.Zero);
+                copyMesh.AddVertex((mesh.Vertices[item.V2].Coord + mesh.Vertices[item.V3].Coord) * 0.5f, OpenTK.Vector3.Zero);
+                copyMesh.AddVertex((mesh.Vertices[item.V3].Coord + mesh.Vertices[item.V1].Coord) * 0.5f, OpenTK.Vector3.Zero);
+
+                copyMesh.AddTriangle(item.V1, copyMesh.Vertices.Count - 3, copyMesh.Vertices.Count - 1);
+                copyMesh.AddTriangle(copyMesh.Vertices.Count - 3, item.V2, copyMesh.Vertices.Count - 2);
+                copyMesh.AddTriangle(copyMesh.Vertices.Count - 2, item.V3, copyMesh.Vertices.Count - 1);
+                copyMesh.AddTriangle(copyMesh.Vertices.Count - 3, copyMesh.Vertices.Count - 2, copyMesh.Vertices.Count - 1);
+
+                copyMesh.Vertices[item.V1].Verts.Remove(item.V2);
+                copyMesh.Vertices[item.V1].Verts.Remove(item.V3);
+
+                copyMesh.Vertices[item.V2].Verts.Remove(item.V1);
+                copyMesh.Vertices[item.V2].Verts.Remove(item.V3);
+
+                copyMesh.Vertices[item.V3].Verts.Remove(item.V1);
+                copyMesh.Vertices[item.V3].Verts.Remove(item.V2);
+            }
+
+
+            mesh = copyMesh.Copy();
+        }
+
         private static int GetMiddlePointIndex(Vertex v1, Vertex v2, ref Mesh sphere, ref Dictionary<int, int> cache)
         {
             var i1 = sphere.Vertices.IndexOf(v1);

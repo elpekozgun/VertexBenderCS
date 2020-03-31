@@ -160,7 +160,6 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
 
-
         private void StarTest()
         {
             var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\MeshsegBenchmark-1.0\data\off\169-2.off"), "test");
@@ -230,50 +229,58 @@ namespace VertexBenderCS.Forms
 
         private void SetupTestScene()
         {
-
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
-            var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
-
-            var mesh2 = new MeshRenderer(m.Cutmesh, "cut");
+            var origin = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "origin");
+            origin.Color = Vector4.One;
+            _SceneGraph.AddObject(origin);
 
 
-            _SceneGraph.AddObject(mesh2);
-            _activeMesh = mesh2;
-            DisplayDiscParametrizationOutput(m.Disc);
-            DisplayShortestPathOutput(m.ShortestPath);
+            var sphere = new MeshRenderer(PrimitiveObjectFactory.Sphere(1, 5));
+            _SceneGraph.AddObject(sphere);
 
 
-            var a = m.Disc.Output;
-            var b = m.boundary.ToList();
-            //for (int i = 0; i < m.boundary.Count; i++)
-            {
-                var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-                cube.Position = new Vector3(a[b[1].Id].X, 0, a[b[1].Id].Y);
-                cube.Color = new Vector4(1, 0, 0, 1);
-                _SceneGraph.AddObject(cube);
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
+            //var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
 
-                var cube2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-                cube2.Position = new Vector3(a[b[31].Id].X, 0, a[b[31].Id].Y);
-                cube2.Color = new Vector4(0, 1, 0, 1);
-                _SceneGraph.AddObject(cube2);
+            //var mesh2 = new MeshRenderer(m.Cutmesh, "cut");
 
-                var cube3 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-                cube3.Position = new Vector3(a[b[45].Id].X, 0, a[b[45].Id].Y);
-                cube3.Color = new Vector4(0, 0, 1, 1);
-                _SceneGraph.AddObject(cube3);
-                
-                var cube4 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-                cube4.Position = new Vector3(a[b[61].Id].X, 0, a[b[61].Id].Y);
-                cube4.Color = new Vector4(1, 1, 0, 1);
-                _SceneGraph.AddObject(cube4);
-            }
+
+            //_SceneGraph.AddObject(mesh2);
+            //_activeMesh = mesh2;
+            //DisplayDiscParametrizationOutput(m.Disc);
+            //DisplayShortestPathOutput(m.ShortestPath);
+
+
+            //var a = m.Disc.Output;
+            //var b = m.boundary.ToList();
+            ////for (int i = 0; i < m.boundary.Count; i++)
+            //{
+            //    var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+            //    cube.Position = new Vector3(a[b[1].Id].X, 0, a[b[1].Id].Y);
+            //    cube.Color = new Vector4(1, 0, 0, 1);
+            //    _SceneGraph.AddObject(cube);
+
+            //    var cube2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+            //    cube2.Position = new Vector3(a[b[31].Id].X, 0, a[b[31].Id].Y);
+            //    cube2.Color = new Vector4(0, 1, 0, 1);
+            //    _SceneGraph.AddObject(cube2);
+
+            //    var cube3 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+            //    cube3.Position = new Vector3(a[b[45].Id].X, 0, a[b[45].Id].Y);
+            //    cube3.Color = new Vector4(0, 0, 1, 1);
+            //    _SceneGraph.AddObject(cube3);
+
+            //    var cube4 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
+            //    cube4.Position = new Vector3(a[b[61].Id].X, 0, a[b[61].Id].Y);
+            //    cube4.Color = new Vector4(1, 1, 0, 1);
+            //    _SceneGraph.AddObject(cube4);
+            //}
 
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {
 
-            GLControl.Invoke((MethodInvoker)delegate ()
+            InvokeIfRequired(GLControl, () =>
             {
                 GLControl.Invalidate();
                 GLControl.Update();
@@ -286,7 +293,51 @@ namespace VertexBenderCS.Forms
                     MouseState = OpenTK.Input.Mouse.GetState();
                 }
             });
+
+            //GLControl.Invoke((MethodInvoker)delegate ()
+            //{
+            //    GLControl.Invalidate();
+            //    GLControl.Update();
+
+            //    if (GLControl.Focused)
+            //    {
+            //        _cameraController.Navigate(KeyState);
+            //        KeyState = OpenTK.Input.Keyboard.GetState();
+            //        MouseState = OpenTK.Input.Mouse.GetCursorState();
+            //        MouseState = OpenTK.Input.Mouse.GetState();
+            //    }
+            //});
         }
+
+        private void InvokeIfRequired(Control control, MethodInvoker action)
+        {
+            if (control.IsDisposed)
+            {
+                return;
+            }
+
+            if (control.InvokeRequired)
+            {
+                try
+                {
+                    control.Invoke(action);
+                }
+                catch (ObjectDisposedException) { }
+                catch (InvalidOperationException e)
+                {
+                    if (!e.Message.Contains("invoke"))
+                    {
+                        throw e;
+                    }
+                }
+            }
+            else
+            {
+                action();
+            }
+
+        }
+
 
         #region Logger
 
@@ -311,6 +362,26 @@ namespace VertexBenderCS.Forms
 
         #region Process Output Displayers
 
+        private void DrawPath(MeshRenderer mesh, List<int> path, Vector4 color, string name = "")
+        {
+            List<Vector3> lines1 = new List<Vector3>();
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                lines1.Add(mesh.Mesh.Vertices[path[i]].Coord);
+                lines1.Add(mesh.Mesh.Vertices[path[i + 1]].Coord);
+            }
+
+            var r1 = new LineRenderer(lines1, name + " path");
+            r1.Parent = mesh;
+
+            r1.Position = mesh.Position;
+            r1.Rotation = mesh.Rotation;
+            r1.Scale = mesh.Scale;
+            r1.Color = color;
+
+            _SceneGraph.AddObject(r1);
+        }
+
         private void DisplayShortestPathOutput(ShortestPathOutput output)
         {
             if (_activeMesh != null)
@@ -320,27 +391,13 @@ namespace VertexBenderCS.Forms
                 //    _SceneGraph.DeleteObject(child);
                 //}
 
-                List<Vector3> lines1 = new List<Vector3>();
-                for (int i = 0; i < output.Path.Count - 1; i++)
-                {
-                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i]].Coord);
-                    lines1.Add(_activeMesh.Mesh.Vertices[output.Path[i + 1]].Coord);
-                }
-
-                var r1 = new LineRenderer(lines1, output.Type.ToString() + " path");
-                r1.Parent = _activeMesh;
-
-                r1.Position = _activeMesh.Position;
-                r1.Rotation = _activeMesh.Rotation;
-                r1.Scale = _activeMesh.Scale;
-
-                r1.Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+                var color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
                 if (output.Method == eShortestPathMethod.Astar)
                 {
-                    r1.Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+                    color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
                 }
 
-                _SceneGraph.AddObject(r1);
+                DrawPath(_activeMesh, output.Path, color, output.Type.ToString());
 
                 //Logger.Append(output.Info);
             }
@@ -450,21 +507,8 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.DeleteObject(child);
                 }
 
-                //var boundaryVertices = _activeMesh.Mesh.GetBoundaryVertices();
-                //var allBoundaries = new List<Dictionary<int, Vertex>>();
-                //Algorithm.RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
 
-                //foreach (var item in allBoundaries)
-                //{
-                //    foreach (var i in item)
-                //    {
-                //        var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f));
-                //        cube.Position = i.Value.Coord;
-                //        cube.Color = new Vector4(1, 0, 0, 1);
-                //        _SceneGraph.AddObject(cube);
-                //    }
-                //}
-
+                _activeMesh.SetMesh(output.Mesh);
                 var outputmesh = new Mesh();
 
                 for (int i = 0; i < output.Output.Count; i++)
@@ -474,22 +518,26 @@ namespace VertexBenderCS.Forms
                 }
                 outputmesh.Triangles = _activeMesh.Mesh.Triangles;
 
-                var renderer = new MeshRenderer(outputmesh, "asd")
-                {
-                    //Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
-                    Position = _activeMesh.Position + new Vector3(0.2f, 0.0f, 0.0f)
-                };
-
                 var tex = Texture.LoadTexture(@"Resources\Image\UV1024.png", eTextureType.Diffuse);
                 //var tex = Texture.LoadTexture(@"Resources\Image\tile.png", eTextureType.Diffuse);
-                _activeMesh.DiffuseTexture = tex;
-                renderer.DiffuseTexture = tex;
 
+                var renderer = new MeshRenderer(outputmesh, $"Disc-{_activeMesh.Name}")
+                {
+                    Position = _activeMesh.Position + new Vector3(0.2f, 0.0f, 0.0f),
+                    EnableCull = false
+                };
+                renderer.Parent = _activeMesh;
+                
+                renderer.DiffuseTexture = tex;
+                _activeMesh.DiffuseTexture = tex;
 
                 _activeMesh.SetTextureBuffer(output.NormalizedUVCoords());
                 renderer.SetTextureBuffer(output.NormalizedUVCoords());
 
                 _SceneGraph.AddObject(renderer);
+                
+
+                DrawPath(_activeMesh, output.BoundaryPath, new Vector4(1, 0, 0, 0), $"path-{_activeMesh.Name}");
 
             }
         }
@@ -517,6 +565,11 @@ namespace VertexBenderCS.Forms
                     //Position = _activeMesh.Position + new Vector3(2.0f, 0.0f, 0.0f)
                 };
 
+                var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f),"center");
+                cube.Position = output.Center[0];
+                cube.Color = new Vector4(1, 0, 0, 1);
+
+                _SceneGraph.AddObject(cube);
                 //var tex = Texture.LoadTexture(@"Resources\Image\UV1024.png", eTextureType.Diffuse);
                 //var tex = Texture.LoadTexture(@"Resources\Image\tile.png", eTextureType.Diffuse);
                 //_activeMesh.DiffuseTexture = tex;
@@ -1079,6 +1132,7 @@ namespace VertexBenderCS.Forms
         }
 
         #endregion
+
 
     }
 

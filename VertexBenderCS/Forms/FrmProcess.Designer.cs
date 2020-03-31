@@ -51,6 +51,10 @@
             this.labelSampleCount = new System.Windows.Forms.Label();
             this.numericSampleCount = new System.Windows.Forms.NumericUpDown();
             this.tabParametrization = new System.Windows.Forms.TabPage();
+            this.checkUniformBoundary = new System.Windows.Forms.CheckBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.checkFixate = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.numericIteration = new System.Windows.Forms.NumericUpDown();
             this.labelDiskWeight = new System.Windows.Forms.Label();
@@ -60,7 +64,6 @@
             this.labelDiskMethod = new System.Windows.Forms.Label();
             this.cmbDisk = new System.Windows.Forms.ComboBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.radioCut = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.numericSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericTarget)).BeginInit();
             this.tabProcess.SuspendLayout();
@@ -341,7 +344,10 @@
             // 
             // tabParametrization
             // 
-            this.tabParametrization.Controls.Add(this.radioCut);
+            this.tabParametrization.Controls.Add(this.checkUniformBoundary);
+            this.tabParametrization.Controls.Add(this.label9);
+            this.tabParametrization.Controls.Add(this.label8);
+            this.tabParametrization.Controls.Add(this.checkFixate);
             this.tabParametrization.Controls.Add(this.label6);
             this.tabParametrization.Controls.Add(this.numericIteration);
             this.tabParametrization.Controls.Add(this.labelDiskWeight);
@@ -357,11 +363,55 @@
             this.tabParametrization.Text = "Parametrization";
             this.tabParametrization.UseVisualStyleBackColor = true;
             // 
+            // checkUniformBoundary
+            // 
+            this.checkUniformBoundary.AutoSize = true;
+            this.checkUniformBoundary.Checked = true;
+            this.checkUniformBoundary.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkUniformBoundary.Location = new System.Drawing.Point(145, 143);
+            this.checkUniformBoundary.Name = "checkUniformBoundary";
+            this.checkUniformBoundary.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkUniformBoundary.Size = new System.Drawing.Size(15, 14);
+            this.checkUniformBoundary.TabIndex = 25;
+            this.checkUniformBoundary.UseVisualStyleBackColor = true;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.label9.Location = new System.Drawing.Point(30, 141);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(107, 15);
+            this.label9.TabIndex = 24;
+            this.label9.Text = "Uniform Boundary:";
+            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.label8.Location = new System.Drawing.Point(49, 117);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(88, 15);
+            this.label8.TabIndex = 22;
+            this.label8.Text = "Fixate Internals:";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // checkFixate
+            // 
+            this.checkFixate.AutoSize = true;
+            this.checkFixate.Location = new System.Drawing.Point(145, 118);
+            this.checkFixate.Name = "checkFixate";
+            this.checkFixate.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkFixate.Size = new System.Drawing.Size(15, 14);
+            this.checkFixate.TabIndex = 21;
+            this.checkFixate.UseVisualStyleBackColor = true;
+            // 
             // label6
             // 
             this.label6.AutoSize = true;
             this.label6.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.label6.Location = new System.Drawing.Point(51, 167);
+            this.label6.Location = new System.Drawing.Point(51, 204);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(89, 15);
             this.label6.TabIndex = 20;
@@ -370,7 +420,7 @@
             // 
             // numericIteration
             // 
-            this.numericIteration.Location = new System.Drawing.Point(145, 163);
+            this.numericIteration.Location = new System.Drawing.Point(145, 200);
             this.numericIteration.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -418,7 +468,7 @@
             // 
             this.radioSphere.AutoSize = true;
             this.radioSphere.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.radioSphere.Location = new System.Drawing.Point(14, 137);
+            this.radioSphere.Location = new System.Drawing.Point(14, 174);
             this.radioSphere.Name = "radioSphere";
             this.radioSphere.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.radioSphere.Size = new System.Drawing.Size(146, 19);
@@ -473,18 +523,6 @@
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(175, 24);
             this.progressBar1.TabIndex = 13;
-            // 
-            // radioCut
-            // 
-            this.radioCut.AutoSize = true;
-            this.radioCut.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.radioCut.Location = new System.Drawing.Point(32, 207);
-            this.radioCut.Name = "radioCut";
-            this.radioCut.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.radioCut.Size = new System.Drawing.Size(128, 19);
-            this.radioCut.TabIndex = 21;
-            this.radioCut.Text = "Cut Parametrization";
-            this.radioCut.UseVisualStyleBackColor = true;
             // 
             // FrmProcess
             // 
@@ -558,6 +596,9 @@
         private System.Windows.Forms.ComboBox cmbDisk;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown numericIteration;
-        private System.Windows.Forms.RadioButton radioCut;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.CheckBox checkFixate;
+        private System.Windows.Forms.CheckBox checkUniformBoundary;
+        private System.Windows.Forms.Label label9;
     }
 }

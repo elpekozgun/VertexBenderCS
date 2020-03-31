@@ -329,5 +329,15 @@ namespace Engine.Core
             return boundaries.ToList();
         }
             
+        public Mesh Copy()
+        {
+            Mesh mesh = new Mesh(this.Name + "-copy");
+            mesh.Vertices = new List<Vertex>(this.Vertices);
+            mesh.Edges = new List<Edge>(this.Edges);
+            mesh.Triangles = new List<Triangle>(this.Triangles);
+
+            return mesh;
+        }
+
     }
 }
