@@ -345,7 +345,8 @@ namespace Engine.Core
 
         internal float GetTriangleAngle(int triID, int vertexId)
         {
-            Triangle tri = Triangles[triID];
+            Triangle tri = Triangles[GetTriangleIndex(triID)];
+            //Triangle tri = Triangles[triID];
 
             var v1 = Vertices[tri.V1].Coord;
             var v2 = Vertices[tri.V2].Coord;

@@ -845,7 +845,10 @@ namespace Engine.Processing
             var tris = new List<Triangle>();
             foreach (var triId in vi.Tris)
             {
-                var tri = mesh.Triangles[triId];
+                var id = mesh.GetTriangleIndex(triId);
+
+                var tri = mesh.Triangles[id];
+                //var tri = mesh.Triangles[triId];
                 if (tri.V1 == j || tri.V2 == j || tri.V3 == j)
                 {
                     tris.Add(tri);
@@ -1433,6 +1436,8 @@ namespace Engine.Processing
             return new CutSeamParameterizeOutput(cutMesh, discOutput, sp, boundaryVertices);
         }
 
+
+        // This part is kind of chaos due to deleting triangles in tetrahedron sphere creation. I had to find indexes
         private static CutMeshOutput CutMesh(Mesh mesh)
         {
             Graph g = new Graph(mesh);
@@ -1467,24 +1472,32 @@ namespace Engine.Processing
                 vj.Tris = new List<int>();
 
                 var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
-                var tri = mesh.Triangles[commonTris[0]];
-                int triIndex = tri.Id;
+                int triIndex = mesh.GetTriangleIndex(commonTris[0]);
+                var tri = mesh.Triangles[triIndex]; 
+
+                //Triangles[commonTris[0]];
+                //int triIndex = tri.Id;
                 if (i != 1)
                 {
                     for (int j = 0; j < commonTris.Count; j++)
                     {
-                        if (cutMesh.Triangles[commonTris[j]].ContainsId(mesh.Vertices.Count + i - 2))
+                        var a = mesh.GetTriangleIndex(commonTris[j]);
+                        if (cutMesh.Triangles[a].ContainsId(mesh.Vertices.Count + i - 2))
                         {
-                            tri = mesh.Triangles[commonTris[j]];
-                            triIndex = tri.Id;
+                            triIndex = a;  //mesh.GetTriangleIndex(commonTris[j]);
+                            tri = mesh.Triangles[triIndex];
+                            //tri = mesh.Triangles[commonTris[j]];
+                            //triIndex = tri.Id;
                             break;
                         }
                     }
                 }
                 var i3rd = tri.GetThirdVertexId(v1.Id, vi.Id);
 
-                vj.Tris.Add(tri.Id);
-                vi.Tris.Remove(tri.Id);
+                //vj.Tris.Add(tri.Id);
+                //vi.Tris.Remove(tri.Id);
+                vi.Tris.Add(triIndex);
+                vj.Tris.Remove(triIndex);
 
                 tri.UpdateIndex(vi.Id, vj.Id);
                 cutMesh.Triangles[triIndex] = tri;
@@ -1499,7 +1512,8 @@ namespace Engine.Processing
 
                     commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
                     commonTris.Remove(tri.Id);
-                    var next = commonTris[0];
+                    //var next = commonTris[0];
+                    var next = mesh.GetTriangleIndex(commonTris[0]);
 
                     tri = cutMesh.Triangles[next];
                     i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
