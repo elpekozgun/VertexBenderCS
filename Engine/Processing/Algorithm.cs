@@ -903,9 +903,6 @@ namespace Engine.Processing
 
             boundaryVertices = boundaryVertices.OrderByDescending(x => x.Coord.X).ToList();
 
-
-
-
             List<int> path = new List<int>();
             if (boundaryVertices.Count == 0)
             {

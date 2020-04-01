@@ -75,6 +75,11 @@ namespace Engine.Core
         public int End;
         public float Length { get; set; }
 
+        public int OtherEnd(int id)
+        {
+            var ret = id == Start ? End : Start;
+            return ret;
+        }
     }
 
     public struct Triangle
@@ -105,6 +110,13 @@ namespace Engine.Core
             return V1 == id || V2 == id || V3 == id;
         }
 
+        public bool ContainsEdge(Edge e)
+        {
+            return (e.Start == V1 && e.End == V2 || e.Start == V2 && e.End == V1) ||
+                   (e.Start == V2 && e.End == V3 || e.Start == V3 && e.End == V2) ||
+                   (e.Start == V3 && e.End == V1 || e.Start == V1 && e.End == V3);
+        }
+
         public void UpdateIndex(int id, int value)
         {
             if (V1 == id)
@@ -132,15 +144,24 @@ namespace Engine.Core
             Vertices = new List<Vertex>();
             Triangles = new List<Triangle>();
             Edges = new List<Edge>();
+
+            _lastV = 0;
+            _lastT = 0;
+            _lastE = 0;
         }
 
         public List<Vertex> Vertices;
         public List<Triangle> Triangles;
         public List<Edge> Edges;
 
+        private int _lastV;
+        private int _lastE;
+        private int _lastT;
+
         internal void AddTriangle(int v1, int v2, int v3)
         {
-            int id = Triangles.Count;
+            int id = _lastT++;
+            //int id = Triangles.Count;
 
             Triangles.Add(new Triangle(id, v1, v2, v3));
             Vertices[v1].Tris.Add(id);
@@ -163,29 +184,101 @@ namespace Engine.Core
         }
         internal void AddEdge(int v1, int v2, float length)
         {
-            int id = Edges.Count;
+            int id = _lastE++;
+            //int id = Edges.Count;
 
             Edges.Add(new Edge(id, v1, v2, length));
 
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);
         }
-        internal void AddVertex(float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
+        internal Vertex AddVertex(float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
         {
-            int id = Vertices.Count;
-
-            Vertices.Add(new Vertex(id, x, y, z, nx, ny, nz));
+            //int id = Vertices.Count;
+            int id = _lastV++;
+            var v = new Vertex(id, x, y, z, nx, ny, nz);
+            Vertices.Add(v);
+            return v;
         }
-        internal void AddVertex(Vector3 coord, Vector3 normal)
+        internal Vertex AddVertex(Vector3 coord, Vector3 normal)
         {
-            int id = Vertices.Count;
-
-            Vertices.Add(new Vertex(id, coord, normal));
+            //int id = Vertices.Count;
+            int id = _lastV++;
+            var v = new Vertex(id, coord, normal);
+            Vertices.Add(v);
+            return v;
         }
-
         internal void AddVertex(Vertex v)
         {
             Vertices.Add(v);
+        }
+
+        internal void RemoveVertex(int id)
+        {
+            Vertices[id].Verts.Remove(id);
+            for (int i = 0; i < Vertices[id].Verts.Count; i++)
+            {
+                Vertices[Vertices[id].Verts[i]].Verts.Remove(id);
+            }
+            for (int i = 0; i < Vertices[id].Edges.Count; i++)
+            {
+                Edges.Remove(Edges[Vertices[id].Edges[i]]);
+            }
+            for (int i = 0; i < Vertices[id].Tris.Count; i++)
+            {
+                Triangles.Remove(Triangles[Vertices[id].Tris[i]]);
+            }
+            Vertices.Remove(Vertices[id]);
+        }
+
+        internal void RemoveTriangle(Triangle tri)
+        {
+            
+            var v1 = Vertices[tri.V1];
+            var v2 = Vertices[tri.V2];
+            var v3 = Vertices[tri.V3];
+
+            v1.Tris.Remove(tri.Id);
+            v2.Tris.Remove(tri.Id);
+            v3.Tris.Remove(tri.Id);
+
+
+            Triangles.Remove(tri);
+        }
+
+        public int GetTriangleIndex(int t)
+        {
+            var tri = Triangles.First(x => x.Id == t);
+
+            return Triangles.IndexOf(tri);
+        }
+
+        internal void DivideEdge(Edge e, int id)
+        {
+            var vert1 = Vertices[e.Start];
+            var vert2 = Vertices[e.End];
+
+            
+            AddEdge(e.Start, id, (vert1.Coord - Vertices[id].Coord).Length);
+            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length);
+
+            var commonTris = vert1.Tris.Intersect(vert2.Tris).ToList();
+            
+            Edges.Remove(e);
+            for (int i = 0; i < commonTris.Count; i++)
+            {
+                var tri = Triangles[commonTris[i]];
+                var id3 = tri.GetThirdVertexId(e.Start, e.End);
+
+                if (IsCCW(tri))
+                {
+                    AddTriangle(e.End, id3, id);
+                    AddTriangle(id3, e.Start, id);
+                }
+
+                Triangles.Remove(tri);
+            }
+
         }
 
         internal Vector3 CalculateTriangleNormals(Triangle tri)
@@ -240,6 +333,16 @@ namespace Engine.Core
             return (float)angle;
         }
        
+        private bool IsCCW(Triangle t)
+        {
+            var v1 = Vertices[t.V1].Coord;
+            var v2 = Vertices[t.V2].Coord;
+            var v3 = Vertices[t.V3].Coord;
+
+            return Vector3.CalculateAngle(v2 - v1, v3 - v1) > 0; 
+
+        }
+
         internal float GetTriangleAngle(int triID, int vertexId)
         {
             Triangle tri = Triangles[triID];
@@ -335,6 +438,10 @@ namespace Engine.Core
             mesh.Vertices = new List<Vertex>(this.Vertices);
             mesh.Edges = new List<Edge>(this.Edges);
             mesh.Triangles = new List<Triangle>(this.Triangles);
+
+            mesh._lastE = this._lastE;
+            mesh._lastV = this._lastV;
+            mesh._lastT = this._lastT;
 
             return mesh;
         }

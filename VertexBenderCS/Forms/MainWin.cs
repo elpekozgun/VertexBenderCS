@@ -234,7 +234,7 @@ namespace VertexBenderCS.Forms
             _SceneGraph.AddObject(origin);
 
 
-            var sphere = new MeshRenderer(PrimitiveObjectFactory.Sphere(1, 5));
+            var sphere = new MeshRenderer(PrimitiveObjectFactory.Sphere(1, 4));
             _SceneGraph.AddObject(sphere);
 
 
