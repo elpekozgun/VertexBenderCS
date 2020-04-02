@@ -18,7 +18,7 @@ namespace Engine.Core
 
             Up = Vector3.UnitY;
             Right = Vector3.UnitX;
-            AspectRatio = width / height;
+            _aspectRatio = width / height;
             OrthoSize = new Vector2(AspectRatio,1.0f);
             
             FoV = fov;
@@ -33,11 +33,25 @@ namespace Engine.Core
         public Vector3 Right;
         public Vector2 OrthoSize;
 
+        private float _aspectRatio;
+
         public float Near;
         public float Far;
         public float FoV;
-        public float AspectRatio;
         public bool IsOrtho;
+
+        public float AspectRatio
+        {
+            get
+            {
+                return _aspectRatio;
+            }
+            set
+            {
+                _aspectRatio = value;
+                OrthoSize = new Vector2(_aspectRatio, 1.0f );
+            }
+        }
 
         public Matrix4 Projection
         {
@@ -49,7 +63,7 @@ namespace Engine.Core
                 }
                 else
                 {
-                    return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FoV),AspectRatio, Near, Far);
+                    return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(FoV),_aspectRatio, Near, Far);
                 }
             }
         }

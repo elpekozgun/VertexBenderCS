@@ -9,7 +9,8 @@ namespace Engine.Core
     public enum eSphereGenerationType
     {
         Tetrahedron,
-        Cube
+        Cube,
+        icosahedron
     }
 
     public static class PrimitiveObjectFactory
@@ -225,6 +226,55 @@ namespace Engine.Core
             return tetrahedron;
         }
 
+        public static Mesh Icosahedron(float size)
+        {
+            Mesh icosahedron = new Mesh();
+
+            var t = (float)(1.0 + Math.Sqrt(5.0)) / 2.0f;
+
+            icosahedron.AddVertex(-1, t, 0);
+            icosahedron.AddVertex(1, t, 0);
+            icosahedron.AddVertex(-1, -t, 0);
+            icosahedron.AddVertex(1, -t, 0);
+
+            icosahedron.AddVertex(0, -1, t);
+            icosahedron.AddVertex(0, 1, t);
+            icosahedron.AddVertex(0, -1, -t);
+            icosahedron.AddVertex(0, 1, -t);
+
+            icosahedron.AddVertex(t, 0, -1);
+            icosahedron.AddVertex(t, 0, 1);
+            icosahedron.AddVertex(-t, 0, -1);
+            icosahedron.AddVertex(-t, 0, 1);
+
+            icosahedron.AddTriangle(5, 11, 0);
+            icosahedron.AddTriangle(1, 5, 0);
+            icosahedron.AddTriangle(7, 1, 0);
+            icosahedron.AddTriangle(10, 7, 0);
+            icosahedron.AddTriangle(11, 10, 0);
+
+            icosahedron.AddTriangle(9, 5, 1);
+            icosahedron.AddTriangle(4, 11, 5);
+            icosahedron.AddTriangle(2, 10, 11);
+            icosahedron.AddTriangle(6, 7, 10);
+            icosahedron.AddTriangle(8, 1, 7);
+
+            icosahedron.AddTriangle(4, 9, 3);
+            icosahedron.AddTriangle(2, 4, 3);
+            icosahedron.AddTriangle(6, 2, 3);
+            icosahedron.AddTriangle(8, 6, 3);
+            icosahedron.AddTriangle(9, 8, 3);
+
+            icosahedron.AddTriangle(5, 9, 4);
+            icosahedron.AddTriangle(11, 4, 2);
+            icosahedron.AddTriangle(10, 2, 6);
+            icosahedron.AddTriangle(7, 6, 8);
+            icosahedron.AddTriangle(1, 8, 9);
+
+            return icosahedron;
+
+        }
+
         private static void DivideFace(ref Mesh mesh, float size, ref Dictionary<OpenTK.Vector3, Vertex> verts)
         {
             var copyMesh = mesh.Copy();
@@ -296,9 +346,13 @@ namespace Engine.Core
             {
                 sphere = CubeIndexed(radius);
             }
-            else
+            else if (type == eSphereGenerationType.Tetrahedron)
             {
                 sphere = Tetrahedron(radius);
+            }
+            else
+            {
+                sphere = Icosahedron(radius);
             }
 
             var vertDict = new Dictionary<OpenTK.Vector3, Vertex>();

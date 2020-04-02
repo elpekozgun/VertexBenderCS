@@ -28,12 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
-
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -79,7 +78,7 @@
             this.menuAddPyramid = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAddBottomlessPyramid = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAddSphereTetra = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuAddSphereCube = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddSphereIcosahedron = new System.Windows.Forms.ToolStripMenuItem();
             this.editMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,6 +114,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.numericSize = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
+            this.menuAddSphereCube = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -189,48 +189,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea5.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea5.AxisX.LabelStyle.Interval = 0D;
-            chartArea5.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea5.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea5.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea5.AxisY.LabelStyle.Interval = 0D;
-            chartArea5.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea5.BackColor = System.Drawing.Color.White;
-            chartArea5.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea5);
-            legend5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend5.ForeColor = System.Drawing.Color.Gainsboro;
-            legend5.InterlacedRowsColor = System.Drawing.Color.White;
-            legend5.Name = "Legend1";
-            legend5.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend5);
+            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisX.LabelStyle.Interval = 0D;
+            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisY.LabelStyle.Interval = 0D;
+            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea1.BackColor = System.Drawing.Color.White;
+            chartArea1.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea1);
+            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend1.ForeColor = System.Drawing.Color.Gainsboro;
+            legend1.InterlacedRowsColor = System.Drawing.Color.White;
+            legend1.Name = "Legend1";
+            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend1);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series5.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series5.BackSecondaryColor = System.Drawing.Color.White;
-            series5.ChartArea = "isoCurve-Distances";
-            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series5.Color = System.Drawing.Color.DodgerBlue;
-            series5.CustomProperties = "PointWidth=0.3";
-            series5.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series5.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series5.IsVisibleInLegend = false;
-            series5.LabelBackColor = System.Drawing.Color.White;
-            series5.LabelBorderColor = System.Drawing.Color.White;
-            series5.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series5.Legend = "Legend1";
-            series5.MarkerBorderColor = System.Drawing.Color.White;
-            series5.MarkerColor = System.Drawing.Color.White;
-            series5.MarkerSize = 3;
-            series5.Name = "IsoCurve";
-            series5.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series5.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series5.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series5);
+            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series1.BackSecondaryColor = System.Drawing.Color.White;
+            series1.ChartArea = "isoCurve-Distances";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.Color = System.Drawing.Color.DodgerBlue;
+            series1.CustomProperties = "PointWidth=0.3";
+            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series1.IsVisibleInLegend = false;
+            series1.LabelBackColor = System.Drawing.Color.White;
+            series1.LabelBorderColor = System.Drawing.Color.White;
+            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series1.Legend = "Legend1";
+            series1.MarkerBorderColor = System.Drawing.Color.White;
+            series1.MarkerColor = System.Drawing.Color.White;
+            series1.MarkerSize = 3;
+            series1.Name = "IsoCurve";
+            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series1);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -581,7 +581,8 @@
             this.menuAddPyramid,
             this.menuAddBottomlessPyramid,
             this.menuAddSphereTetra,
-            this.menuAddSphereCube});
+            this.menuAddSphereCube,
+            this.menuAddSphereIcosahedron});
             this.addMenu.Font = new System.Drawing.Font("Ebrima", 9F);
             this.addMenu.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.addMenu.Name = "addMenu";
@@ -623,12 +624,12 @@
             this.menuAddSphereTetra.Size = new System.Drawing.Size(183, 22);
             this.menuAddSphereTetra.Text = "Sphere (tetrahedron)";
             // 
-            // menuAddSphereCube
+            // menuAddSphereIcosahedron
             // 
-            this.menuAddSphereCube.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.menuAddSphereCube.Name = "menuAddSphereCube";
-            this.menuAddSphereCube.Size = new System.Drawing.Size(183, 22);
-            this.menuAddSphereCube.Text = "Sphere (cube)";
+            this.menuAddSphereIcosahedron.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddSphereIcosahedron.Name = "menuAddSphereIcosahedron";
+            this.menuAddSphereIcosahedron.Size = new System.Drawing.Size(183, 22);
+            this.menuAddSphereIcosahedron.Text = "Sphere icosahedron)";
             // 
             // editMenu
             // 
@@ -1102,6 +1103,13 @@
             this.label7.TabIndex = 0;
             this.label7.Text = "Sphere";
             // 
+            // menuAddSphereCube
+            // 
+            this.menuAddSphereCube.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddSphereCube.Name = "menuAddSphereCube";
+            this.menuAddSphereCube.Size = new System.Drawing.Size(183, 22);
+            this.menuAddSphereCube.Text = "Sphere (cube)";
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -1229,13 +1237,14 @@
         private System.Windows.Forms.ToolStripMenuItem menuAddPyramid;
         private System.Windows.Forms.ToolStripMenuItem menuAddBottomlessPyramid;
         private System.Windows.Forms.ToolStripMenuItem menuAddSphereTetra;
-        private System.Windows.Forms.ToolStripMenuItem menuAddSphereCube;
+        private System.Windows.Forms.ToolStripMenuItem menuAddSphereIcosahedron;
         private System.Windows.Forms.Panel spherePanel;
         private System.Windows.Forms.NumericUpDown numericSubdivision;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown numericSize;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ToolStripMenuItem menuAddSphereCube;
     }
 }
 
