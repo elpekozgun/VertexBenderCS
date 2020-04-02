@@ -187,7 +187,8 @@ namespace VertexBenderCS.Forms
                     (
                         _mesh,
                         (int)numericIteration.Value,
-                        UpdateProgress
+                        UpdateProgress,
+                        checkUseCenter.Checked
                     );
                 }
             }

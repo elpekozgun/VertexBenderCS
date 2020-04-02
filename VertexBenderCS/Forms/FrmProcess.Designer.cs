@@ -64,6 +64,8 @@
             this.labelDiskMethod = new System.Windows.Forms.Label();
             this.cmbDisk = new System.Windows.Forms.ComboBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.checkUseCenter = new System.Windows.Forms.CheckBox();
+            this.label10 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numericSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericTarget)).BeginInit();
             this.tabProcess.SuspendLayout();
@@ -344,6 +346,8 @@
             // 
             // tabParametrization
             // 
+            this.tabParametrization.Controls.Add(this.checkUseCenter);
+            this.tabParametrization.Controls.Add(this.label10);
             this.tabParametrization.Controls.Add(this.checkUniformBoundary);
             this.tabParametrization.Controls.Add(this.label9);
             this.tabParametrization.Controls.Add(this.label8);
@@ -524,6 +528,29 @@
             this.progressBar1.Size = new System.Drawing.Size(175, 24);
             this.progressBar1.TabIndex = 13;
             // 
+            // checkUseCenter
+            // 
+            this.checkUseCenter.AutoSize = true;
+            this.checkUseCenter.Checked = true;
+            this.checkUseCenter.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkUseCenter.Location = new System.Drawing.Point(147, 236);
+            this.checkUseCenter.Name = "checkUseCenter";
+            this.checkUseCenter.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkUseCenter.Size = new System.Drawing.Size(15, 14);
+            this.checkUseCenter.TabIndex = 27;
+            this.checkUseCenter.UseVisualStyleBackColor = true;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.label10.Location = new System.Drawing.Point(72, 234);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(66, 15);
+            this.label10.TabIndex = 26;
+            this.label10.Text = "Use Center:";
+            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // FrmProcess
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -600,5 +627,7 @@
         private System.Windows.Forms.CheckBox checkFixate;
         private System.Windows.Forms.CheckBox checkUniformBoundary;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.CheckBox checkUseCenter;
+        private System.Windows.Forms.Label label10;
     }
 }

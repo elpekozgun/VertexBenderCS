@@ -20,6 +20,8 @@ namespace VertexBenderCS.Forms
 
     public partial class MainWin : Form
     {
+        //this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
+
         //[DllImport("User32.dll", CharSet = CharSet.Auto)]
         //public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
@@ -122,7 +124,9 @@ namespace VertexBenderCS.Forms
             _renderMode = eRenderMode.shaded;
 
             InitTransformPanel();
+            InitSpherePanel();
         }
+
 
         public void SubscribeEvents()
         {
@@ -144,6 +148,13 @@ namespace VertexBenderCS.Forms
             menuExit.Click += MenuExit_Click;
             menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
 
+            menuAddCube.Click += MenuAddCube_Click;
+            menuAddPyramid.Click += MenuAddPyramid_Click;
+            menuAddBottomlessPyramid.Click += MenuAddBottomlessPyramid_Click;
+            menuAddTetrahedron.Click += MenuAddTetrahedron_Click;
+            menuAddSphereCube.Click += MenuAddSphereCube_Click;
+            menuAddSphereTetra.Click += MenuAddSphereTetra_Click;
+
             toolbarPoint.Click += ToolbarPoint_Click;
             toolbarShaded.Click += ToolbarShaded_Click;
             toolbarWireframe.Click += ToolbarWireframe_Click;
@@ -155,10 +166,12 @@ namespace VertexBenderCS.Forms
 
             sceneGraphTree.AfterSelect += SceneGraphTree_AfterSelect;
             sceneGraphTree.KeyDown += SceneGraphTree_KeyDown;
+
             _SceneGraph.OnItemAdded += SceneGraph_OnItemAdded;
             _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
+
 
         private void StarTest()
         {
@@ -234,46 +247,13 @@ namespace VertexBenderCS.Forms
             _SceneGraph.AddObject(origin);
 
 
-            var sphere = new MeshRenderer(PrimitiveObjectFactory.Sphere(1, 4));
-            _SceneGraph.AddObject(sphere);
-
-
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
-            //var m = Algorithm.ParameterizeMeshCutSeam(mesh.Mesh, (asd) => { });
+            //_activeMesh = mesh;
+            //_SceneGraph.AddObject(mesh);
+            //var m = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Harmonic, (asd) => { });
 
-            //var mesh2 = new MeshRenderer(m.Cutmesh, "cut");
+            //DisplayDiscParametrizationOutput(m);
 
-
-            //_SceneGraph.AddObject(mesh2);
-            //_activeMesh = mesh2;
-            //DisplayDiscParametrizationOutput(m.Disc);
-            //DisplayShortestPathOutput(m.ShortestPath);
-
-
-            //var a = m.Disc.Output;
-            //var b = m.boundary.ToList();
-            ////for (int i = 0; i < m.boundary.Count; i++)
-            //{
-            //    var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-            //    cube.Position = new Vector3(a[b[1].Id].X, 0, a[b[1].Id].Y);
-            //    cube.Color = new Vector4(1, 0, 0, 1);
-            //    _SceneGraph.AddObject(cube);
-
-            //    var cube2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-            //    cube2.Position = new Vector3(a[b[31].Id].X, 0, a[b[31].Id].Y);
-            //    cube2.Color = new Vector4(0, 1, 0, 1);
-            //    _SceneGraph.AddObject(cube2);
-
-            //    var cube3 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-            //    cube3.Position = new Vector3(a[b[45].Id].X, 0, a[b[45].Id].Y);
-            //    cube3.Color = new Vector4(0, 0, 1, 1);
-            //    _SceneGraph.AddObject(cube3);
-
-            //    var cube4 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f), 0.ToString());
-            //    cube4.Position = new Vector3(a[b[61].Id].X, 0, a[b[61].Id].Y);
-            //    cube4.Color = new Vector4(1, 1, 0, 1);
-            //    _SceneGraph.AddObject(cube4);
-            //}
 
         }
 
@@ -768,11 +748,15 @@ namespace VertexBenderCS.Forms
             var selectedNode = sceneGraphTree.SelectedNode;
             if (selectedNode == null)
             {
-                sceneGraphTree.Nodes.Add(new SceneNode(obj));
+                var node = new SceneNode(obj);
+                sceneGraphTree.Nodes.Add(node);
+                sceneGraphTree.SelectedNode = node;
             }
             else
             {
-                sceneGraphTree.SelectedNode.Nodes.Add(new SceneNode(obj));
+                var node = new SceneNode(obj);
+                sceneGraphTree.SelectedNode.Nodes.Add(node);
+                sceneGraphTree.SelectedNode = node;
             }
         }
 
@@ -829,6 +813,27 @@ namespace VertexBenderCS.Forms
                 {
                     UpdateChart(output);
                 }
+                
+                if (_activeMesh.Mesh is Sphere)
+                {
+                    var sphere = (_activeMesh.Mesh as Sphere);
+
+                    numericSubdivision.ValueChanged -= NumericSubdivision_ValueChanged;
+                    numericSize.ValueChanged -= NumericSize_ValueChanged;
+
+                    spherePanel.Visible = true;
+
+                    numericSize.Value = (decimal)sphere.Size;
+                    numericSubdivision.Value = (decimal)sphere.Subdivision;
+
+                    numericSubdivision.ValueChanged += NumericSubdivision_ValueChanged;
+                    numericSize.ValueChanged += NumericSize_ValueChanged;
+                }
+            }
+            else
+            {
+                transformPanel.Visible = false;
+                spherePanel.Visible = false;
             }
         }
 
@@ -851,7 +856,7 @@ namespace VertexBenderCS.Forms
 
         #endregion
 
-        #region Transform Panel
+        #region Component Panel
 
         public void InitTransformPanel()
         {
@@ -921,6 +926,42 @@ namespace VertexBenderCS.Forms
                 foreach (var child in _activeMesh.Children)
                 {
                     child.Scale = _activeMesh.Scale;
+                }
+            }
+        }
+
+        private void InitSpherePanel()
+        {
+            spherePanel.Visible = false;
+
+            numericSize.ValueChanged += NumericSize_ValueChanged;
+            numericSubdivision.ValueChanged += NumericSubdivision_ValueChanged;
+        }
+
+        private void NumericSubdivision_ValueChanged(object sender, EventArgs e)
+        {
+            if (_activeMesh != null)
+            {
+                if (_activeMesh.Mesh is Sphere)
+                {
+                    var sphere = _activeMesh.Mesh as Sphere;
+
+                    var s = PrimitiveObjectFactory.Sphere(sphere.Size, (int)numericSubdivision.Value, sphere.Type);
+                    _activeMesh = new MeshRenderer(s, "Sphere");
+                }
+            }
+        }
+
+        private void NumericSize_ValueChanged(object sender, EventArgs e)
+        {
+            if (_activeMesh != null)
+            {
+                if (_activeMesh.Mesh is Sphere)
+                {
+                    var sphere = _activeMesh.Mesh as Sphere;
+
+                    var s = PrimitiveObjectFactory.Sphere((float)numericSize.Value, sphere.Subdivision, sphere.Type);
+                    _activeMesh = new MeshRenderer(s, "Sphere");
                 }
             }
         }
@@ -1076,7 +1117,46 @@ namespace VertexBenderCS.Forms
             }
         }
 
+        private void MenuAddSphereTetra_Click(object sender, EventArgs e)
+        {
+            var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Tetrahedron);
+            var sphereMesh = new MeshRenderer(sphere, "Sphere");
+            _SceneGraph.AddObject(sphereMesh);
+            
+        }
 
+        private void MenuAddSphereCube_Click(object sender, EventArgs e)
+        {
+            var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+            var sphereMesh = new MeshRenderer(sphere, "Sphere");
+            _SceneGraph.AddObject(sphereMesh);
+        }
+
+        private void MenuAddTetrahedron_Click(object sender, EventArgs e)
+        {
+            var tetrahedron = new MeshRenderer(PrimitiveObjectFactory.Tetrahedron(1), "Tetrahedron");
+            _SceneGraph.AddObject(tetrahedron);
+        }
+
+        private void MenuAddBottomlessPyramid_Click(object sender, EventArgs e)
+        {
+            var pyramid = new MeshRenderer(PrimitiveObjectFactory.PyramidNoBottom(1, 1, Vector3.Zero), "Bottomless Pyramid");
+            _SceneGraph.AddObject(pyramid);
+        }
+
+        private void MenuAddPyramid_Click(object sender, EventArgs e)
+        {
+            var pyramid = new PrimitiveRenderer(PrimitiveObjectFactory.Pyramid(1, 1, Vector2.Zero), "Pyramid");
+            _SceneGraph.AddObject(pyramid);
+            
+        }
+
+        private void MenuAddCube_Click(object sender, EventArgs e)
+        {
+            var cube = new MeshRenderer(PrimitiveObjectFactory.Cube(1), "Cube");
+            _SceneGraph.AddObject(cube);
+            
+        }
 
         #endregion
 

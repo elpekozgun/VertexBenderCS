@@ -589,7 +589,6 @@ namespace Engine.Processing
             return new GeodesicMatrixOutput(matrix, _watch.ElapsedMilliseconds);
         }
 
-
         internal static float[] DijkstraFibonacciHeap(Mesh mesh, int src)
         {
             var graph = new Graph(mesh);
@@ -707,6 +706,8 @@ namespace Engine.Processing
                 {
                     if (!boundary.ContainsKey(result.Id))
                     {
+                        var commonEdge = source.Edges.Intersect(result.Edges).ToList();
+
                         boundary.Add(result.Id, result);
                         candidates.Remove(result.Id);
                         RecursivelyAddNeighbor(result, ref candidates, ref boundary);
@@ -714,6 +715,8 @@ namespace Engine.Processing
                 }
             }
         }
+
+
 
         private static void FillVectors(ref Vector<float> vectorX, ref Vector<float> vectorY, List<Dictionary<int,Vertex>> allBoundaries, bool fixInternals = false, bool uniformBoundary = true)
         {
@@ -899,7 +902,7 @@ namespace Engine.Processing
             totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
         }
 
-        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, Action<int> updateProgress, float weight = 0.5f, bool fixInternals = false, bool uniformBoundary = true)
+        public static DiscParameterizeOutput ParameterizeMeshToDiscOld(Mesh mesh, eParameterizationMethod method, Action<int> updateProgress, float weight = 0.5f, bool fixInternals = false, bool uniformBoundary = true)
         {
             var allBoundaries = new List<Dictionary<int, Vertex>>();
             var boundaryVertices = mesh.GetBoundaryVertices();
@@ -959,72 +962,6 @@ namespace Engine.Processing
             updateProgress(100);
 
             return new DiscParameterizeOutput(list, mesh, path);
-        }
-
-
-
-
-        public static SphereParameterizeOutput ParameterizeMeshToSphere(Mesh mesh, int iterationCount, Action<int> updateProgress)
-        {
-            _watch.Reset();
-            _watch.Start();
-
-            var box = Box3.CalculateBoundingBox(mesh.Vertices);
-
-            var sample = FarthestPointSampling(new Graph(mesh), 2, 0, (a)=>{ });
-
-            var path = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1]);
-
-            var midId = path.Path[path.Path.Count / 2];
-            var v = mesh.Vertices[midId];
-
-
-            var meshCenter = v.Coord - v.Normal * box.Size  / 128;
-
-
-            //meshCenter = mesh.Center();
-
-            
-
-            List<Vector3> spherePoints = new List<Vector3>();
-            List<Vector3> normals = new List<Vector3>();
-
-
-
-            for (int i = 0; i < mesh.Vertices.Count; i++)
-            {
-                var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
-                spherePoints.Add(normal);
-                normals.Add(normal);
-            }
-
-
-            for (int i = 0; i < iterationCount; i++)
-            {
-                for (int j = 0; j < spherePoints.Count; j++)
-                {
-                    var neighbors = mesh.Vertices[j].Verts;
-
-                    Vector3 newCenter = Vector3.Zero;
-                    for (int k = 0; k < neighbors.Count; k++)
-                    {
-                        newCenter += spherePoints[neighbors[k]];
-                    }
-                    newCenter /= neighbors.Count;
-
-                    spherePoints[j] = newCenter.Normalized();
-                    normals[j] = (spherePoints[j]).Normalized();
-                }
-                updateProgress((int)(100 * (float)(i) / iterationCount));
-            }
-            updateProgress(100);
-
-
-            _watch.Stop();
-            Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
-
-            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> {  meshCenter });
-
         }
 
         public static SphereParameterizeOutput ParameterizeMeshToSphereOld(Mesh mesh, int iterationCount, Action<int> updateProgress)
@@ -1088,6 +1025,183 @@ namespace Engine.Processing
         }
 
 
+
+        private static void RecursivelyAddEdge(Edge source, ref Dictionary<int, Edge> candidates, ref Dictionary<int, Edge> boundary)
+        {
+
+            var nexts = candidates.Where(x => x.Value.Start == source.End).ToList();
+            if (nexts != null && nexts.Count > 0)
+            {
+                var next = nexts.First().Value;
+                if (!boundary.ContainsKey(next.Id))
+                {
+                    boundary.Add(next.Id, next);
+                    candidates.Remove(next.Id);
+                    RecursivelyAddEdge(next, ref candidates, ref boundary);
+                }
+            }
+        }
+
+        public static void RecursivelyFindAllBoundaries(List<Vertex> vertices, List<Edge> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
+        {
+
+            var candidateItems = candidates.Select(x => x).ToDictionary(x => x.Id);
+
+            List<Dictionary<int, Edge>> totalBoundaryEdges = new List<Dictionary<int, Edge>>();
+
+            while (candidateItems.Count > 0)
+            {
+                var itemList = new List<Edge>();
+                var boundary = new Dictionary<int, Edge>();
+
+                var first = candidateItems.First();
+                boundary.Add(first.Key, first.Value);
+                candidateItems.Remove(first.Key);
+                RecursivelyAddEdge(first.Value, ref candidateItems, ref boundary);
+
+                totalBoundaryEdges.Add(boundary);
+            }
+
+            foreach (var boundaries in totalBoundaryEdges)
+            {
+                HashSet<Vertex> boundaryVertices = new HashSet<Vertex>();
+                var pairs = boundaries.ToList();
+
+                for (int i = 0; i < pairs.Count; i++)
+                {
+                    boundaryVertices.Add(vertices[pairs[i].Value.Start]);
+                }
+                boundaryVertices.Add(vertices[pairs.Last().Value.End]);
+
+                totalBoundaries.Add(boundaryVertices.Select(x => x).ToDictionary(x => x.Id));
+            }
+
+
+            totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
+        }
+
+        public static DiscParameterizeOutput ParameterizeMeshToDisc(Mesh mesh, eParameterizationMethod method, Action<int> updateProgress, float weight = 0.5f, bool fixInternals = false, bool uniformBoundary = true)
+        {
+            var allBoundaries = new List<Dictionary<int, Vertex>>();
+            var boundaryEdges = mesh.GetBoundaryEdges();
+            var boundaryVerts = mesh.GetBoundaryVertices();
+
+
+            List<int> path = new List<int>();
+            if (boundaryEdges.Count == 0)
+            {
+                string extra = "";
+                if (!uniformBoundary)
+                {
+                    extra = "Uniformly distributing boundaries.";
+                    uniformBoundary = true;
+                }
+                Logger.Log($"No holes detected, cutting {mesh.Name}. {extra}");
+                var cutOutput = CutMesh(mesh);
+                allBoundaries = cutOutput.boundary;
+                mesh = cutOutput.Cutmesh;
+                path = cutOutput.ShortestPath.Path;
+            }
+            else
+            {
+                RecursivelyFindAllBoundaries(mesh.Vertices, boundaryEdges, ref allBoundaries);
+                path = allBoundaries[0].Select(x => x.Key).ToList();
+            }
+
+
+            updateProgress(20);
+
+            MathNet.Numerics.Control.UseNativeOpenBLAS();
+            Matrix<float> W = Matrix<float>.Build.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
+            Vector<float> Bx = Vector<float>.Build.Dense(mesh.Vertices.Count, 0.0f);
+            Vector<float> By = Vector<float>.Build.Dense(mesh.Vertices.Count, 0.0f);
+
+
+            FillMatrix(ref W, mesh, allBoundaries, method, weight, fixInternals);
+            FillVectors(ref Bx, ref By, allBoundaries, fixInternals, uniformBoundary);
+
+            _watch.Reset();
+            _watch.Start();
+
+
+            var Xx = W.Solve(Bx);
+            var Xy = W.Solve(By);
+
+            updateProgress(80);
+
+            _watch.Stop();
+            Logger.Log($"Matrix of size {W.ColumnCount} x {W.ColumnCount} Solved in: {_watch.ElapsedMilliseconds} ms");
+
+            var list = new List<Vector2>();
+            for (int i = 0; i < Xx.Count; i++)
+            {
+                list.Add(new Vector2(Xx[i], Xy[i]));
+            }
+            updateProgress(100);
+
+            return new DiscParameterizeOutput(list, mesh, path);
+        }
+
+        public static SphereParameterizeOutput ParameterizeMeshToSphere(Mesh mesh, int iterationCount, Action<int> updateProgress, bool useMeshCenter = false)
+        {
+            _watch.Reset();
+            _watch.Start();
+
+            var box = Box3.CalculateBoundingBox(mesh.Vertices);
+
+            var sample = FarthestPointSampling(new Graph(mesh), 2, 0, (a)=>{ });
+
+            var path = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1]);
+
+            var meshCenter = mesh.Center();
+            if (!useMeshCenter)
+            {
+                var midId = path.Path[path.Path.Count / 2];
+                var v = mesh.Vertices[midId];
+                meshCenter = v.Coord - v.Normal * box.Size / 128;
+            }
+
+
+            List<Vector3> spherePoints = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
+
+
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
+                spherePoints.Add(normal);
+                normals.Add(normal);
+            }
+
+
+            for (int i = 0; i < iterationCount; i++)
+            {
+                for (int j = 0; j < spherePoints.Count; j++)
+                {
+                    var neighbors = mesh.Vertices[j].Verts;
+
+                    Vector3 newCenter = Vector3.Zero;
+                    for (int k = 0; k < neighbors.Count; k++)
+                    {
+                        newCenter += spherePoints[neighbors[k]];
+                    }
+                    newCenter /= neighbors.Count;
+
+                    spherePoints[j] = newCenter.Normalized();
+                    normals[j] = (spherePoints[j]).Normalized();
+                }
+                updateProgress((int)(100 * (float)(i) / iterationCount));
+            }
+            updateProgress(100);
+
+
+            _watch.Stop();
+            Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
+
+            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> {  meshCenter });
+
+        }
+
         public static SphereParameterizeOutput SphereTest(Mesh mesh, int iterationCount)
         {
             _watch.Reset();
@@ -1148,295 +1262,6 @@ namespace Engine.Processing
             return new SphereParameterizeOutput(spherePoints, normals, centerList );
         }
 
-        public static CutSeamParameterizeOutput ParameterizeMeshCutSeam3(Mesh mesh, Action<int> updateProgress)
-        {
-            //TODO: this doesnt do any process regarding edges.
-            Graph g = new Graph(mesh);
-
-            var sample = FarthestPointSampling(g, 2, 0, (a) => { });
-            var sp = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1], true);
-
-            var boundaryVertices = new HashSet<Vertex>();
-
-            var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Id)).ToList();
-
-            var cutMesh = mesh.Copy();
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var newVertex = mesh.Vertices[sp.Path[i]];
-                newVertex.Id = cutMesh.Vertices.Count;
-                cutMesh.AddVertex(newVertex);
-            }
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var vi = cutMesh.Vertices[sp.Path[i]];
-                var vj = cutMesh.Vertices[mesh.Vertices.Count + i - 1];
-                var v1 = mesh.Vertices[sp.Path[i - 1]];
-
-                vi.Verts = new List<int>(vi.Verts);
-                vi.Tris = new List<int>(vi.Tris);
-
-                // This is problematish
-                vj.Verts = new List<int>(); //{ v1.Id, sp.Path[i + 1] };
-                vj.Tris = new List<int>();
-
-                var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
-                var tri = mesh.Triangles[commonTris[0]];
-                int triIndex = tri.Id;
-                if (i != 1)
-                {
-                    for (int j = 0; j < commonTris.Count; j++)
-                    {
-                        if (cutMesh.Triangles[commonTris[j]].ContainsId(mesh.Vertices.Count + i - 2))
-                        {
-                            tri = mesh.Triangles[commonTris[j]];
-                            triIndex = tri.Id;
-                            break;
-                        }
-                    }
-                }
-                var i3rd = tri.GetThirdVertexId(v1.Id, vi.Id);
-
-                vj.Tris.Add(tri.Id);
-                vi.Tris.Remove(tri.Id);
-
-                tri.UpdateIndex(vi.Id, vj.Id);
-                cutMesh.Triangles[triIndex] = tri;
-
-                while (i3rd != sp.Path[i + 1])
-                {
-                    vi.Verts.Remove(i3rd);
-                    vj.Verts.Add(i3rd);
-
-                    cutMesh.Vertices[i3rd].Verts.Remove(vi.Id);
-                    cutMesh.Vertices[i3rd].Verts.Add(vj.Id);
-
-                    commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
-                    commonTris.Remove(tri.Id);
-                    var next = commonTris[0];
-
-                    tri = cutMesh.Triangles[next];
-                    i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
-                    
-
-                    vi.Tris.Remove(next);
-                    vj.Tris.Add(next);
-                }
-
-                for (int j = 0; j < vj.Tris.Count; j++)
-                {
-                    tri = cutMesh.Triangles[vj.Tris[j]];
-                    tri.UpdateIndex(vi.Id, vj.Id);
-                    cutMesh.Triangles[vj.Tris[j]] = tri;
-                }
-
-                cutMesh.Vertices[vi.Id] = vi;
-                cutMesh.Vertices[vj.Id] = vj;
-
-            }
-            cutMesh.Vertices[sp.Path.Last()].Verts.Add(cutMesh.Vertices[cutMesh.Vertices.Count - 1].Id);
-            cutMesh.Vertices[sp.Path[0]].Verts.Add(mesh.Vertices.Count);
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var v = cutMesh.Vertices[mesh.Vertices.Count + i - 1];
-
-                if (i == 1)
-                {
-                    v.Verts.Add(sp.Path[0]);
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i].Id);
-                }
-                else if (i == sp.Path.Count - 2)
-                {
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i - 2].Id);
-                    v.Verts.Add(sp.Path.Last());
-                }
-                else
-                {
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i - 2].Id);
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i].Id);
-                }
-
-                foreach (var item in v.Tris)
-                {
-                    var tri = cutMesh.Triangles[item];
-                    tri.UpdateIndex(sp.Path[i], mesh.Vertices.Count + i - 1);
-
-                    cutMesh.Triangles[item] = tri;
-                }
-
-                cutMesh.Vertices[mesh.Vertices.Count + i - 1] = v;
-            }
-
-            for (int i = 0; i < sp.Path.Count; i++)
-            {
-                boundaryVertices.Add(cutMesh.Vertices[sp.Path[i]]);
-            }
-
-            for (int i = cutMesh.Vertices.Count - 1; i > mesh.Vertices.Count - 1; i--)
-            {
-                boundaryVertices.Add(cutMesh.Vertices[i]);
-            }
-
-            var allBoundaries = new List<Dictionary<int, Vertex>>
-            {
-                boundaryVertices.ToDictionary(x => x.Id)
-            };
-
-
-            var discOutput = ParameterizeMeshToDisc(cutMesh, eParameterizationMethod.Harmonic, updateProgress);
-
-
-            return new CutSeamParameterizeOutput(cutMesh, discOutput, sp, boundaryVertices);
-        }
-
-        public static CutSeamParameterizeOutput ParameterizeMeshCutSeam(Mesh mesh, Action<int> updateProgress)
-        {
-            //TODO: this doesnt do any process regarding edges.
-            Graph g = new Graph(mesh);
-
-            var sample = FarthestPointSampling(g, 2, 0, (a) => { });
-            var sp = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1], true);
-
-            var boundaryVertices = new HashSet<Vertex>();
-
-            var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Id)).ToList();
-
-            var cutMesh = mesh.Copy();
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var newVertex = mesh.Vertices[sp.Path[i]];
-                newVertex.Id = cutMesh.Vertices.Count;
-                cutMesh.AddVertex(newVertex);
-            }
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var vi = cutMesh.Vertices[sp.Path[i]];
-                var vj = cutMesh.Vertices[mesh.Vertices.Count + i - 1];
-                var v1 = mesh.Vertices[sp.Path[i - 1]];
-
-                vi.Verts = new List<int>(vi.Verts);
-                vi.Tris = new List<int>(vi.Tris);
-
-                // This is problematish
-                vj.Verts = new List<int>(); //{ v1.Id, sp.Path[i + 1] };
-                vj.Tris = new List<int>();
-
-                var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
-                var tri = mesh.Triangles[commonTris[0]];
-                int triIndex = tri.Id;
-                if (i != 1)
-                {
-                    for (int j = 0; j < commonTris.Count; j++)
-                    {
-                        if (cutMesh.Triangles[commonTris[j]].ContainsId(mesh.Vertices.Count + i - 2))
-                        {
-                            tri = mesh.Triangles[commonTris[j]];
-                            triIndex = tri.Id;
-                            break;
-                        }
-                    }
-                }
-                var i3rd = tri.GetThirdVertexId(v1.Id, vi.Id);
-
-                vj.Tris.Add(tri.Id);
-                vi.Tris.Remove(tri.Id);
-
-                tri.UpdateIndex(vi.Id, vj.Id);
-                cutMesh.Triangles[triIndex] = tri;
-
-                while (i3rd != sp.Path[i + 1])
-                {
-                    vi.Verts.Remove(i3rd);
-                    vj.Verts.Add(i3rd);
-
-                    cutMesh.Vertices[i3rd].Verts.Remove(vi.Id);
-                    cutMesh.Vertices[i3rd].Verts.Add(vj.Id);
-
-                    commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
-                    commonTris.Remove(tri.Id);
-                    var next = commonTris[0];
-
-                    tri = cutMesh.Triangles[next];
-                    i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
-
-
-                    vi.Tris.Remove(next);
-                    vj.Tris.Add(next);
-                }
-
-                for (int j = 0; j < vj.Tris.Count; j++)
-                {
-                    tri = cutMesh.Triangles[vj.Tris[j]];
-                    tri.UpdateIndex(vi.Id, vj.Id);
-                    cutMesh.Triangles[vj.Tris[j]] = tri;
-                }
-
-                cutMesh.Vertices[vi.Id] = vi;
-                cutMesh.Vertices[vj.Id] = vj;
-
-            }
-            cutMesh.Vertices[sp.Path.Last()].Verts.Add(cutMesh.Vertices[cutMesh.Vertices.Count - 1].Id);
-            cutMesh.Vertices[sp.Path[0]].Verts.Add(mesh.Vertices.Count);
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var v = cutMesh.Vertices[mesh.Vertices.Count + i - 1];
-
-                if (i == 1)
-                {
-                    v.Verts.Add(sp.Path[0]);
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i].Id);
-                }
-                else if (i == sp.Path.Count - 2)
-                {
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i - 2].Id);
-                    v.Verts.Add(sp.Path.Last());
-                }
-                else
-                {
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i - 2].Id);
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i].Id);
-                }
-
-                foreach (var item in v.Tris)
-                {
-                    var tri = cutMesh.Triangles[item];
-                    tri.UpdateIndex(sp.Path[i], mesh.Vertices.Count + i - 1);
-
-                    cutMesh.Triangles[item] = tri;
-                }
-
-                cutMesh.Vertices[mesh.Vertices.Count + i - 1] = v;
-            }
-
-            for (int i = 0; i < sp.Path.Count; i++)
-            {
-                boundaryVertices.Add(cutMesh.Vertices[sp.Path[i]]);
-            }
-
-            for (int i = cutMesh.Vertices.Count - 1; i > mesh.Vertices.Count - 1; i--)
-            {
-                boundaryVertices.Add(cutMesh.Vertices[i]);
-            }
-
-            var allBoundaries = new List<Dictionary<int, Vertex>>
-            {
-                boundaryVertices.ToDictionary(x => x.Id)
-            };
-
-
-            var discOutput = ParameterizeMeshToDisc(cutMesh, eParameterizationMethod.Harmonic, updateProgress);
-
-
-            return new CutSeamParameterizeOutput(cutMesh, discOutput, sp, boundaryVertices);
-        }
-
-
         // This part is kind of chaos due to deleting triangles in tetrahedron sphere creation. I had to find indexes
         private static CutMeshOutput CutMesh(Mesh mesh)
         {
@@ -1467,35 +1292,30 @@ namespace Engine.Processing
                 vi.Verts = new List<int>(vi.Verts);
                 vi.Tris = new List<int>(vi.Tris);
 
-                // This is problematish
-                vj.Verts = new List<int>(); //{ v1.Id, sp.Path[i + 1] };
+                vj.Verts = new List<int>(); 
                 vj.Tris = new List<int>();
 
                 var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
-                int triIndex = mesh.GetTriangleIndex(commonTris[0]);
-                var tri = mesh.Triangles[triIndex]; 
 
-                //Triangles[commonTris[0]];
-                //int triIndex = tri.Id;
+                int triIndex = mesh.GetTriangleIndex(commonTris[0]);
+                var tri = mesh.Triangles[triIndex];
+
+
                 if (i != 1)
                 {
                     for (int j = 0; j < commonTris.Count; j++)
                     {
-                        var a = mesh.GetTriangleIndex(commonTris[j]);
-                        if (cutMesh.Triangles[a].ContainsId(mesh.Vertices.Count + i - 2))
+                        var id = mesh.GetTriangleIndex(commonTris[j]);
+                        if (cutMesh.Triangles[id].ContainsId(mesh.Vertices.Count + i - 2))
                         {
-                            triIndex = a;  //mesh.GetTriangleIndex(commonTris[j]);
+                            triIndex = id;  
                             tri = mesh.Triangles[triIndex];
-                            //tri = mesh.Triangles[commonTris[j]];
-                            //triIndex = tri.Id;
                             break;
                         }
                     }
                 }
                 var i3rd = tri.GetThirdVertexId(v1.Id, vi.Id);
 
-                //vj.Tris.Add(tri.Id);
-                //vi.Tris.Remove(tri.Id);
                 vi.Tris.Add(triIndex);
                 vj.Tris.Remove(triIndex);
 
@@ -1510,17 +1330,17 @@ namespace Engine.Processing
                     cutMesh.Vertices[i3rd].Verts.Remove(vi.Id);
                     cutMesh.Vertices[i3rd].Verts.Add(vj.Id);
 
+                    // Triangles
                     commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
                     commonTris.Remove(tri.Id);
-                    //var next = commonTris[0];
-                    var next = mesh.GetTriangleIndex(commonTris[0]);
+                    var nextTriId = mesh.GetTriangleIndex(commonTris[0]);
 
-                    tri = cutMesh.Triangles[next];
+                    tri = cutMesh.Triangles[nextTriId];
                     i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
+                    
+                    vi.Tris.Remove(nextTriId);
+                    vj.Tris.Add(nextTriId);
 
-
-                    vi.Tris.Remove(next);
-                    vj.Tris.Add(next);
                 }
 
                 for (int j = 0; j < vj.Tris.Count; j++)
@@ -1561,7 +1381,6 @@ namespace Engine.Processing
                 {
                     var tri = cutMesh.Triangles[item];
                     tri.UpdateIndex(sp.Path[i], mesh.Vertices.Count + i - 1);
-
                     cutMesh.Triangles[item] = tri;
                 }
 
@@ -1587,15 +1406,6 @@ namespace Engine.Processing
             return new CutMeshOutput(cutMesh, sp, allBoundaries);
         }
 
-        private static void DetectOverlaps(List<Triangle> triangles, List<Vertex> vertices)
-        {
-            for (int i = 0; i < triangles.Count; i++)
-            {
-                var v1 = vertices[triangles[i].V1];
-                var v2 = vertices[triangles[i].V2];
-                var v3 = vertices[triangles[i].V3];
-            }
-        }
     }
 
 

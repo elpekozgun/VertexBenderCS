@@ -6,9 +6,15 @@ using System.Threading.Tasks;
 
 namespace Engine.Core
 {
+    public enum eSphereGenerationType
+    {
+        Tetrahedron,
+        Cube
+    }
+
     public static class PrimitiveObjectFactory
     {
-        public static Mesh CubeIndexed(float size)
+        private static Mesh CubeIndexed(float size)
         {
             Mesh cube = new Mesh();
 
@@ -90,7 +96,7 @@ namespace Engine.Core
             return cube;
         }
 
-        public static Mesh Pyramid(float size, float height, OpenTK.Vector2 offset)
+        public static Mesh Pyramid(float size, float height, OpenTK.Vector2 offset, bool hasBottom = true)
         {
             Mesh pyramid = new Mesh();
 
@@ -178,18 +184,6 @@ namespace Engine.Core
 
             var a = OpenTK.Matrix3.CreateRotationY(OpenTK.MathHelper.PiOver4);
 
-            //var v1 = a * new OpenTK.Vector3(-size, 0, size);
-            //var v2 = a * new OpenTK.Vector3(size, 0, size);
-            //var v3 = a * new OpenTK.Vector3(size, 0, -size);
-            //var v4 = a * new OpenTK.Vector3(-size, 0, -size);
-            //var v5 = a * new OpenTK.Vector3(offset.X, height + offset.Y, offset.Z);
-
-            //pyramid.AddVertex(v1.X, v1.Y, v1.Z);
-            //pyramid.AddVertex(v2.X, v2.Y, v2.Z);
-            //pyramid.AddVertex(v3.X, v3.Y, v3.Z);
-            //pyramid.AddVertex(v4.X, v4.Y, v4.Z);
-            //pyramid.AddVertex(v5.X, v5.Y, v5.Z);
-
             pyramid.AddVertex(-size, 0, size);
             pyramid.AddVertex(size, 0, size);
             pyramid.AddVertex(size, 0, -size);
@@ -202,56 +196,6 @@ namespace Engine.Core
             pyramid.AddTriangle(3, 4, 0);
 
             pyramid.CalculateVertexNormals();
-
-
-            //OpenTK.Vector3 v1 = new OpenTK.Vector3(-size, 0, size);
-            //OpenTK.Vector3 v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
-            //OpenTK.Vector3 v3 = new OpenTK.Vector3(-size, 0, -size);
-            //var normal = OpenTK.Vector3.Cross
-            //(
-            //    v3 - v2,
-            //    v1 - v2
-            //).Normalized();
-            //pyramid.AddVertex(v1, normal);
-            //pyramid.AddVertex(v2, normal);
-            //pyramid.AddVertex(v3, normal);
-
-
-            //v1 = new OpenTK.Vector3(-size, 0, -size);
-            //v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
-            //v3 = new OpenTK.Vector3(size, 0, -size);
-            //normal = OpenTK.Vector3.Cross
-            //(
-            //    v3 - v2,
-            //    v1 - v2
-            //).Normalized();
-            //pyramid.AddVertex(v1, normal);
-            //pyramid.AddVertex(v2, normal);
-            //pyramid.AddVertex(v3, normal);
-
-            //v1 = new OpenTK.Vector3(size, 0, -size);
-            //v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
-            //v3 = new OpenTK.Vector3(size, 0, size);
-            //normal = OpenTK.Vector3.Cross
-            //(
-            //    v3 - v2,
-            //    v1 - v2
-            //).Normalized();
-            //pyramid.AddVertex(v1, normal);
-            //pyramid.AddVertex(v2, normal);
-            //pyramid.AddVertex(v3, normal);
-
-            //v1 = new OpenTK.Vector3(size, 0, size);
-            //v2 = new OpenTK.Vector3(offset.X, height, offset.Y);
-            //v3 = new OpenTK.Vector3(-size, 0, size);
-            //normal = OpenTK.Vector3.Cross
-            //(
-            //    v3 - v2,
-            //    v1 - v2
-            //).Normalized();
-            //pyramid.AddVertex(v1, normal);
-            //pyramid.AddVertex(v2, normal);
-            //pyramid.AddVertex(v3, normal);
 
             return pyramid;
         }
@@ -281,70 +225,9 @@ namespace Engine.Core
             return tetrahedron;
         }
 
-
-        public static Mesh Sphere2(float radius, int recursionLevel)
-        {
-            var sphere = Tetrahedron(radius);
-
-            int n = 1;
-            while (n <= recursionLevel)
-            {
-                DivideFace(ref sphere, radius / ( 2 * n));
-                n++;
-            }
-
-            for (int i = 0; i < sphere.Vertices.Count; i++)
-            {
-                var normal = sphere.Vertices[i].Coord.Normalized();
-
-                sphere.Vertices[i] = new Vertex(sphere.Vertices[i].Id, normal * radius, normal)
-                {
-                    Verts = sphere.Vertices[i].Verts,
-                    Edges = sphere.Vertices[i].Edges,
-                    Tris = sphere.Vertices[i].Tris
-                };
-            }
-            return sphere;
-        }
-
-        
-        private static void DivideFace(ref Mesh mesh, float size)
-        {
-            var copyMesh = mesh.Copy();
-
-
-            for (int i = 0; i < mesh.Triangles.Count; i++)
-            {
-                var item = mesh.Triangles[i];
-
-
-                copyMesh.AddVertex((mesh.Vertices[item.V1].Coord + mesh.Vertices[item.V2].Coord) * 0.5f, OpenTK.Vector3.Zero);
-                copyMesh.AddVertex((mesh.Vertices[item.V2].Coord + mesh.Vertices[item.V3].Coord) * 0.5f, OpenTK.Vector3.Zero);
-                copyMesh.AddVertex((mesh.Vertices[item.V3].Coord + mesh.Vertices[item.V1].Coord) * 0.5f, OpenTK.Vector3.Zero);
-
-                copyMesh.AddTriangle(item.V1, copyMesh.Vertices.Count - 3, copyMesh.Vertices.Count - 1);
-                copyMesh.AddTriangle(copyMesh.Vertices.Count - 3, item.V2, copyMesh.Vertices.Count - 2);
-                copyMesh.AddTriangle(copyMesh.Vertices.Count - 2, item.V3, copyMesh.Vertices.Count - 1);
-                copyMesh.AddTriangle(copyMesh.Vertices.Count - 3, copyMesh.Vertices.Count - 2, copyMesh.Vertices.Count - 1);
-
-                copyMesh.Vertices[item.V1].Verts.Remove(item.V2);
-                copyMesh.Vertices[item.V1].Verts.Remove(item.V3);
-
-                copyMesh.Vertices[item.V2].Verts.Remove(item.V1);
-                copyMesh.Vertices[item.V2].Verts.Remove(item.V3);
-
-                copyMesh.Vertices[item.V3].Verts.Remove(item.V1);
-                copyMesh.Vertices[item.V3].Verts.Remove(item.V2);
-            }
-
-
-            mesh = copyMesh.Copy();
-        }
-
         private static void DivideFace(ref Mesh mesh, float size, ref Dictionary<OpenTK.Vector3, Vertex> verts)
         {
             var copyMesh = mesh.Copy();
-
 
             foreach (var item in mesh.Triangles)
             {
@@ -354,10 +237,6 @@ namespace Engine.Core
                 var c1 = (mesh.Vertices[item.V2].Coord + mesh.Vertices[item.V3].Coord) * 0.5f;
                 var c2 = (mesh.Vertices[item.V1].Coord + mesh.Vertices[item.V3].Coord) * 0.5f;
                 var c3 = (mesh.Vertices[item.V2].Coord + mesh.Vertices[item.V1].Coord) * 0.5f;
-
-                //v1 = copyMesh.AddVertex(c1, OpenTK.Vector3.Zero);
-                //v2 = copyMesh.AddVertex(c2, OpenTK.Vector3.Zero);
-                //v3 = copyMesh.AddVertex(c3, OpenTK.Vector3.Zero);
 
                 if (!verts.ContainsKey(c1))
                 {
@@ -409,15 +288,18 @@ namespace Engine.Core
             mesh = copyMesh.Copy();
         }
 
-
-
-
-
-
-
-        public static Mesh Sphere(float radius, int recursionLevel)
+        public static Sphere Sphere(float radius, int recursionLevel, eSphereGenerationType type)
         {
-            var sphere = Tetrahedron(radius);
+            Mesh sphere = null;
+            var subdivision = recursionLevel;
+            if (type == eSphereGenerationType.Cube)
+            {
+                sphere = CubeIndexed(radius);
+            }
+            else
+            {
+                sphere = Tetrahedron(radius);
+            }
 
             var vertDict = new Dictionary<OpenTK.Vector3, Vertex>();
 
@@ -438,50 +320,31 @@ namespace Engine.Core
                 };
             }
 
-            return sphere;
+
+            return new Sphere(radius, subdivision, type, sphere);
         }
-
-
-        private static void DivideFace2(ref Mesh mesh, float size)
-        {
-            var copyMesh = mesh.Copy();
-
-            var newVertices = new List<Vertex>();
-            foreach (var edge in mesh.Edges)
-            {
-                var start = mesh.Vertices[edge.Start];
-                var end = mesh.Vertices[edge.End];
-
-                var v = copyMesh.AddVertex((start.Coord + end.Coord) * 0.5f, OpenTK.Vector3.Zero);
-
-                var edge1 = new Edge(copyMesh.Edges.Count, v.Id, start.Id, (v.Coord - start.Coord).Length);
-                copyMesh.AddEdge(v.Id, start.Id, (v.Coord - start.Coord).Length);
-                
-                var edge2 = new Edge(copyMesh.Edges.Count, v.Id, end.Id, (v.Coord - end.Coord).Length);
-                copyMesh.AddEdge(v.Id, end.Id, (v.Coord - end.Coord).Length);
-
-                if (newVertices.Count > 0)
-                {
-                    for (int i = 0; i < newVertices.Count; i++)
-                    {
-                        if (OpenTK.Vector3.Distance(newVertices[i].Coord, v.Coord) <= (float)Math.Sqrt(0.75f) * size)
-                        {
-                            copyMesh.AddEdge(v.Id, newVertices[i].Id, (v.Coord - newVertices[i].Coord).Length);
-                        }
-                    }
-                }
-
-                copyMesh.Edges.Remove(edge);
-                newVertices.Add(v);
-            }
-
-
-            mesh = copyMesh.Copy();
-        }
-
 
     }
 
+    public class Sphere : Mesh
+    {
+        public float Size { get; set; }
+        public int Subdivision { get; set; }
+        public eSphereGenerationType Type { get; set; }
+
+        public Sphere(float size, int subdivision, eSphereGenerationType type, Mesh mesh):base("asd")
+        {
+            this.Vertices = mesh.Vertices;
+            this.Triangles = mesh.Triangles;
+            this.Edges = mesh.Edges;
+            this.Name = mesh.Name;
+            this.hasDirtyTriangles = mesh.hasDirtyTriangles;
+
+            Size = size;
+            Subdivision = subdivision;
+            Type = type;
+        }
+    }
 }
 
 

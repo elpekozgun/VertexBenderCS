@@ -80,6 +80,18 @@ namespace Engine.Core
             var ret = id == Start ? End : Start;
             return ret;
         }
+
+        public void UpdateIndex(int id, int val)
+        {
+            if (Start == id)
+            {
+                Start = val;
+            }
+            else if(End == id)
+            {
+                End = val;
+            }
+        }
     }
 
     public struct Triangle
@@ -132,6 +144,8 @@ namespace Engine.Core
                 V3 = value;
             }
         }
+
+        
     }
 
     public class Mesh
@@ -153,6 +167,8 @@ namespace Engine.Core
         public List<Vertex> Vertices;
         public List<Triangle> Triangles;
         public List<Edge> Edges;
+
+        public bool hasDirtyTriangles { get; protected set; }
 
         private int _lastV;
         private int _lastE;
@@ -186,7 +202,6 @@ namespace Engine.Core
         {
             int id = _lastE++;
             //int id = Edges.Count;
-
             Edges.Add(new Edge(id, v1, v2, length));
 
             Vertices[v1].Edges.Add(id);
@@ -242,15 +257,18 @@ namespace Engine.Core
             v2.Tris.Remove(tri.Id);
             v3.Tris.Remove(tri.Id);
 
-
             Triangles.Remove(tri);
+            hasDirtyTriangles = true;
         }
 
         public int GetTriangleIndex(int t)
         {
-            var tri = Triangles.First(x => x.Id == t);
-
-            return Triangles.IndexOf(tri);
+            if (hasDirtyTriangles)
+            {
+                var tri = Triangles.First(x => x.Id == t);
+                return Triangles.IndexOf(tri);
+            }
+            return Triangles[t].Id;
         }
 
         internal void DivideEdge(Edge e, int id)
@@ -399,7 +417,9 @@ namespace Engine.Core
             return false;
         }
 
-        public List<Vertex> GetBoundaryVertices()
+
+        //TODO: O(V * T) bad.
+        public List<Vertex> GetBoundaryVertices2()
         {
             var boundaries = new HashSet<Vertex>();
 
@@ -432,7 +452,83 @@ namespace Engine.Core
             }
             return boundaries.ToList();
         }
-            
+
+
+        //TODO: O(E * T ) bad. 
+        public List<Edge> GetBoundaryEdges2()
+        {
+            var boundaries = new HashSet<Edge>();
+
+            for (int i = 0; i < Edges.Count; i++)
+            {
+                var e1 = Edges[i].Start;
+                var e2 = Edges[i].End;
+
+                int neighbor = 0;
+                for (int j = 0; j < Triangles.Count; j++)
+                {
+                    var t = Triangles[j];
+                    if (e1 == t.V1 || e1 == t.V2 || e1 == t.V3)
+                    {
+                        if (e2 == t.V1 || e2 == t.V2 || e2 == t.V3)
+                        {
+                            if (++neighbor == 2)
+                            {
+                                neighbor = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (neighbor == 1)
+                {
+                    boundaries.Add(Edges[i]);
+                }
+            }
+            return boundaries.ToList();
+        }
+
+        public List<Vertex> GetBoundaryVertices()
+        {
+            var boundaries = new HashSet<Vertex>();
+
+            for (int i = 0; i < Edges.Count; i++)
+            {
+                var e1 = Edges[i].Start;
+                var e2 = Edges[i].End;
+
+                var commonTris = Vertices[e1].Tris.Intersect(Vertices[e2].Tris).ToList().Count;
+
+                if (commonTris == 1)
+                {
+                    boundaries.Add(Vertices[e1]);
+                    boundaries.Add(Vertices[e2]);
+                }
+               
+            }
+            return boundaries.ToList();
+        }
+
+
+        public List<Edge> GetBoundaryEdges()
+        {
+            var boundaries = new HashSet<Edge>();
+
+            for (int i = 0; i < Edges.Count; i++)
+            {
+                var e1 = Edges[i].Start;
+                var e2 = Edges[i].End;
+
+                var commonTris = Vertices[e1].Tris.Intersect(Vertices[e2].Tris).ToList().Count;
+
+                if (commonTris == 1)
+                {
+                    boundaries.Add(Edges[i]);
+                }
+            }
+            return boundaries.ToList();
+        }
+
         public Mesh Copy()
         {
             Mesh mesh = new Mesh(this.Name + "-copy");
@@ -443,6 +539,7 @@ namespace Engine.Core
             mesh._lastE = this._lastE;
             mesh._lastV = this._lastV;
             mesh._lastT = this._lastT;
+            mesh.hasDirtyTriangles = this.hasDirtyTriangles;
 
             return mesh;
         }

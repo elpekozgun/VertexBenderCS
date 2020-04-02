@@ -28,11 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend5 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
+
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -70,8 +71,15 @@
             this.processMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessSP = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessGC = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuProcessDescriptor = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessParametrization = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.addMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddCube = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddTetrahedron = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddPyramid = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddBottomlessPyramid = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddSphereTetra = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuAddSphereCube = new System.Windows.Forms.ToolStripMenuItem();
             this.editMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -81,6 +89,7 @@
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.transformPanel = new System.Windows.Forms.Panel();
@@ -100,7 +109,12 @@
             this.labelPosition = new System.Windows.Forms.Label();
             this.numericPosX = new System.Windows.Forms.NumericUpDown();
             this.labelTransform = new System.Windows.Forms.Label();
-            this.menuProcessDescriptor = new System.Windows.Forms.ToolStripMenuItem();
+            this.spherePanel = new System.Windows.Forms.Panel();
+            this.numericSubdivision = new System.Windows.Forms.NumericUpDown();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.numericSize = new System.Windows.Forms.NumericUpDown();
+            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -115,6 +129,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPosZ)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosX)).BeginInit();
+            this.spherePanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSubdivision)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSize)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -172,48 +189,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisX.LabelStyle.Interval = 0D;
-            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.LabelStyle.Interval = 0D;
-            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea1.BackColor = System.Drawing.Color.White;
-            chartArea1.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea1);
-            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend1.ForeColor = System.Drawing.Color.Gainsboro;
-            legend1.InterlacedRowsColor = System.Drawing.Color.White;
-            legend1.Name = "Legend1";
-            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend1);
+            chartArea5.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea5.AxisX.LabelStyle.Interval = 0D;
+            chartArea5.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea5.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea5.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea5.AxisY.LabelStyle.Interval = 0D;
+            chartArea5.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea5.BackColor = System.Drawing.Color.White;
+            chartArea5.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea5);
+            legend5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend5.ForeColor = System.Drawing.Color.Gainsboro;
+            legend5.InterlacedRowsColor = System.Drawing.Color.White;
+            legend5.Name = "Legend1";
+            legend5.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend5);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series1.BackSecondaryColor = System.Drawing.Color.White;
-            series1.ChartArea = "isoCurve-Distances";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series1.Color = System.Drawing.Color.DodgerBlue;
-            series1.CustomProperties = "PointWidth=0.3";
-            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series1.IsVisibleInLegend = false;
-            series1.LabelBackColor = System.Drawing.Color.White;
-            series1.LabelBorderColor = System.Drawing.Color.White;
-            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series1.Legend = "Legend1";
-            series1.MarkerBorderColor = System.Drawing.Color.White;
-            series1.MarkerColor = System.Drawing.Color.White;
-            series1.MarkerSize = 3;
-            series1.Name = "IsoCurve";
-            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series1);
+            series5.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series5.BackSecondaryColor = System.Drawing.Color.White;
+            series5.ChartArea = "isoCurve-Distances";
+            series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series5.Color = System.Drawing.Color.DodgerBlue;
+            series5.CustomProperties = "PointWidth=0.3";
+            series5.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series5.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series5.IsVisibleInLegend = false;
+            series5.LabelBackColor = System.Drawing.Color.White;
+            series5.LabelBorderColor = System.Drawing.Color.White;
+            series5.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series5.Legend = "Legend1";
+            series5.MarkerBorderColor = System.Drawing.Color.White;
+            series5.MarkerColor = System.Drawing.Color.White;
+            series5.MarkerSize = 3;
+            series5.Name = "IsoCurve";
+            series5.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series5.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series5.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series5);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -369,8 +386,9 @@
             this.mainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileMenu,
             this.processMenu,
-            this.aboutMenu,
-            this.editMenu});
+            this.addMenu,
+            this.editMenu,
+            this.aboutMenu});
             this.mainMenu.Location = new System.Drawing.Point(0, 0);
             this.mainMenu.Name = "mainMenu";
             this.mainMenu.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
@@ -539,6 +557,14 @@
             this.menuProcessGC.Size = new System.Drawing.Size(244, 22);
             this.menuProcessGC.Text = "&Gaussian Curvature";
             // 
+            // menuProcessDescriptor
+            // 
+            this.menuProcessDescriptor.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuProcessDescriptor.Name = "menuProcessDescriptor";
+            this.menuProcessDescriptor.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
+            this.menuProcessDescriptor.Size = new System.Drawing.Size(244, 22);
+            this.menuProcessDescriptor.Text = "Sampling and &Descriptors";
+            // 
             // menuProcessParametrization
             // 
             this.menuProcessParametrization.ForeColor = System.Drawing.Color.MediumAquamarine;
@@ -547,13 +573,62 @@
             this.menuProcessParametrization.Size = new System.Drawing.Size(244, 22);
             this.menuProcessParametrization.Text = "&Parametrization";
             // 
-            // aboutMenu
+            // addMenu
             // 
-            this.aboutMenu.Font = new System.Drawing.Font("Ebrima", 9F);
-            this.aboutMenu.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.aboutMenu.Name = "aboutMenu";
-            this.aboutMenu.Size = new System.Drawing.Size(52, 20);
-            this.aboutMenu.Text = "&About";
+            this.addMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuAddCube,
+            this.menuAddTetrahedron,
+            this.menuAddPyramid,
+            this.menuAddBottomlessPyramid,
+            this.menuAddSphereTetra,
+            this.menuAddSphereCube});
+            this.addMenu.Font = new System.Drawing.Font("Ebrima", 9F);
+            this.addMenu.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.addMenu.Name = "addMenu";
+            this.addMenu.Size = new System.Drawing.Size(41, 20);
+            this.addMenu.Text = "&Add";
+            // 
+            // menuAddCube
+            // 
+            this.menuAddCube.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddCube.Name = "menuAddCube";
+            this.menuAddCube.Size = new System.Drawing.Size(183, 22);
+            this.menuAddCube.Text = "Cube";
+            // 
+            // menuAddTetrahedron
+            // 
+            this.menuAddTetrahedron.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddTetrahedron.Name = "menuAddTetrahedron";
+            this.menuAddTetrahedron.Size = new System.Drawing.Size(183, 22);
+            this.menuAddTetrahedron.Text = "Tetrahedron";
+            // 
+            // menuAddPyramid
+            // 
+            this.menuAddPyramid.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddPyramid.Name = "menuAddPyramid";
+            this.menuAddPyramid.Size = new System.Drawing.Size(183, 22);
+            this.menuAddPyramid.Text = "Pyramid";
+            // 
+            // menuAddBottomlessPyramid
+            // 
+            this.menuAddBottomlessPyramid.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddBottomlessPyramid.Name = "menuAddBottomlessPyramid";
+            this.menuAddBottomlessPyramid.Size = new System.Drawing.Size(183, 22);
+            this.menuAddBottomlessPyramid.Text = "Bottomless Pyramid";
+            // 
+            // menuAddSphereTetra
+            // 
+            this.menuAddSphereTetra.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddSphereTetra.Name = "menuAddSphereTetra";
+            this.menuAddSphereTetra.Size = new System.Drawing.Size(183, 22);
+            this.menuAddSphereTetra.Text = "Sphere (tetrahedron)";
+            // 
+            // menuAddSphereCube
+            // 
+            this.menuAddSphereCube.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuAddSphereCube.Name = "menuAddSphereCube";
+            this.menuAddSphereCube.Size = new System.Drawing.Size(183, 22);
+            this.menuAddSphereCube.Text = "Sphere (cube)";
             // 
             // editMenu
             // 
@@ -635,6 +710,14 @@
             this.toolStripMenuItem7.Name = "toolStripMenuItem7";
             this.toolStripMenuItem7.Size = new System.Drawing.Size(143, 22);
             this.toolStripMenuItem7.Text = "Select &All";
+            // 
+            // aboutMenu
+            // 
+            this.aboutMenu.Font = new System.Drawing.Font("Ebrima", 9F);
+            this.aboutMenu.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.aboutMenu.Name = "aboutMenu";
+            this.aboutMenu.Size = new System.Drawing.Size(52, 20);
+            this.aboutMenu.Text = "Abou&t";
             // 
             // statusBar
             // 
@@ -936,13 +1019,88 @@
             this.labelTransform.TabIndex = 0;
             this.labelTransform.Text = "Name";
             // 
-            // menuProcessDescriptor
+            // spherePanel
             // 
-            this.menuProcessDescriptor.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.menuProcessDescriptor.Name = "menuProcessDescriptor";
-            this.menuProcessDescriptor.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D3)));
-            this.menuProcessDescriptor.Size = new System.Drawing.Size(244, 22);
-            this.menuProcessDescriptor.Text = "Sampling and &Descriptors";
+            this.spherePanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
+            this.spherePanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.spherePanel.Controls.Add(this.numericSubdivision);
+            this.spherePanel.Controls.Add(this.label5);
+            this.spherePanel.Controls.Add(this.label6);
+            this.spherePanel.Controls.Add(this.numericSize);
+            this.spherePanel.Controls.Add(this.label7);
+            this.spherePanel.Location = new System.Drawing.Point(15, 605);
+            this.spherePanel.Name = "spherePanel";
+            this.spherePanel.Size = new System.Drawing.Size(226, 93);
+            this.spherePanel.TabIndex = 22;
+            this.spherePanel.Visible = false;
+            // 
+            // numericSubdivision
+            // 
+            this.numericSubdivision.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericSubdivision.Location = new System.Drawing.Point(90, 55);
+            this.numericSubdivision.Margin = new System.Windows.Forms.Padding(0);
+            this.numericSubdivision.Maximum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericSubdivision.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericSubdivision.Name = "numericSubdivision";
+            this.numericSubdivision.Size = new System.Drawing.Size(50, 22);
+            this.numericSubdivision.TabIndex = 10;
+            this.numericSubdivision.Tag = "rotX";
+            this.numericSubdivision.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(16, 55);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(71, 15);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Subdivision:";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(57, 26);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(30, 15);
+            this.label6.TabIndex = 2;
+            this.label6.Text = "Size:";
+            // 
+            // numericSize
+            // 
+            this.numericSize.DecimalPlaces = 3;
+            this.numericSize.Font = new System.Drawing.Font("Ebrima", 8F);
+            this.numericSize.Location = new System.Drawing.Point(90, 24);
+            this.numericSize.Margin = new System.Windows.Forms.Padding(0);
+            this.numericSize.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericSize.Name = "numericSize";
+            this.numericSize.Size = new System.Drawing.Size(50, 22);
+            this.numericSize.TabIndex = 1;
+            this.numericSize.Tag = "posX";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(3, 3);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(43, 15);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "Sphere";
             // 
             // MainWin
             // 
@@ -951,6 +1109,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1298, 905);
+            this.Controls.Add(this.spherePanel);
             this.Controls.Add(this.transformPanel);
             this.Controls.Add(this.statusBar);
             this.Controls.Add(this.toolBar);
@@ -984,6 +1143,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPosZ)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericPosX)).EndInit();
+            this.spherePanel.ResumeLayout(false);
+            this.spherePanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSubdivision)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSize)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1060,6 +1223,19 @@
         private System.Windows.Forms.Label labelXpos;
         private System.Windows.Forms.ToolStripMenuItem menuIsoCurveExport;
         private System.Windows.Forms.ToolStripMenuItem menuProcessDescriptor;
+        private System.Windows.Forms.ToolStripMenuItem addMenu;
+        private System.Windows.Forms.ToolStripMenuItem menuAddCube;
+        private System.Windows.Forms.ToolStripMenuItem menuAddTetrahedron;
+        private System.Windows.Forms.ToolStripMenuItem menuAddPyramid;
+        private System.Windows.Forms.ToolStripMenuItem menuAddBottomlessPyramid;
+        private System.Windows.Forms.ToolStripMenuItem menuAddSphereTetra;
+        private System.Windows.Forms.ToolStripMenuItem menuAddSphereCube;
+        private System.Windows.Forms.Panel spherePanel;
+        private System.Windows.Forms.NumericUpDown numericSubdivision;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.NumericUpDown numericSize;
+        private System.Windows.Forms.Label label7;
     }
 }
 

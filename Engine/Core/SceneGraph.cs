@@ -17,6 +17,8 @@ namespace Engine.Core
 
         public bool IsBlinnPhong;
 
+        public Transform SelectedItem;
+
         public SceneGraph()
         {
             SceneItems = new List<Transform>();
@@ -33,6 +35,11 @@ namespace Engine.Core
         {
             SceneItems.Add(item);
             OnItemAdded?.Invoke(item);
+        }
+
+        public void UpdateObject(Transform item)
+        {
+            
         }
 
         public void DeleteObject(Transform item)
