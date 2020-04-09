@@ -23,7 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -68,6 +68,7 @@
     <Compile Include="Core\CameraNew.cs" />
     <Compile Include="Core\DirectionalLight.cs" />
     <Compile Include="Core\IComponent.cs" />
+    <Compile Include="Core\KretzTag.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\Mesh.cs" />
     <Compile Include="Core\ObjectLoader.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="GLApi\LineRenderer.cs" />
     <Compile Include="GLApi\Material.cs" />
     <Compile Include="GLApi\MeshRenderer.cs" />
+    <Compile Include="GLApi\PointCloudRenderer.cs" />
     <Compile Include="GLApi\PrimitiveRenderer.cs" />
     <Compile Include="GLApi\Renderer.cs" />
     <Compile Include="GLApi\Shader.cs" />

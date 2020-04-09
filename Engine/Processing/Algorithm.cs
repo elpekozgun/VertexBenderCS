@@ -814,10 +814,10 @@ namespace Engine.Processing
             box.Bottom = 0;
 
             var initialItem = vertices.First();
-            var initialOffset = Math.PI - Vector3.CalculateAngle
+            var initialOffset = Vector3.CalculateAngle
             (
-                new Vector3(initialItem.Value.Coord.X, 0.0f, initialItem.Value.Coord.Z),
-                new Vector3(box.Center.X, 0.0f, box.Center.Z)
+                new Vector3(initialItem.Value.Coord.X - box.Center.X, 0.0f, initialItem.Value.Coord.Z - box.Center.Z),
+                Vector3.UnitX
             );
             
 
@@ -1219,47 +1219,110 @@ namespace Engine.Processing
             List<Vector3> normals = new List<Vector3>();
             List<Vector3> centerList = new List<Vector3>();
 
-            var radius = box.LongestDimension * 0.5f;
-            
-            var dist = float.MinValue;
             for (int i = 0; i < mesh.Vertices.Count; i++)
             {
-                dist = (mesh.Vertices[i].Coord - meshCenter).Length > dist ? (mesh.Vertices[i].Coord - meshCenter).Length : dist;
+                var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
+                spherePoints.Add(meshCenter + normal * box.Size);
+                normals.Add(normal);
             }
 
             for (int j = 0; j < iterationCount; j++)
             {
-                spherePoints.Clear();
-                normals.Clear();
 
+                var sphereCenter = Vector3.Zero;
+                var totalTriArea = 0.0f;
+
+                for (int i = 0; i < spherePoints.Count; i++)
+                {
+                    var weight = 0.0f;
+                    foreach (var triId in mesh.Vertices[i].Tris)
+                    {
+                        var tri = mesh.Triangles[triId];
+                        var triArea = mesh.TriangleArea(spherePoints[tri.V1], spherePoints[tri.V2], spherePoints[tri.V3]);
+                        //var triArea = mesh.TriangleArea(tri);
+                        
+                        
+                        weight += triArea;
+                    }
+                    totalTriArea += weight;
+                    sphereCenter += (spherePoints[i] * weight);
+                }
+                meshCenter = sphereCenter / (totalTriArea);
+                centerList.Add(meshCenter);
 
                 for (int i = 0; i < mesh.Vertices.Count; i++)
                 {
-                    var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
-                    spherePoints.Add((meshCenter + normal * dist));
+                    var normal = (spherePoints[i] - meshCenter).Normalized();
+                    spherePoints[i] = (meshCenter + normal * box.Size);
                     normals.Add(normal);
                 }
 
-                if (j < iterationCount - 1)
-                {
-                    var sphereCenter = Vector3.Zero;
-                    var weight = 0;
-                    for (int i = 0; i < spherePoints.Count; i++)
-                    {
-                        sphereCenter += spherePoints[i];
-                        weight += mesh.Vertices[i].Verts.Count;
-                    }
-                    sphereCenter /= spherePoints.Count;
-
-                    //meshCenter = (sphereCenter - meshCenter) / radius;
-
-                    meshCenter = sphereCenter;
-                    centerList.Add(meshCenter);
-                }
-
-
             }
 
+            //for (int j = 0; j < iterationCount; j++)
+            //{
+
+            //    //var dist = float.MinValue;
+            //    //for (int i = 0; i < mesh.Vertices.Count; i++)
+            //    //{
+            //    //    dist = (mesh.Vertices[i].Coord - meshCenter).Length > dist ? (mesh.Vertices[i].Coord - meshCenter).Length : dist;
+            //    //}
+
+            //    spherePoints.Clear();
+            //    normals.Clear();
+
+
+            //    for (int i = 0; i < mesh.Vertices.Count; i++)
+            //    {
+            //        var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
+            //        spherePoints.Add(meshCenter + normal * box.Size);
+            //        normals.Add(normal);
+            //    }
+
+            //    var sphereCenter = Vector3.Zero;
+            //    var totalTriArea = 0.0f;
+
+            //    for (int i = 0; i < spherePoints.Count; i++)
+            //    {
+            //        var weight = 0.0f;
+            //        foreach (var triId in mesh.Vertices[i].Tris)
+            //        {
+            //            var tri = mesh.Triangles[triId];
+            //            //var triArea = mesh.TriangleArea(spherePoints[tri.V1], spherePoints[tri.V2], spherePoints[tri.V3]);
+            //            var triArea = mesh.TriangleArea(tri);
+            //            var triNormal = mesh.CalculateTriangleNormals(spherePoints[tri.V1], spherePoints[tri.V2], spherePoints[tri.V3]);
+            //            var or = Vector3.Dot(spherePoints[i] - meshCenter, triNormal);
+            //            if (or < 0)
+            //            {
+            //                weight += 1 * (triArea);
+            //            }
+            //            else
+            //            {
+            //                weight += (triArea);
+            //            }
+            //        }
+            //        totalTriArea += weight;
+            //        sphereCenter += (spherePoints[i] * weight);
+            //    }
+            //    meshCenter = sphereCenter / (totalTriArea);
+            //    centerList.Add(meshCenter);
+
+            //    //var sphereCenter = meshCenter;
+
+            //    //for (int i = 0; i < spherePoints.Count; i++)
+            //    //{
+            //    //    var weight = 0.0f;
+            //    //    foreach (var triId in mesh.Vertices[i].Tris)
+            //    //    {
+            //    //        weight += (mesh.TriangleArea(triId) / maxTriArea);
+            //    //    }
+            //    //    sphereCenter += spherePoints[i] * weight;
+            //    //}
+            //    //sphereCenter /= ( spherePoints.Count);
+
+            //    //meshCenter = sphereCenter;
+            //    //centerList.Add(meshCenter);
+            //}
 
             _watch.Stop();
             Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
@@ -1267,151 +1330,7 @@ namespace Engine.Processing
             return new SphereParameterizeOutput(spherePoints, normals, centerList );
         }
 
-        // This part is kind of chaos due to deleting triangles in tetrahedron sphere creation. I had to find indexes
-        private static CutMeshOutput CutMesh2(Mesh mesh)
-        {
-            Graph g = new Graph(mesh);
-
-            var sample = FarthestPointSampling(g, 2, 0, (a) => { });
-            var sp = DijkstraMinHeap(mesh, sample.SampleIndices[0], sample.SampleIndices[1], true);
-
-            var boundaryVertices = new HashSet<Vertex>();
-
-            var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Id)).ToList();
-
-            var cutMesh = mesh.Copy();
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var newVertex = mesh.Vertices[sp.Path[i]];
-                newVertex.Id = cutMesh.Vertices.Count;
-                cutMesh.AddVertex(newVertex);
-            }
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var vi = cutMesh.Vertices[sp.Path[i]];
-                var vj = cutMesh.Vertices[mesh.Vertices.Count + i - 1];
-                var v1 = mesh.Vertices[sp.Path[i - 1]];
-
-                vi.Verts = new List<int>(vi.Verts);
-                vi.Tris = new List<int>(vi.Tris);
-
-                vj.Verts = new List<int>(); 
-                vj.Tris = new List<int>();
-
-                var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
-
-                int triIndex = mesh.GetTriangleIndex(commonTris[0]);
-                var tri = mesh.Triangles[triIndex];
-
-
-                if (i != 1)
-                {
-                    for (int j = 0; j < commonTris.Count; j++)
-                    {
-                        var id = mesh.GetTriangleIndex(commonTris[j]);
-                        if (cutMesh.Triangles[id].ContainsId(mesh.Vertices.Count + i - 2))
-                        {
-                            triIndex = id;  
-                            tri = mesh.Triangles[triIndex];
-                            break;
-                        }
-                    }
-                }
-                var i3rd = tri.GetThirdVertexId(v1.Id, vi.Id);
-
-                vi.Tris.Add(triIndex);
-                vj.Tris.Remove(triIndex);
-
-                tri.UpdateIndex(vi.Id, vj.Id);
-                cutMesh.Triangles[triIndex] = tri;
-
-                while (i3rd != sp.Path[i + 1])
-                {
-                    vi.Verts.Remove(i3rd);
-                    vj.Verts.Add(i3rd);
-
-                    cutMesh.Vertices[i3rd].Verts.Remove(vi.Id);
-                    cutMesh.Vertices[i3rd].Verts.Add(vj.Id);
-
-                    // Triangles
-                    commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
-                    commonTris.Remove(tri.Id);
-                    var nextTriId = mesh.GetTriangleIndex(commonTris[0]);
-
-                    tri = cutMesh.Triangles[nextTriId];
-                    i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
-                    
-                    vi.Tris.Remove(nextTriId);
-                    vj.Tris.Add(nextTriId);
-
-                }
-
-                for (int j = 0; j < vj.Tris.Count; j++)
-                {
-                    tri = cutMesh.Triangles[vj.Tris[j]];
-                    tri.UpdateIndex(vi.Id, vj.Id);
-                    cutMesh.Triangles[vj.Tris[j]] = tri;
-                }
-
-                cutMesh.Vertices[vi.Id] = vi;
-                cutMesh.Vertices[vj.Id] = vj;
-
-            }
-            cutMesh.Vertices[sp.Path.Last()].Verts.Add(cutMesh.Vertices[cutMesh.Vertices.Count - 1].Id);
-            cutMesh.Vertices[sp.Path[0]].Verts.Add(mesh.Vertices.Count);
-
-            for (int i = 1; i < sp.Path.Count - 1; i++)
-            {
-                var v = cutMesh.Vertices[mesh.Vertices.Count + i - 1];
-
-                if (i == 1)
-                {
-                    v.Verts.Add(sp.Path[0]);
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i].Id);
-                }
-                else if (i == sp.Path.Count - 2)
-                {
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i - 2].Id);
-                    v.Verts.Add(sp.Path.Last());
-                }
-                else
-                {
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i - 2].Id);
-                    v.Verts.Add(cutMesh.Vertices[mesh.Vertices.Count + i].Id);
-                }
-
-                foreach (var item in v.Tris)
-                {
-                    var tri = cutMesh.Triangles[item];
-                    tri.UpdateIndex(sp.Path[i], mesh.Vertices.Count + i - 1);
-                    cutMesh.Triangles[item] = tri;
-                }
-
-                cutMesh.Vertices[mesh.Vertices.Count + i - 1] = v;
-            }
-
-            for (int i = 0; i < sp.Path.Count; i++)
-            {
-                boundaryVertices.Add(cutMesh.Vertices[sp.Path[i]]);
-            }
-
-            for (int i = cutMesh.Vertices.Count - 1; i > mesh.Vertices.Count - 1; i--)
-            {
-                boundaryVertices.Add(cutMesh.Vertices[i]);
-            }
-
-            var allBoundaries = new List<Dictionary<int, Vertex>>
-            {
-                boundaryVertices.ToDictionary(x => x.Id)
-            };
-
-
-            return new CutMeshOutput(cutMesh, sp, allBoundaries);
-        }
-
-        // This part is kind of chaos due to deleting triangles in tetrahedron sphere creation. I had to find indexes
+        //This part is kind of chaos due to deleting triangles in tetrahedron sphere creation. I had to find indexes
         private static CutMeshOutput CutMesh(Mesh mesh)
         {
             Graph g = new Graph(mesh);

@@ -12,7 +12,7 @@ using System.Drawing.Imaging;
 namespace Engine.GLApi
 {
 
-    public class PrimitiveRenderer : Transform, IDisposable, IRenderable
+    public class PointCloudRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
@@ -29,7 +29,7 @@ namespace Engine.GLApi
 
         public Vector4 Color { get; set; }
 
-        private void ExtractVertices(Mesh mesh)
+        private void ExtractVertices(Mesh mesh, List<Vector3> intensity)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
             for (int i = 0; i < mesh.Vertices.Count; i++)
@@ -38,23 +38,22 @@ namespace Engine.GLApi
                 {
                     Coord = mesh.Vertices[i].Coord,
                     Normal = mesh.Vertices[i].Normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = intensity[i]
                 };
             }
         }
 
-        public PrimitiveRenderer(Mesh mesh, string name = "")
+        public PointCloudRenderer(Mesh mesh, List<Vector3> intensity, string name = "")
             : base(name)
         {
-            ExtractVertices(mesh);
-            DiffuseTexture = Texture.LoadTexture(@"Resources\Image\Blank1024.png", eTextureType.Diffuse);
+            ExtractVertices(mesh, intensity);
             Setup();
             _initialized = true;
             Mesh = mesh;
             Shader = Shader.DefaultShader;
         }
 
-        public PrimitiveRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
+        public PointCloudRenderer(Mesh mesh, List<Vector3> intensity, Shader shader, string name = "") : this(mesh, intensity, name)
         {
             Shader = shader;
         }
@@ -101,72 +100,25 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
-            GL.Disable(EnableCap.CullFace);
+            var unlit = Shader.DefaultUnlitShader;
 
-            if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
-            {
-                Shader.Use();
-                Shader.SetInt("material.diffuse", (int)TextureUnit.Texture0);
-                Shader.SetMat4("Model", ModelMatrix);
-                Shader.SetMat4("View", cam.View);
-                Shader.SetMat4("Projection", cam.Projection);
-                Shader.SetVec4("Color", Color);
+            unlit.Use();
+            unlit.SetMat4("Model", ModelMatrix);
+            unlit.SetMat4("View", cam.View);
+            unlit.SetMat4("Projection", cam.Projection);
+            unlit.SetVec4("Color", Color);
 
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                //GL.Enable(EnableCap.PolygonSmooth);
+            var temp = Shader;
+            Shader = unlit;
 
-                GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length); 
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
+            GL.PointSize(1);
 
-            }
-            if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
-            {
-                var unlit = Shader.DefaultUnlitShader;
-
-                unlit = Shader.DefaultUnlitShader;
-                unlit.Use();
-                unlit.SetMat4("Model", ModelMatrix);
-                unlit.SetMat4("View", cam.View);
-                unlit.SetMat4("Projection", cam.Projection);
-                unlit.SetVec4("Color", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-                var temp = Shader;
-                Shader = unlit;
-
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.LineWidth(2.0f);
-                //GL.Enable(EnableCap.LineSmooth);
-
-                GL.DrawArrays(PrimitiveType.LineStrip, 0, vertices.Length); // vertices.Length);
-                Shader = temp;
-            }
-            if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
-            {
-                var unlit = Shader.DefaultUnlitShader;
-
-                unlit.Use();
-                unlit.SetMat4("Model", ModelMatrix);
-                unlit.SetMat4("View", cam.View);
-                unlit.SetMat4("Projection", cam.Projection);
-                //unlit.SetVec4("Color", new Vector4(1.0f, 1.0f, 0.0f, 1.0f));
-
-                var temp = Shader;
-                Shader = unlit;
-
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
-                GL.PointSize(1);
-
-                GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
-                Shader = temp;
-            }
-
-            GL.Enable(EnableCap.CullFace);
+            GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
+            Shader = temp;
 
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
-
-            //int diffuse = 1;
-            //int specular = 1;
-            //int normal = 1;
-            //int height = 1;
 
         }
 

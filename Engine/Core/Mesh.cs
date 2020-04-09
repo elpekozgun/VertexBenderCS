@@ -308,6 +308,11 @@ namespace Engine.Core
             return -Vector3.Cross(v2 - v1, v3 - v1).Normalized();
         }
 
+        internal Vector3 CalculateTriangleNormals(Vector3 v1, Vector3 v2, Vector3 v3)
+        {
+            return -Vector3.Cross(v2 - v1, v3 - v1).Normalized();
+        }
+
         internal void CalculateVertexNormals()
         {
             for (int i = 0; i < Vertices.Count; i++)
@@ -317,7 +322,8 @@ namespace Engine.Core
                 Vector3 normal = Vector3.Zero;
                 for (int j = 0; j < Vertices[i].Tris.Count; j++)
                 {
-                    normal += CalculateTriangleNormals(Triangles[v.Tris[j]]);
+                    //normal += CalculateTriangleNormals(Triangles[v.Tris[j]]) * TriangleArea(Triangles[v.Tris[j]]);
+                    normal += CalculateTriangleNormals(Triangles[v.Tris[j]]) * GetTriangleAngle(v.Tris[j], v.Id);
                 }
 
                 v.Normal = normal.Normalized();
@@ -329,6 +335,17 @@ namespace Engine.Core
         internal float TriangleArea(Vector3 v1, Vector3 v2, Vector3 v3)
         {
             return Vector3.Cross(v2 - v1, v2 - v3).Length / 2;
+        }
+
+        internal float TriangleArea(int id)
+        {
+            var tri = Triangles[id];
+            return TriangleArea(Vertices[tri.V1].Coord, Vertices[tri.V2].Coord, Vertices[tri.V3].Coord);
+        }
+
+        internal float TriangleArea(Triangle tri)
+        {
+            return TriangleArea(Vertices[tri.V1].Coord, Vertices[tri.V2].Coord, Vertices[tri.V3].Coord);
         }
 
         private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
@@ -418,76 +435,6 @@ namespace Engine.Core
         }
 
 
-        //TODO: O(V * T) bad.
-        public List<Vertex> GetBoundaryVertices2()
-        {
-            var boundaries = new HashSet<Vertex>();
-
-            for (int i = 0; i < Edges.Count; i++)
-            {
-                var e1 = Edges[i].Start;
-                var e2 = Edges[i].End;
-
-                int neighbor = 0;
-                for (int j = 0; j < Triangles.Count; j++)
-                {
-                    var t = Triangles[j];
-                    if (e1 == t.V1 || e1 == t.V2 || e1 == t.V3)
-                    {
-                        if (e2 == t.V1 || e2 == t.V2 || e2 == t.V3)
-                        {
-                            if (++neighbor == 2)
-                            {
-                                neighbor = 0;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (neighbor == 1)
-                {
-                    boundaries.Add(Vertices[e1]);
-                    boundaries.Add(Vertices[e2]);
-                }
-            }
-            return boundaries.ToList();
-        }
-
-
-        //TODO: O(E * T ) bad. 
-        public List<Edge> GetBoundaryEdges2()
-        {
-            var boundaries = new HashSet<Edge>();
-
-            for (int i = 0; i < Edges.Count; i++)
-            {
-                var e1 = Edges[i].Start;
-                var e2 = Edges[i].End;
-
-                int neighbor = 0;
-                for (int j = 0; j < Triangles.Count; j++)
-                {
-                    var t = Triangles[j];
-                    if (e1 == t.V1 || e1 == t.V2 || e1 == t.V3)
-                    {
-                        if (e2 == t.V1 || e2 == t.V2 || e2 == t.V3)
-                        {
-                            if (++neighbor == 2)
-                            {
-                                neighbor = 0;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (neighbor == 1)
-                {
-                    boundaries.Add(Edges[i]);
-                }
-            }
-            return boundaries.ToList();
-        }
-
         public List<Vertex> GetBoundaryVertices()
         {
             var boundaries = new HashSet<Vertex>();
@@ -508,7 +455,6 @@ namespace Engine.Core
             }
             return boundaries.ToList();
         }
-
 
         public List<Edge> GetBoundaryEdges()
         {

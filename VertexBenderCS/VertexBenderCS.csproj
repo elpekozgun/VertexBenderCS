@@ -78,6 +78,12 @@
     <Compile Include="Forms\FrmProcess.Designer.cs">
       <DependentUpon>FrmProcess.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\RangeSlider.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\RangeSlider.Designer.cs">
+      <DependentUpon>RangeSlider.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SceneNode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

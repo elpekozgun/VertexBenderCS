@@ -140,6 +140,7 @@ namespace VertexBenderCS.Forms
             GLControl.MouseWheel += GLControl_MouseWheel;
             
             menuImportOff.Click += MenuImport_Click;
+            menuImportVol.Click += MenuImportVol_Click;
 
             menuProcessSP.Click += menuProcessSP_Click;
             menuProcessGC.Click += menuProcessGC_Click;
@@ -176,7 +177,6 @@ namespace VertexBenderCS.Forms
         }
 
 
-
         private void SceneGraphTree_LostFocus(object sender, EventArgs e)
         {
             sceneGraphTree.HideSelection = false;
@@ -184,19 +184,19 @@ namespace VertexBenderCS.Forms
 
         private void StarTest()
         {
-            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\MeshsegBenchmark-1.0\data\off\169-2.off"), "test");
+            var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\star-shaped-meshes\teddy.off"), "test");
+            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\MeshsegBenchmark-1.0\data\off\169-2.off"), "test");
             //mesh.Scale = Vector3.One * 10;
 
-            _activeMesh = mesh;
+            //_activeMesh = mesh;
 
             var center = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "center");
             center.Position = mesh.Mesh.Center(); //- new Vector3(0, 0.04f, 0);
 
 
             center.Color = new Vector4(1, 0, 0, 1);
-            _SceneGraph.AddObject(center);
 
-            var m2 = Algorithm.SphereTest(mesh.Mesh, 10);
+            var m2 = Algorithm.SphereTest(mesh.Mesh, 250);
             var m3 = Algorithm.SphereTest(mesh.Mesh, 1);
 
             var sphere2 = new Mesh();
@@ -207,28 +207,30 @@ namespace VertexBenderCS.Forms
                 sphere2.Vertices.Add(new Vertex(i, m2.PointsOnSphere[i], m2.Normals[i]));
                 sphere3.Vertices.Add(new Vertex(i, m3.PointsOnSphere[i], m3.Normals[i]));
             }
-            sphere2.Triangles = _activeMesh.Mesh.Triangles;
-            sphere3.Triangles = _activeMesh.Mesh.Triangles;
+            sphere2.Triangles = mesh.Mesh.Triangles;
+            sphere3.Triangles = mesh.Mesh.Triangles;
 
             var renderer2 = new MeshRenderer(sphere2, "sphere2")
             {
                 Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                Position = _activeMesh.Position + new Vector3(0.05f, 0.0f, 0.0f),
+                Position = mesh.Position + new Vector3(0.05f, 0.0f, 0.0f),
                 //Scale = mesh.Scale
             };
+            _SceneGraph.AddObject(renderer2);
 
             var renderer3 = new MeshRenderer(sphere3, "sphere3")
             {
                 Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                Position = _activeMesh.Position + new Vector3(0.1f, 0.0f, 0.0f),
+                Position = mesh.Position + new Vector3(0.1f, 0.0f, 0.0f),
                 // Scale = mesh.Scale
             };
+            //_SceneGraph.AddObject(renderer3);
 
             for (int i = 0; i < m2.Center.Count; i++)
             {
                 var c2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "c2");
                 c2.Position = m2.Center[i];
-                c2.Color = new Vector4(1, 1, 0, 1);
+                c2.Color = new Vector4(0, (i /(float)(m2.Center.Count - 1)), 0, 1);
                 _SceneGraph.AddObject(c2);
             }
 
@@ -245,15 +247,26 @@ namespace VertexBenderCS.Forms
 
 
             _SceneGraph.AddObject(mesh);
-            _SceneGraph.AddObject(renderer2);
-            _SceneGraph.AddObject(renderer3);
+            _activeMesh = mesh;
+            _SceneGraph.AddObject(center);
         }
 
         private void SetupTestScene()
         {
-            var origin = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "origin");
-            origin.Color = Vector4.One;
-            _SceneGraph.AddObject(origin);
+            //ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
+            var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out List<Vector3> colors);
+            var pointCloudRenderer = new PointCloudRenderer(pointCloud, colors, "pointcloud");
+            Vector3[] colorBuffer = colors.ToArray();
+            //pointCloudRenderer.SetColorBuffer(colorBuffer);
+            _SceneGraph.AddObject(pointCloudRenderer);
+            //ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\noncartesian.vol");
+
+
+
+            //var origin = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "origin");
+            //origin.Color = Vector4.One;
+            //_SceneGraph.AddObject(origin);
+            //StarTest();
 
             //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
             //_activeMesh = mesh;
@@ -626,7 +639,7 @@ namespace VertexBenderCS.Forms
 
         private void GLControl_MouseWheel(object sender,  System.Windows.Forms.MouseEventArgs e)
         {
-            _cameraController.Zoom(e.Delta);
+            _cameraController.Zoom(e.Delta, KeyState.IsKeyDown(OpenTK.Input.Key.ShiftLeft));
         }
 
         private void GLControl_MouseMove(object sender, MouseEventArgs e)
@@ -727,7 +740,7 @@ namespace VertexBenderCS.Forms
 
 #endregion
 
-#region Scene Graph
+        #region Scene Graph
 
         private void SceneGraph_OnSceneCleared()
         {
@@ -881,9 +894,9 @@ namespace VertexBenderCS.Forms
         }
 
 
-#endregion
+        #endregion
 
-#region Component Panel
+        #region Component Panel
 
         public void InitTransformPanel()
         {
@@ -993,9 +1006,9 @@ namespace VertexBenderCS.Forms
             }
         }
 
-#endregion
+        #endregion
 
-#region Drawing
+        #region Drawing
 
         private void Render()
         {
@@ -1033,9 +1046,9 @@ namespace VertexBenderCS.Forms
             chartIsoCurve.Show();
         }
 
-#endregion
+        #endregion
 
-#region Menu Items
+        #region Menu Items
 
         private void menuProcessSP_Click(object sender, EventArgs e)
         {
@@ -1144,6 +1157,28 @@ namespace VertexBenderCS.Forms
             }
         }
 
+        private void MenuImportVol_Click(object sender, EventArgs e)
+        {
+            var d = new OpenFileDialog();
+            d.ValidateNames = true;
+            d.Filter = "VOL files (*.vol)|*.vol|All Files(*.*)|*.* ";
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                var v = d.FileName.Substring(d.FileName.Length - 4);
+                if (v.ToLower() == ".vol")
+                {
+                    var split = d.FileName.Split(new char[] { '\\' });
+                    var name = split[split.Length - 1];
+
+                    //_SceneGraph.Clean();
+                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<Vector3> intensities);
+                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, intensities, name);
+                    _SceneGraph.AddObject(pointCloudRenderer);
+                }
+            }
+        }
+
+
         private void MenuAddSphereTetra_Click(object sender, EventArgs e)
         {
             var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Tetrahedron);
@@ -1187,14 +1222,14 @@ namespace VertexBenderCS.Forms
 
         private void MenuAddCube_Click(object sender, EventArgs e)
         {
-            var cube = new MeshRenderer(PrimitiveObjectFactory.Cube(1), "Cube");
+            var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(1), "Cube");
             _SceneGraph.AddObject(cube);
             
         }
 
-#endregion
+        #endregion
 
-#region Toolbar
+        #region Toolbar
 
         private void ToolbarProjectionMode_Click(object sender, EventArgs e)
         {
@@ -1245,7 +1280,7 @@ namespace VertexBenderCS.Forms
             }
         }
 
-#endregion
+        #endregion
 
 
     }
