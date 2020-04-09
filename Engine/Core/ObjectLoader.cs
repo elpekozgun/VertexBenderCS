@@ -73,7 +73,7 @@ namespace Engine.Core
             return null;
         }
 
-        public static Mesh LoadVol(string path, out List<OpenTK.Vector3> colorBuffer)
+        public static Mesh LoadVol(string path, out List<int> colorBuffer)
         {
             string expectedHeader = "KRETZFILE 1.0";
 
@@ -81,7 +81,7 @@ namespace Engine.Core
             var headerTexts = firstLine.Split(new char[] {' '},StringSplitOptions.RemoveEmptyEntries);
             var header = $"{headerTexts[0]} {headerTexts[1]}";
 
-            colorBuffer = new List<OpenTK.Vector3>();
+            colorBuffer = new List<int>();
             if (expectedHeader != header)
             {
                 Logger.Log("Not a kretzfile");
@@ -239,7 +239,6 @@ namespace Engine.Core
                                 for (int x = 0; x < dimensionX; x++)
                                 {
                                     var intensity = buffer[startIndex + (z * dimensionX * dimensionY) + (y * dimensionX) + x];
-                                    if (intensity > 68 && intensity < 255)
                                     {
                                         intensities.Add(new KeyValuePair<OpenTK.Vector3, int>(new OpenTK.Vector3(x, y, z), intensity));
                                     }
@@ -265,7 +264,7 @@ namespace Engine.Core
                 for (int i = 0; i < intensities.Count; i++)
                 {
                     mesh.AddVertex(new Vertex(i, intensities[i].Key * -(float)resolution / (float)cartesianSpacing));
-                    colorBuffer.Add(new OpenTK.Vector3((float)intensities[i].Value / 255, 0.5f * (float)intensities[i].Value / (255), 0));
+                    colorBuffer.Add(intensities[i].Value);
                 }
                 return mesh;
             }

@@ -28,11 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl();
+            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -117,10 +117,12 @@
             this.label7 = new System.Windows.Forms.Label();
             this.sliderMin = new System.Windows.Forms.TrackBar();
             this.pointCloudPanel = new System.Windows.Forms.Panel();
+            this.sliderMax = new System.Windows.Forms.TrackBar();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.sliderMax = new System.Windows.Forms.TrackBar();
+            this.sliderMinText = new System.Windows.Forms.Label();
+            this.sliderMaxText = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -198,48 +200,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisX.LabelStyle.Interval = 0D;
-            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.LabelStyle.Interval = 0D;
-            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea1.BackColor = System.Drawing.Color.White;
-            chartArea1.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea1);
-            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend1.ForeColor = System.Drawing.Color.Gainsboro;
-            legend1.InterlacedRowsColor = System.Drawing.Color.White;
-            legend1.Name = "Legend1";
-            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend1);
+            chartArea2.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisX.LabelStyle.Interval = 0D;
+            chartArea2.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea2.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea2.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisY.LabelStyle.Interval = 0D;
+            chartArea2.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea2.BackColor = System.Drawing.Color.White;
+            chartArea2.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea2);
+            legend2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend2.ForeColor = System.Drawing.Color.Gainsboro;
+            legend2.InterlacedRowsColor = System.Drawing.Color.White;
+            legend2.Name = "Legend1";
+            legend2.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend2);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series1.BackSecondaryColor = System.Drawing.Color.White;
-            series1.ChartArea = "isoCurve-Distances";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series1.Color = System.Drawing.Color.DodgerBlue;
-            series1.CustomProperties = "PointWidth=0.3";
-            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series1.IsVisibleInLegend = false;
-            series1.LabelBackColor = System.Drawing.Color.White;
-            series1.LabelBorderColor = System.Drawing.Color.White;
-            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series1.Legend = "Legend1";
-            series1.MarkerBorderColor = System.Drawing.Color.White;
-            series1.MarkerColor = System.Drawing.Color.White;
-            series1.MarkerSize = 3;
-            series1.Name = "IsoCurve";
-            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series1);
+            series2.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series2.BackSecondaryColor = System.Drawing.Color.White;
+            series2.ChartArea = "isoCurve-Distances";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series2.Color = System.Drawing.Color.DodgerBlue;
+            series2.CustomProperties = "PointWidth=0.3";
+            series2.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series2.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series2.IsVisibleInLegend = false;
+            series2.LabelBackColor = System.Drawing.Color.White;
+            series2.LabelBorderColor = System.Drawing.Color.White;
+            series2.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series2.Legend = "Legend1";
+            series2.MarkerBorderColor = System.Drawing.Color.White;
+            series2.MarkerColor = System.Drawing.Color.White;
+            series2.MarkerSize = 3;
+            series2.Name = "IsoCurve";
+            series2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series2.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series2.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series2);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -1120,7 +1122,7 @@
             // 
             // sliderMin
             // 
-            this.sliderMin.Location = new System.Drawing.Point(54, 21);
+            this.sliderMin.Location = new System.Drawing.Point(59, 21);
             this.sliderMin.Maximum = 255;
             this.sliderMin.Name = "sliderMin";
             this.sliderMin.Size = new System.Drawing.Size(167, 45);
@@ -1130,6 +1132,8 @@
             // 
             this.pointCloudPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
             this.pointCloudPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pointCloudPanel.Controls.Add(this.sliderMaxText);
+            this.pointCloudPanel.Controls.Add(this.sliderMinText);
             this.pointCloudPanel.Controls.Add(this.sliderMax);
             this.pointCloudPanel.Controls.Add(this.label1);
             this.pointCloudPanel.Controls.Add(this.sliderMin);
@@ -1141,10 +1145,19 @@
             this.pointCloudPanel.TabIndex = 24;
             this.pointCloudPanel.Visible = false;
             // 
+            // sliderMax
+            // 
+            this.sliderMax.Location = new System.Drawing.Point(59, 54);
+            this.sliderMax.Maximum = 255;
+            this.sliderMax.Name = "sliderMax";
+            this.sliderMax.Size = new System.Drawing.Size(167, 45);
+            this.sliderMax.TabIndex = 24;
+            this.sliderMax.TabStop = false;
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 55);
+            this.label1.Location = new System.Drawing.Point(5, 55);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(32, 15);
             this.label1.TabIndex = 3;
@@ -1153,7 +1166,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 25);
+            this.label2.Location = new System.Drawing.Point(4, 23);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(31, 15);
             this.label2.TabIndex = 2;
@@ -1168,13 +1181,23 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "Point Cloud";
             // 
-            // sliderMax
+            // sliderMinText
             // 
-            this.sliderMax.Location = new System.Drawing.Point(54, 54);
-            this.sliderMax.Maximum = 255;
-            this.sliderMax.Name = "sliderMax";
-            this.sliderMax.Size = new System.Drawing.Size(167, 45);
-            this.sliderMax.TabIndex = 24;
+            this.sliderMinText.AutoSize = true;
+            this.sliderMinText.Location = new System.Drawing.Point(38, 23);
+            this.sliderMinText.Name = "sliderMinText";
+            this.sliderMinText.Size = new System.Drawing.Size(13, 15);
+            this.sliderMinText.TabIndex = 25;
+            this.sliderMinText.Text = "0";
+            // 
+            // sliderMaxText
+            // 
+            this.sliderMaxText.AutoSize = true;
+            this.sliderMaxText.Location = new System.Drawing.Point(36, 56);
+            this.sliderMaxText.Name = "sliderMaxText";
+            this.sliderMaxText.Size = new System.Drawing.Size(25, 15);
+            this.sliderMaxText.TabIndex = 26;
+            this.sliderMaxText.Text = "255";
             // 
             // MainWin
             // 
@@ -1322,6 +1345,8 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TrackBar sliderMax;
+        private System.Windows.Forms.Label sliderMaxText;
+        private System.Windows.Forms.Label sliderMinText;
     }
 }
 

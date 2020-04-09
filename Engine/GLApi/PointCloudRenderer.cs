@@ -25,11 +25,27 @@ namespace Engine.GLApi
         private int _VAO;
         private int _VBO;
 
+        public int Min { get; private set; }
+        public int Max { get; private set; }
+
+        public void SetMax(int max)
+        {
+            Max = max;
+            //Shader.Use();
+            //Shader.SetFloat("MaxIntensity", max / 255.0f);
+        }
+
+        public void SetMin(int min)
+        {
+            Min = min;
+        }
+
+
         public Mesh Mesh { get; set; }
 
         public Vector4 Color { get; set; }
 
-        private void ExtractVertices(Mesh mesh, List<Vector3> intensity)
+        private void ExtractVertices(Mesh mesh, List<int> intensities)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
             for (int i = 0; i < mesh.Vertices.Count; i++)
@@ -38,22 +54,24 @@ namespace Engine.GLApi
                 {
                     Coord = mesh.Vertices[i].Coord,
                     Normal = mesh.Vertices[i].Normal,
-                    Color = intensity[i]
+                    Color =  new Vector3((float)intensities[i] / 255.0f, 0.5f * (float)intensities[i] / 255.0f, 0)
                 };
             }
         }
 
-        public PointCloudRenderer(Mesh mesh, List<Vector3> intensity, string name = "")
+        public PointCloudRenderer(Mesh mesh, List<int> intensities, int min = 0, int max = 255, string name = "")
             : base(name)
         {
-            ExtractVertices(mesh, intensity);
+            Max = max;
+            Min = min;
+            ExtractVertices(mesh, intensities);
             Setup();
             _initialized = true;
             Mesh = mesh;
-            Shader = Shader.DefaultShader;
+            Shader = Shader.DefaultPointCloud;
         }
 
-        public PointCloudRenderer(Mesh mesh, List<Vector3> intensity, Shader shader, string name = "") : this(mesh, intensity, name)
+        public PointCloudRenderer(Mesh mesh, List<int> intensity, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, min, max, name)
         {
             Shader = shader;
         }
@@ -100,16 +118,18 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
-            var unlit = Shader.DefaultUnlitShader;
+            var pointCloudShader = Shader.DefaultPointCloud;
 
-            unlit.Use();
-            unlit.SetMat4("Model", ModelMatrix);
-            unlit.SetMat4("View", cam.View);
-            unlit.SetMat4("Projection", cam.Projection);
-            unlit.SetVec4("Color", Color);
+            pointCloudShader.Use();
+            pointCloudShader.SetMat4("Model", ModelMatrix);
+            pointCloudShader.SetMat4("View", cam.View);
+            pointCloudShader.SetMat4("Projection", cam.Projection);
+            pointCloudShader.SetVec4("Color", Color);
+            pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
+            pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
 
             var temp = Shader;
-            Shader = unlit;
+            Shader = pointCloudShader;
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
             GL.PointSize(1);

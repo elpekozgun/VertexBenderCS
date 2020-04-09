@@ -1,33 +1,47 @@
 ﻿using Engine.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK;
-using System.Drawing;
-using System.Drawing.Imaging;
+using System;
+using OpenTK.Graphics.OpenGL4;
 
 namespace Engine.GLApi
 {
-
-    public class PrimitiveRenderer : Transform, IDisposable, IRenderable
+    public class InstancedRenderer : Transform, IRenderable, IDisposable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
-        public Texture DiffuseTexture { get; set; }
+        //public Texture DiffuseTexture { get; set; }
 
         private GpuVertex[] vertices;
+        private int[] indices;
 
         private bool _initialized;
 
         private int _VAO;
         private int _VBO;
+        private int _EBO;
 
-        public Mesh Mesh { get; set; }
+
+        /*
+            Send Cube mesh. Normalized.
+            Send positionList for vertices
+            do a 3way loop to set position of cubes using vertices.
+            Push to buffer in uniform matrix.
+            Rip.
+        */ 
+
+
+
+
+        public Mesh Mesh { get; private set; }
 
         public Vector4 Color { get; set; }
+
+        public void SetMesh(Mesh mesh)
+        {
+            ExtractVertices(mesh);
+            Setup();
+            Mesh = mesh;
+        }
 
         private void ExtractVertices(Mesh mesh)
         {
@@ -38,23 +52,33 @@ namespace Engine.GLApi
                 {
                     Coord = mesh.Vertices[i].Coord,
                     Normal = mesh.Vertices[i].Normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = new Vector3(0.0f, 0.0f, 0.0f),
+                    TexCoord = new Vector2(0.0f, 0.0f)
                 };
+            }
+
+            indices = new int[mesh.Triangles.Count * 3];
+            for (int i = 0; i < mesh.Triangles.Count; i++)
+            {
+                var tri = mesh.Triangles[i];
+
+                indices[i * 3] = tri.V1;
+                indices[i * 3 + 1] = tri.V2;
+                indices[i * 3 + 2] = tri.V3;
             }
         }
 
-        public PrimitiveRenderer(Mesh mesh, string name = "")
+        public InstancedRenderer(Mesh mesh, int count, string name = "")
             : base(name)
         {
             ExtractVertices(mesh);
-            DiffuseTexture = Texture.LoadTexture(@"Resources\Image\Blank1024.png", eTextureType.Diffuse);
             Setup();
             _initialized = true;
             Mesh = mesh;
             Shader = Shader.DefaultShader;
         }
 
-        public PrimitiveRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
+        public InstancedRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
         {
             Shader = shader;
         }
@@ -63,11 +87,15 @@ namespace Engine.GLApi
         {
             GL.GenVertexArrays(1, out _VAO);
             GL.GenBuffers(1, out _VBO);
+            GL.GenBuffers(1, out _EBO);
 
             GL.BindVertexArray(_VAO);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, _VBO);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * GpuVertex.Size, vertices, BufferUsageHint.StaticDraw);
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _EBO);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * 4, indices, BufferUsageHint.StaticDraw);
 
             //coord
             GL.EnableVertexAttribArray(0);
@@ -80,6 +108,10 @@ namespace Engine.GLApi
             //color
             GL.EnableVertexAttribArray(2);
             GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
+
+            //texCoord
+            GL.EnableVertexAttribArray(3);
+            GL.VertexAttribPointer(3, 2, VertexAttribPointerType.Float, false, GpuVertex.Size, 36);
 
             GL.BindVertexArray(0);
 
@@ -94,17 +126,23 @@ namespace Engine.GLApi
             Setup();
         }
 
+        public void SetTextureBuffer(Vector2[] texcoord)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i].TexCoord = new Vector2(MathHelper.Clamp(texcoord[i].X, 0, 1), MathHelper.Clamp(texcoord[i].Y, 0, 1));
+            }
+            Setup();
+        }
+
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
-
             GL.BindVertexArray(_VAO);
 
-            GL.Disable(EnableCap.CullFace);
 
             if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
+
                 Shader.Use();
                 Shader.SetInt("material.diffuse", (int)TextureUnit.Texture0);
                 Shader.SetMat4("Model", ModelMatrix);
@@ -112,10 +150,11 @@ namespace Engine.GLApi
                 Shader.SetMat4("Projection", cam.Projection);
                 Shader.SetVec4("Color", Color);
 
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                //GL.Enable(EnableCap.PolygonSmooth);
 
-                GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length); 
+                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+                GL.Enable(EnableCap.PolygonSmooth);
+
+                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
 
             }
             if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
@@ -135,7 +174,7 @@ namespace Engine.GLApi
                 GL.LineWidth(2.0f);
                 //GL.Enable(EnableCap.LineSmooth);
 
-                GL.DrawArrays(PrimitiveType.LineStrip, 0, vertices.Length); // vertices.Length);
+                GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
                 Shader = temp;
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
@@ -151,22 +190,16 @@ namespace Engine.GLApi
                 var temp = Shader;
                 Shader = unlit;
 
-                GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
+                GL.PolygonMode(MaterialFace.Front, PolygonMode.Point);
                 GL.PointSize(5);
 
-                GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
+                GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
                 Shader = temp;
             }
-
-            GL.Enable(EnableCap.CullFace);
-
             GL.BindVertexArray(0);
-            GL.ActiveTexture(TextureUnit.Texture0);
 
-            //int diffuse = 1;
-            //int specular = 1;
-            //int normal = 1;
-            //int height = 1;
+
+
 
         }
 
@@ -178,6 +211,7 @@ namespace Engine.GLApi
                 {
                     GL.DeleteVertexArray(_VAO);
                     GL.DeleteBuffer(_VBO);
+                    GL.DeleteBuffer(_EBO);
                     _initialized = false;
                 }
             }

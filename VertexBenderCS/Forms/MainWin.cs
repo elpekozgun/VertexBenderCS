@@ -58,7 +58,7 @@ namespace VertexBenderCS.Forms
         private eRenderMode         _renderMode;
         private bool                _isPerspective;
 
-        private MeshRenderer            _activeMesh;
+        private Transform           _selectedTransform;
         private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
         
         private OpenTK.Input.KeyboardState KeyState { get; set; }
@@ -67,6 +67,7 @@ namespace VertexBenderCS.Forms
         public MainWin()
         {
             InitializeComponent();
+
         }
 
         protected override void OnLoad(EventArgs e)
@@ -127,7 +128,6 @@ namespace VertexBenderCS.Forms
             InitSpherePanel();
         }
 
-
         public void SubscribeEvents()
         {
             GLControl.MouseClick += GLControl_MouseClick;
@@ -176,12 +176,7 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
 
-
-        private void SceneGraphTree_LostFocus(object sender, EventArgs e)
-        {
-            sceneGraphTree.HideSelection = false;
-        }
-
+        
         private void StarTest()
         {
             var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\star-shaped-meshes\teddy.off"), "test");
@@ -247,35 +242,19 @@ namespace VertexBenderCS.Forms
 
 
             _SceneGraph.AddObject(mesh);
-            _activeMesh = mesh;
+            _selectedTransform = mesh;
             _SceneGraph.AddObject(center);
+        }
+
+        private void UltrasonLoadTest()
+        {
+            var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out List<int> _intensities);
+            var pointCloudRenderer = new PointCloudRenderer(pointCloud, _intensities, 0, 255, "pointcloud");
+            _SceneGraph.AddObject(pointCloudRenderer);
         }
 
         private void SetupTestScene()
         {
-            //ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
-            var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out List<Vector3> colors);
-            var pointCloudRenderer = new PointCloudRenderer(pointCloud, colors, "pointcloud");
-            Vector3[] colorBuffer = colors.ToArray();
-            //pointCloudRenderer.SetColorBuffer(colorBuffer);
-            _SceneGraph.AddObject(pointCloudRenderer);
-            //ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\noncartesian.vol");
-
-
-
-            //var origin = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "origin");
-            //origin.Color = Vector4.One;
-            //_SceneGraph.AddObject(origin);
-            //StarTest();
-
-            //var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\OneDrive\DERSLER\Ceng789\proje ödev\meshes1\1) use for geodesic\fprint matrix\horse0.off"), "test");
-            //_activeMesh = mesh;
-            //_SceneGraph.AddObject(mesh);
-            //var m = Algorithm.ParameterizeMeshToDisc(mesh.Mesh, eParameterizationMethod.Harmonic, (asd) => { });
-
-            //DisplayDiscParametrizationOutput(m);
-
-
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -385,7 +364,7 @@ namespace VertexBenderCS.Forms
 
         private void DisplayShortestPathOutput(ShortestPathOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
                 //foreach (var child in _activeMesh.Children)
                 //{
@@ -398,7 +377,9 @@ namespace VertexBenderCS.Forms
                     color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
                 }
 
-                DrawPath(_activeMesh, output.Path, color, output.Type.ToString());
+                var mesh = _selectedTransform as MeshRenderer;
+
+                DrawPath(mesh, output.Path, color, output.Type.ToString());
 
                 //Logger.Append(output.Info);
             }
@@ -406,9 +387,9 @@ namespace VertexBenderCS.Forms
 
         private void DisplaySamplingOutput(SampleOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                foreach (var child in _activeMesh.Children)
+                foreach (var child in _selectedTransform.Children)
                 {
                     _SceneGraph.DeleteObject(child);
                 }
@@ -424,11 +405,11 @@ namespace VertexBenderCS.Forms
                     obj.Position = output.SamplePoints[i].Coord;
 
                     //obj.Position = new Vector3(_activeMesh.ModelMatrix * new Vector4(obj.Position));
-                    obj.Position += _activeMesh.Position;
+                    obj.Position += _selectedTransform.Position;
 
 
                     // bad block but keep it for now..
-                    obj.Parent = _activeMesh;
+                    obj.Parent = _selectedTransform;
 
                     points.Add(obj);
                     _SceneGraph.AddObject(obj);
@@ -440,37 +421,39 @@ namespace VertexBenderCS.Forms
 
         private void DisplayIsoCurveOutput(IsoCurveOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                if (_IsoCurveOutputs.ContainsKey(_activeMesh))
+                if (_IsoCurveOutputs.ContainsKey(_selectedTransform))
                 {
-                    _IsoCurveOutputs.Remove(_activeMesh);
+                    _IsoCurveOutputs.Remove(_selectedTransform);
                 }
-                _IsoCurveOutputs.Add(_activeMesh, output);
+                _IsoCurveOutputs.Add(_selectedTransform, output);
 
-                foreach (var child in _activeMesh.Children)
+                foreach (var child in _selectedTransform.Children)
                 {
                     _SceneGraph.DeleteObject(child);
                 }
+
+                var mesh = _selectedTransform as MeshRenderer;
 
                 PrimitiveRenderer indicator = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.05f), Shader.DefaultShader, "source")
                 {
                     Color = new Vector4(0.0f, 1.0f, 0.0f, 1.0f)
                 };
-                indicator.Position = _activeMesh.Mesh.Vertices[output.SourceIndex].Coord;
+                indicator.Position = mesh.Mesh.Vertices[output.SourceIndex].Coord;
 
-                indicator.Parent = _activeMesh;
+                indicator.Parent = _selectedTransform;
                 _SceneGraph.AddObject(indicator);
 
 
                 for (int i = 0; i < output.IsoCurveDistances.Length; i++)
                 {
                     var line = new LineRenderer(output.IsoCurves[i], "sample-" + i);
-                    line.Position = _activeMesh.Position;
-                    line.Rotation = _activeMesh.Rotation;
-                    line.Scale = _activeMesh.Scale;
+                    line.Position = _selectedTransform.Position;
+                    line.Rotation = _selectedTransform.Rotation;
+                    line.Scale = _selectedTransform.Scale;
 
-                    line.Parent = _activeMesh;
+                    line.Parent = _selectedTransform;
                     _SceneGraph.AddObject(line);
 
                     line.Color = new Vector4(1, 0, 0, 1);
@@ -484,7 +467,7 @@ namespace VertexBenderCS.Forms
 
         private void DisplayAverageGeodesicOutput(AverageGeodesicOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
                 float max = output.Distances.Max();
 
@@ -493,23 +476,25 @@ namespace VertexBenderCS.Forms
                 {
                     color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f;
                 }
+                var mesh = _selectedTransform as MeshRenderer;
 
-                _activeMesh.SetColorBuffer(color);
+                mesh.SetColorBuffer(color);
                 //Logger.Append(output.Info);
             }
         }
 
         private void DisplayDiscParametrizationOutput(DiscParameterizeOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                foreach (var child in _activeMesh.Children)
+                foreach (var child in _selectedTransform.Children)
                 {
                     _SceneGraph.DeleteObject(child);
                 }
 
+                var mesh = _selectedTransform as MeshRenderer;
 
-                _activeMesh.SetMesh(output.Mesh);
+                mesh.SetMesh(output.Mesh);
                 var outputmesh = new Mesh();
 
                 for (int i = 0; i < output.Output.Count; i++)
@@ -517,40 +502,42 @@ namespace VertexBenderCS.Forms
                     var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y), Vector3.UnitY);
                     outputmesh.Vertices.Add(v);
                 }
-                outputmesh.Triangles = _activeMesh.Mesh.Triangles;
+                outputmesh.Triangles = mesh.Mesh.Triangles;
 
                 var tex = Texture.LoadTexture(@"Resources\Image\UV1024.png", eTextureType.Diffuse);
                 //var tex = Texture.LoadTexture(@"Resources\Image\tile.png", eTextureType.Diffuse);
 
-                var renderer = new MeshRenderer(outputmesh, $"Disc-{_activeMesh.Name}")
+                var renderer = new MeshRenderer(outputmesh, $"Disc-{_selectedTransform.Name}")
                 {
-                    Position = _activeMesh.Position + new Vector3(0.2f, 0.0f, 0.0f),
+                    Position = _selectedTransform.Position + new Vector3(0.2f, 0.0f, 0.0f),
                     EnableCull = false
                 };
-                renderer.Parent = _activeMesh;
+                renderer.Parent = _selectedTransform;
                 
                 renderer.DiffuseTexture = tex;
-                _activeMesh.DiffuseTexture = tex;
+                mesh.DiffuseTexture = tex;
 
-                _activeMesh.SetTextureBuffer(output.NormalizedUVCoords());
+                mesh.SetTextureBuffer(output.NormalizedUVCoords());
                 renderer.SetTextureBuffer(output.NormalizedUVCoords());
 
                 _SceneGraph.AddObject(renderer);
                 
 
-                DrawPath(_activeMesh, output.BoundaryPath, new Vector4(1, 0, 0, 0), $"path-{_activeMesh.Name}");
+                DrawPath(mesh, output.BoundaryPath, new Vector4(1, 0, 0, 0), $"path-{_selectedTransform.Name}");
 
             }
         }
 
         private void DisplaySphereParametrizationOutput(SphereParameterizeOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
                 //foreach (var child in _activeMesh.Children)
                 //{
                 //    _SceneGraph.DeleteObject(child);
                 //}
+
+                var mesh = _selectedTransform as MeshRenderer;
 
                 var sphere = new Mesh();
 
@@ -558,16 +545,17 @@ namespace VertexBenderCS.Forms
                 {
                     sphere.Vertices.Add(new Vertex(i, output.PointsOnSphere[i], output.Normals[i]));
                 }
-                sphere.Triangles = _activeMesh.Mesh.Triangles;
+
+                sphere.Triangles = mesh.Mesh.Triangles;
 
                 var size = Box3.CalculateBoundingBox(output.PointsOnSphere).Size;
 
                 var renderer = new MeshRenderer(sphere, "sphere")
                 {
                     Color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                    Position = _activeMesh.Position + Vector3.UnitX * size
+                    Position = _selectedTransform.Position + Vector3.UnitX * size
                 };
-                renderer.Rotation = _activeMesh.Rotation;
+                renderer.Rotation = _selectedTransform.Rotation;
 
 
                 var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f * size),"center");
@@ -591,13 +579,13 @@ namespace VertexBenderCS.Forms
 
         private void DisplayCutParametrizationOutput(CutSeamParameterizeOutput output)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
 
                 //var m = Algorithm.ParameterizeMeshCutSeam(_activeMesh.Mesh, (asd) => { });
                 var meshrend = new MeshRenderer(output.Cutmesh, "asdasd");
                 _SceneGraph.AddObject(meshrend);
-                _activeMesh = meshrend;
+                _selectedTransform = meshrend;
                 DisplayDiscParametrizationOutput(output.Disc);
                 DisplayShortestPathOutput(output.ShortestPath);
             }
@@ -793,10 +781,10 @@ namespace VertexBenderCS.Forms
         private void SceneGraphTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var item = (e.Node as SceneNode).Transform;
-            if (item is MeshRenderer)
-            {
-                _activeMesh = item as MeshRenderer;
 
+            if (item != null)
+            {
+                _selectedTransform = item;
                 numericScaleX.ValueChanged -= NumericScale_ValueChanged;
                 numericScaleY.ValueChanged -= NumericScale_ValueChanged;
                 numericScaleZ.ValueChanged -= NumericScale_ValueChanged;
@@ -810,21 +798,21 @@ namespace VertexBenderCS.Forms
                 numericRotZ.ValueChanged -= NumericRot_ValueChanged;
 
                 transformPanel.Visible = true;
-                labelTransform.Text = _activeMesh.Name;
-                numericPosX.Value = new decimal(_activeMesh.Position.X);
-                numericPosY.Value = new decimal(_activeMesh.Position.Y);
-                numericPosZ.Value = new decimal(_activeMesh.Position.Z);
+                labelTransform.Text = _selectedTransform.Name;
+                numericPosX.Value = new decimal(_selectedTransform.Position.X);
+                numericPosY.Value = new decimal(_selectedTransform.Position.Y);
+                numericPosZ.Value = new decimal(_selectedTransform.Position.Z);
 
-                var q = _activeMesh.Rotation;
-                var rot = _activeMesh.Rotation.EulerAngles();
-                
+                var q = _selectedTransform.Rotation;
+                var rot = _selectedTransform.Rotation.EulerAngles();
+
                 numericRotX.Value = new decimal(rot.X);
                 numericRotY.Value = new decimal(rot.Y);
                 numericRotZ.Value = new decimal(rot.Z);
 
-                numericScaleX.Value  = new decimal(_activeMesh.Scale.X);
-                numericScaleY.Value  = new decimal(_activeMesh.Scale.Y);
-                numericScaleZ.Value  = new decimal(_activeMesh.Scale.Z);
+                numericScaleX.Value = new decimal(_selectedTransform.Scale.X);
+                numericScaleY.Value = new decimal(_selectedTransform.Scale.Y);
+                numericScaleZ.Value = new decimal(_selectedTransform.Scale.Z);
 
                 numericScaleX.ValueChanged += NumericScale_ValueChanged;
                 numericScaleY.ValueChanged += NumericScale_ValueChanged;
@@ -838,32 +826,49 @@ namespace VertexBenderCS.Forms
                 numericRotY.ValueChanged += NumericRot_ValueChanged;
                 numericRotZ.ValueChanged += NumericRot_ValueChanged;
 
-                chartIsoCurve.Hide();
-                if(_IsoCurveOutputs.TryGetValue(_activeMesh, out IsoCurveOutput output))
+                if (_IsoCurveOutputs.TryGetValue(_selectedTransform, out IsoCurveOutput output))
                 {
                     UpdateChart(output);
                 }
-                
-                if (_activeMesh.Mesh is Sphere)
+
+                if (_selectedTransform is MeshRenderer)
                 {
-                    var sphere = (_activeMesh.Mesh as Sphere);
+                    var mesh = _selectedTransform as MeshRenderer;
 
-                    numericSubdivision.ValueChanged -= NumericSubdivision_ValueChanged;
-                    numericSize.ValueChanged -= NumericSize_ValueChanged;
 
-                    spherePanel.Visible = true;
 
-                    numericSize.Value = (decimal)sphere.Size;
-                    numericSubdivision.Value = (decimal)sphere.Subdivision;
+                    if (mesh.Mesh is Sphere)
+                    {
+                        var sphere = (mesh.Mesh as Sphere);
 
-                    numericSubdivision.ValueChanged += NumericSubdivision_ValueChanged;
-                    numericSize.ValueChanged += NumericSize_ValueChanged;
+                        numericSubdivision.ValueChanged -= NumericSubdivision_ValueChanged;
+                        numericSize.ValueChanged -= NumericSize_ValueChanged;
+
+                        spherePanel.Visible = true;
+
+                        numericSize.Value = (decimal)sphere.Size;
+                        numericSubdivision.Value = (decimal)sphere.Subdivision;
+
+                        numericSubdivision.ValueChanged += NumericSubdivision_ValueChanged;
+                        numericSize.ValueChanged += NumericSize_ValueChanged;
+                    }
                 }
-            }
-            else
-            {
-                transformPanel.Visible = false;
-                spherePanel.Visible = false;
+                else if (_selectedTransform is PointCloudRenderer)
+                {
+                    var mesh = _selectedTransform as PointCloudRenderer;
+
+                    pointCloudPanel.Visible = true;
+
+                    sliderMax.ValueChanged -= SliderMax_ValueChanged;
+                    sliderMin.ValueChanged -= SliderMin_ValueChanged;
+
+                    sliderMax.Value = mesh.Max;
+                    sliderMin.Value = mesh.Min;
+
+                    sliderMax.ValueChanged += SliderMax_ValueChanged;
+                    sliderMin.ValueChanged += SliderMin_ValueChanged;
+
+                }
             }
         }
 
@@ -890,7 +895,16 @@ namespace VertexBenderCS.Forms
             {
                 sceneGraphTree.HideSelection = true;
                 sceneGraphTree.SelectedNode = null;
+                chartIsoCurve.Hide();
+                transformPanel.Visible = false;
+                spherePanel.Visible = false;
+                pointCloudPanel.Visible = false;
             }
+        }
+
+        private void SceneGraphTree_LostFocus(object sender, EventArgs e)
+        {
+            sceneGraphTree.HideSelection = false;
         }
 
 
@@ -918,18 +932,18 @@ namespace VertexBenderCS.Forms
 
         private void NumericRot_ValueChanged(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                _activeMesh.Rotation = Quaternion.FromEulerAngles
+                _selectedTransform.Rotation = Quaternion.FromEulerAngles
                 (
                     MathHelper.DegreesToRadians((float)numericRotX.Value),
                     MathHelper.DegreesToRadians((float)numericRotY.Value),
                     MathHelper.DegreesToRadians((float)numericRotZ.Value)
                 );
 
-                foreach (var child in _activeMesh.Children)
+                foreach (var child in _selectedTransform.Children)
                 {
-                    child.Rotation = _activeMesh.Rotation;
+                    child.Rotation = _selectedTransform.Rotation;
                 }
 
             }
@@ -937,35 +951,35 @@ namespace VertexBenderCS.Forms
 
         private void NumericPos_ValueChanged(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                _activeMesh.Position = new Vector3
+                _selectedTransform.Position = new Vector3
                 (
                     (float)numericPosX.Value, 
                     (float)numericPosY.Value, 
                     (float)numericPosZ.Value
                 );
 
-                foreach (var child in _activeMesh.Children)
+                foreach (var child in _selectedTransform.Children)
                 {
-                    child.Position = _activeMesh.Position;
+                    child.Position = _selectedTransform.Position;
                 }
             }
         }
 
         private void NumericScale_ValueChanged(object sender, EventArgs e) 
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                _activeMesh.Scale = new Vector3
+                _selectedTransform.Scale = new Vector3
                 (
                     (float)numericScaleX.Value, 
                     (float)numericScaleY.Value, 
                     (float)numericScaleZ.Value
                 );
-                foreach (var child in _activeMesh.Children)
+                foreach (var child in _selectedTransform.Children)
                 {
-                    child.Scale = _activeMesh.Scale;
+                    child.Scale = _selectedTransform.Scale;
                 }
             }
         }
@@ -980,31 +994,65 @@ namespace VertexBenderCS.Forms
 
         private void NumericSubdivision_ValueChanged(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                if (_activeMesh.Mesh is Sphere)
+                var mesh = _selectedTransform as MeshRenderer;
+                if (mesh.Mesh is Sphere)
                 {
-                    var sphere = _activeMesh.Mesh as Sphere;
+                    var sphere = mesh.Mesh as Sphere;
 
                     var s = PrimitiveObjectFactory.Sphere(sphere.Size, (int)numericSubdivision.Value, sphere.Type);
-                    _activeMesh.SetMesh(s);
+                    mesh.SetMesh(s);
                 }
             }
         }
 
         private void NumericSize_ValueChanged(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                if (_activeMesh.Mesh is Sphere)
+                var mesh = _selectedTransform as MeshRenderer;
+
+                if (mesh.Mesh is Sphere)
                 {
-                    var sphere = _activeMesh.Mesh as Sphere;
+                    var sphere = mesh.Mesh as Sphere;
 
                     var s = PrimitiveObjectFactory.Sphere((float)numericSize.Value, sphere.Subdivision, sphere.Type);
-                    _activeMesh.SetMesh(s);
+                    mesh.SetMesh(s);
                 }
             }
         }
+
+        private void SliderMin_ValueChanged(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var s = sender as TrackBar;
+                var mesh = _selectedTransform as PointCloudRenderer;
+                if (mesh is PointCloudRenderer)
+                {
+                    mesh.SetMin(s.Value);
+                    sliderMax.Value = Math.Max(s.Value, sliderMax.Value);
+                    sliderMinText.Text = s.Value.ToString();
+                }
+            }
+        }
+
+        private void SliderMax_ValueChanged(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var s = sender as TrackBar;
+                var mesh = _selectedTransform as PointCloudRenderer;
+                if (mesh is PointCloudRenderer)
+                {
+                    mesh.SetMax(s.Value);
+                    sliderMin.Value = Math.Min(s.Value, sliderMin.Value);
+                    sliderMaxText.Text = s.Value.ToString();
+                }
+            }
+        }
+
 
         #endregion
 
@@ -1053,9 +1101,9 @@ namespace VertexBenderCS.Forms
         private void menuProcessSP_Click(object sender, EventArgs e)
         {
 
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                var mesh = _activeMesh.Mesh;
+                var mesh = (_selectedTransform as MeshRenderer).Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
                 _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
@@ -1068,9 +1116,10 @@ namespace VertexBenderCS.Forms
 
         private void menuProcessGC_Click(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                var a = Algorithm.GaussianCurvature(_activeMesh.Mesh);
+                var mesh = _selectedTransform as MeshRenderer;
+                var a = Algorithm.GaussianCurvature(mesh.Mesh);
                 var max = a.Max();
                 var min = a.Min();
                 max -= min;
@@ -1088,15 +1137,15 @@ namespace VertexBenderCS.Forms
                     }
                 }
 
-                _activeMesh.SetColorBuffer(color);
+                mesh.SetColorBuffer(color);
             }
         }
 
         private void menuProcessDescriptor_Click(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                var mesh = _activeMesh.Mesh;
+                var mesh = (_selectedTransform as MeshRenderer).Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.Descriptor);
                 _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
@@ -1105,9 +1154,9 @@ namespace VertexBenderCS.Forms
 
         private void MenuProcessParametrization_Click(object sender, EventArgs e)
         {
-            if (_activeMesh != null)
+            if (_selectedTransform != null)
             {
-                var mesh = _activeMesh.Mesh;
+                var mesh = (_selectedTransform as MeshRenderer).Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.Parametrization);
                 _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
@@ -1171,8 +1220,8 @@ namespace VertexBenderCS.Forms
                     var name = split[split.Length - 1];
 
                     //_SceneGraph.Clean();
-                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<Vector3> intensities);
-                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, intensities, name);
+                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<int> intensities);
+                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, intensities, 0, 255, name);
                     _SceneGraph.AddObject(pointCloudRenderer);
                 }
             }
