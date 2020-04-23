@@ -248,13 +248,18 @@ namespace VertexBenderCS.Forms
 
         private void UltrasonLoadTest()
         {
-            var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out List<int> _intensities);
-            var pointCloudRenderer = new PointCloudRenderer(pointCloud, _intensities, 0, 255, "pointcloud");
-            _SceneGraph.AddObject(pointCloudRenderer);
+            var mesh = new Mesh();
+            mesh.Vertices.Add(new Vertex(0, Vector3.Zero));
+            var pointCloud = new PointCloudRenderer(mesh, new List<int>() { 255 }, 1);
+            _SceneGraph.AddObject(pointCloud);
+            //var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out List<int> _intensities, out float spacing);
+            //var pointCloudRenderer = new PointCloudRenderer(pointCloud, _intensities, spacing, 67, 120, "pointcloud");
+            //_SceneGraph.AddObject(pointCloudRenderer);
         }
 
         private void SetupTestScene()
         {
+            UltrasonLoadTest();
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -1220,8 +1225,8 @@ namespace VertexBenderCS.Forms
                     var name = split[split.Length - 1];
 
                     //_SceneGraph.Clean();
-                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<int> intensities);
-                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, intensities, 0, 255, name);
+                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<int> intensities, out float spacing);
+                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, intensities, spacing, 0, 255, name);
                     _SceneGraph.AddObject(pointCloudRenderer);
                 }
             }

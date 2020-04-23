@@ -31,6 +31,7 @@ namespace Engine.GLApi
         (
             "pointCloud",
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudGeometry.glsl", ShaderType.GeometryShader),
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudFragment.glsl", ShaderType.FragmentShader)
         );
 

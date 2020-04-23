@@ -73,7 +73,7 @@ namespace Engine.Core
             return null;
         }
 
-        public static Mesh LoadVol(string path, out List<int> colorBuffer)
+        public static Mesh LoadVol(string path, out List<int> colorBuffer, out float spacing)
         {
             string expectedHeader = "KRETZFILE 1.0";
 
@@ -85,6 +85,7 @@ namespace Engine.Core
             if (expectedHeader != header)
             {
                 Logger.Log("Not a kretzfile");
+                spacing = 0;
                 return null;
             }
             
@@ -261,9 +262,12 @@ namespace Engine.Core
                 }
 
                 Mesh mesh = new Mesh();
+
+                spacing = (float)resolution / (float)cartesianSpacing;
+
                 for (int i = 0; i < intensities.Count; i++)
                 {
-                    mesh.AddVertex(new Vertex(i, intensities[i].Key * -(float)resolution / (float)cartesianSpacing));
+                    mesh.AddVertex(new Vertex(i, intensities[i].Key * -spacing));
                     colorBuffer.Add(intensities[i].Value);
                 }
                 return mesh;

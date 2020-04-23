@@ -2,7 +2,6 @@
 
 out vec4 FragColor;
 in vec3 OutColor;
-//in vec4 OutColor;
 
 uniform float MaxIntensity;
 uniform float MinIntensity;

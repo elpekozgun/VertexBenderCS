@@ -8,21 +8,13 @@ uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
 
-//uniform float MaxIntensity;
-//uniform float MinIntensity;
-
-out vec3 OutColor;
-
-//out vec4 OutColor;
+out VS_OUT
+{
+	vec3 Color;
+} vs_out;
 
 void main()
 {
-	OutColor = inColor;
-
-//	if(OutColor.x >= MinIntensity && OutColor.x <= MaxIntensity)
-//	{
-//	}
 	gl_Position = Projection * View * Model * vec4(inPos,1.0f);
-
-	//OutColor = Color;
+	vs_out.Color = inColor;
 }

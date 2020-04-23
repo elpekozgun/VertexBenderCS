@@ -78,7 +78,7 @@ namespace Engine.GLApi
             Shader = Shader.DefaultShader;
         }
 
-        public InstancedRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
+        public InstancedRenderer(Mesh mesh, Shader shader, int count, string name = "") : this(mesh, count, name)
         {
             Shader = shader;
         }

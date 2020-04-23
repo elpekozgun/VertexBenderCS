@@ -27,6 +27,7 @@ namespace Engine.GLApi
 
         public int Min { get; private set; }
         public int Max { get; private set; }
+        public float Spacing { get; private set; }
 
         public void SetMax(int max)
         {
@@ -59,11 +60,12 @@ namespace Engine.GLApi
             }
         }
 
-        public PointCloudRenderer(Mesh mesh, List<int> intensities, int min = 0, int max = 255, string name = "")
+        public PointCloudRenderer(Mesh mesh, List<int> intensities, float spacing, int min = 0, int max = 255, string name = "")
             : base(name)
         {
             Max = max;
             Min = min;
+            Spacing = spacing;
             ExtractVertices(mesh, intensities);
             Setup();
             _initialized = true;
@@ -71,7 +73,7 @@ namespace Engine.GLApi
             Shader = Shader.DefaultPointCloud;
         }
 
-        public PointCloudRenderer(Mesh mesh, List<int> intensity, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, min, max, name)
+        public PointCloudRenderer(Mesh mesh, List<int> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)
         {
             Shader = shader;
         }
@@ -127,6 +129,7 @@ namespace Engine.GLApi
             pointCloudShader.SetVec4("Color", Color);
             pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
             pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
+            pointCloudShader.SetFloat("Spacing", Spacing);
 
             var temp = Shader;
             Shader = pointCloudShader;
