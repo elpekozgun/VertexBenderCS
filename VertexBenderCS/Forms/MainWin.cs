@@ -110,7 +110,7 @@ namespace VertexBenderCS.Forms
             _mouseY = (int)(Height * 0.5);
             _isFirstMouse = true;
 
-            _timer = new System.Timers.Timer(8.0f);
+            _timer = new System.Timers.Timer(16.66f);
             _timer.Elapsed += Update;
             _timer.Start();
 
@@ -246,20 +246,42 @@ namespace VertexBenderCS.Forms
             _SceneGraph.AddObject(center);
         }
 
-        private void UltrasonLoadTest()
+        private void GeometryShaderTest()
         {
             var mesh = new Mesh();
             mesh.Vertices.Add(new Vertex(0, Vector3.Zero));
             var pointCloud = new PointCloudRenderer(mesh, new List<int>() { 255 }, 1);
             _SceneGraph.AddObject(pointCloud);
+        }
+
+        private void UltrasonLoadTest()
+        {
             //var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out List<int> _intensities, out float spacing);
-            //var pointCloudRenderer = new PointCloudRenderer(pointCloud, _intensities, spacing, 67, 120, "pointcloud");
+            //var pointCloud = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out VolOutput output);
+            //var output2 = Algorithm.Downsample(output, 2);
+            //var pointCloudRenderer = new PointCloudRenderer(pointCloud, output2.Intensities, output2.Spacing, 67, 120, "pointcloud");
             //_SceneGraph.AddObject(pointCloudRenderer);
+
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
+            
+            var output2 = Algorithm.Downsample(output, 2);
+            var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
+            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 67, 120, "pointcloud2");
+            _SceneGraph.AddObject(pointCloudRenderer2);
+
+            sceneGraphTree.SelectedNode = null;
+
+            //var output3 = Algorithm.Downsample(output, 3);
+            //var mesh3 = ObjectLoader.MakeMeshFromVol(output3);
+            //var pointCloudRenderer3 = new PointCloudRenderer(mesh3, output3.Intensities, output3.Spacing, 67, 120, "pointcloud3");
+            //pointCloudRenderer3.Position = new Vector3(0, 0, -0.4f);
+            //_SceneGraph.AddObject(pointCloudRenderer3);
         }
 
         private void SetupTestScene()
         {
             UltrasonLoadTest();
+            //GeometryShaderTest();
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -1225,8 +1247,9 @@ namespace VertexBenderCS.Forms
                     var name = split[split.Length - 1];
 
                     //_SceneGraph.Clean();
-                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<int> intensities, out float spacing);
-                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, intensities, spacing, 0, 255, name);
+                    //var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<int> intensities, out float spacing);
+                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out VolOutput output);
+                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, output.Intensities, output.Spacing, 0, 255, name);
                     _SceneGraph.AddObject(pointCloudRenderer);
                 }
             }

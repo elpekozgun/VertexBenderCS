@@ -27,11 +27,18 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\UnlitFragment.glsl", ShaderType.FragmentShader)
         );
 
+        private static Shader _defaultCuberille = ShaderBuilder.CreateShader
+        (
+            "cuberille",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\CuberilleVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\CuberilleGeometry.glsl", ShaderType.GeometryShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\CuberilleFragment.glsl", ShaderType.FragmentShader)
+        );
+
         private static Shader _defaultPointCloud = ShaderBuilder.CreateShader
         (
             "pointCloud",
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudVertex.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudGeometry.glsl", ShaderType.GeometryShader),
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudFragment.glsl", ShaderType.FragmentShader)
         );
 
@@ -45,6 +52,7 @@ namespace Engine.GLApi
         public static Shader DefaultShader => _defaultShader;
         public static Shader DefaultUnlitShader=> _defaultUnlit;
         public static Shader DefaultPointCloud => _defaultPointCloud;
+        public static Shader DefaultCuberille => _defaultCuberille;
         //public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion

@@ -1480,6 +1480,48 @@ namespace Engine.Processing
             return new CutMeshOutput(cutMesh, sp, allBoundaries);
         }
 
+
+
+        public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
+        {
+            var intensities = new List<int>();
+            var intensityMap = new List<KeyValuePair<Vector3, int>>();
+
+            var dimX = volumeInfo.XCount;
+            var dimY = volumeInfo.YCount;
+            var dimZ = volumeInfo.ZCount;
+
+            // This is utter crap for now..
+            // needs a huge todo for this shit...
+            sampleSize = Math.Max(2, sampleSize);
+            for (int z = 0; z < dimZ; z+= sampleSize)
+            {
+                for (int y = 0; y < dimY; y+=sampleSize)
+                {
+                    for (int x = 0; x < dimX; x+=sampleSize)
+                    {
+                        var intensity = 0;
+                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+
+                        intensity /= 6;
+
+                        intensities.Add(intensity);
+                        intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x,y,z) / sampleSize, intensity));
+                    }
+                }
+            }
+
+
+            
+            return new VolOutput(dimX / sampleSize, dimY / sampleSize, dimZ / sampleSize, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
+        }
+
+
     }
 
 

@@ -6,15 +6,12 @@ layout (location = 2) in vec3 inColor;
 
 uniform mat4 Model;
 uniform mat4 View;
-uniform mat4 Projection;
+uniform mat4 Projection;	
 
-out VS_OUT
-{
-	vec3 Color;
-} vs_out;
+out vec3 OutColor;
 
 void main()
 {
 	gl_Position = Projection * View * Model * vec4(inPos,1.0f);
-	vs_out.Color = inColor;
+	OutColor = inColor;
 }

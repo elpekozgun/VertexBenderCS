@@ -120,13 +120,13 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
-            var pointCloudShader = Shader.DefaultPointCloud;
+            var pointCloudShader = Shader.DefaultCuberille;
 
             pointCloudShader.Use();
             pointCloudShader.SetMat4("Model", ModelMatrix);
             pointCloudShader.SetMat4("View", cam.View);
             pointCloudShader.SetMat4("Projection", cam.Projection);
-            pointCloudShader.SetVec4("Color", Color);
+            pointCloudShader.SetVec4("OutColor", Color);
             pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
             pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
             pointCloudShader.SetFloat("Spacing", Spacing);
@@ -134,16 +134,47 @@ namespace Engine.GLApi
             var temp = Shader;
             Shader = pointCloudShader;
 
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Point);
-            GL.PointSize(1);
+            GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+            GL.PointSize(2);
 
             GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
             Shader = temp;
 
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
-
         }
+
+        public void Render2(Camera cam, eRenderMode mode = eRenderMode.shaded)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
+
+            GL.BindVertexArray(_VAO);
+
+            var pointCloudShader = Shader.DefaultCuberille;
+
+            pointCloudShader.Use();
+            pointCloudShader.SetMat4("Model", ModelMatrix);
+            pointCloudShader.SetMat4("View", cam.View);
+            pointCloudShader.SetMat4("Projection", cam.Projection);
+            pointCloudShader.SetVec4("OutColor", Color);
+            pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
+            pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
+            pointCloudShader.SetFloat("Spacing", Spacing);
+
+            var temp = Shader;
+            Shader = pointCloudShader;
+
+            GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+            GL.PointSize(2);
+
+            GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
+            Shader = temp;
+
+            GL.BindVertexArray(0);
+            GL.ActiveTexture(TextureUnit.Texture0);
+        }
+
 
         protected virtual void Dispose(bool disposing)
         {
