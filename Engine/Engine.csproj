@@ -78,6 +78,7 @@
     <Compile Include="Core\SceneGraph.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="GLApi\GpuVertex.cs" />
+    <Compile Include="GLApi\IndexlessMeshRenderer.cs" />
     <Compile Include="GLApi\InstancedRenderer.cs" />
     <Compile Include="GLApi\IRenderable.cs" />
     <Compile Include="GLApi\LineRenderer.cs" />

@@ -110,7 +110,7 @@ namespace VertexBenderCS.Forms
             _mouseY = (int)(Height * 0.5);
             _isFirstMouse = true;
 
-            _timer = new System.Timers.Timer(16.66f);
+            _timer = new System.Timers.Timer(8.33f);
             _timer.Elapsed += Update;
             _timer.Start();
 
@@ -262,14 +262,31 @@ namespace VertexBenderCS.Forms
             //var pointCloudRenderer = new PointCloudRenderer(pointCloud, output2.Intensities, output2.Spacing, 67, 120, "pointcloud");
             //_SceneGraph.AddObject(pointCloudRenderer);
 
-            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
             
+            
+
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
+
             var output2 = Algorithm.Downsample(output, 2);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
-            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 67, 120, "pointcloud2");
+            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 80, 140, "pointcloud2");
             _SceneGraph.AddObject(pointCloudRenderer2);
 
             sceneGraphTree.SelectedNode = null;
+
+            var grid = Algorithm.MakeGrid(output);
+
+            var triangles = new List<Vector3[]>();
+            for (int i = 0; i < grid.Count; i++)
+            {
+                triangles.AddRange(Algorithm.Polygonize(grid[i], 80, 140));
+            }
+
+            var testCube = ObjectLoader.MakeMesh(triangles, output.Spacing, "test");
+
+
+            var meshrenderer = new IndexlessMeshRenderer(testCube, "testmarchingCube");
+            _SceneGraph.AddObject(meshrenderer);
 
             //var output3 = Algorithm.Downsample(output, 3);
             //var mesh3 = ObjectLoader.MakeMeshFromVol(output3);

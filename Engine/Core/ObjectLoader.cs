@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,6 +28,17 @@ namespace Engine.Core
             Spacing = spacing;
         }
     }
+
+    public struct CubicCell
+    {
+        public KeyValuePair<OpenTK.Vector3, int>[] Corners;
+
+        public CubicCell(KeyValuePair<Vector3, int>[] corners)
+        {
+            Corners = corners;
+        }
+    }
+
 
     public static partial class ObjectLoader
     {
@@ -519,6 +531,26 @@ namespace Engine.Core
             }
         }
 
+        public static Mesh MakeMesh(List<Vector3[]> tris, float spacing, string name = "")
+        {
+            var mesh = new Mesh();
+            
+            for (int i = 0; i < tris.Count; i++)
+            {
+                var n1 = mesh.CalculateTriangleNormals(tris[i][0], tris[i][1], tris[i][2]);
+                var n2 = mesh.CalculateTriangleNormals(tris[i][1], tris[i][2], tris[i][0]);
+                var n3 = mesh.CalculateTriangleNormals(tris[i][2], tris[i][0], tris[i][1]);
+
+                mesh.AddVertex(tris[i][0] * -spacing, -n1);
+                mesh.AddVertex(tris[i][1] * -spacing, -n2);
+                mesh.AddVertex(tris[i][2] * -spacing, -n3);
+
+            }
+
+            //mesh.CalculateVertexNormals();
+
+            return mesh;
+        }
 
     }
 }
