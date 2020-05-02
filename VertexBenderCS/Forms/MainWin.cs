@@ -95,7 +95,7 @@ namespace VertexBenderCS.Forms
             toolBar.Renderer = new CustomToolStripRenderer();
 
 
-            GL.ClearColor(Color.FromArgb(50,50,50));
+            GL.ClearColor(Color.FromArgb(66,167,250));
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
 
@@ -110,7 +110,7 @@ namespace VertexBenderCS.Forms
             _mouseY = (int)(Height * 0.5);
             _isFirstMouse = true;
 
-            _timer = new System.Timers.Timer(8.33f);
+            _timer = new System.Timers.Timer(16);
             _timer.Elapsed += Update;
             _timer.Start();
 
@@ -148,6 +148,7 @@ namespace VertexBenderCS.Forms
             menuProcessParametrization.Click += MenuProcessParametrization_Click;
             menuExit.Click += MenuExit_Click;
             menuIsoCurveExport.Click += MenuIsoCurveExport_Click;
+            menuOffExport.Click += MenuOffExport_Click;
 
             menuAddCube.Click += MenuAddCube_Click;
             menuAddPyramid.Click += MenuAddPyramid_Click;
@@ -176,7 +177,8 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
         }
 
-        
+
+
         private void StarTest()
         {
             var mesh = new MeshRenderer(ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\star-shaped-meshes\teddy.off"), "test");
@@ -262,37 +264,45 @@ namespace VertexBenderCS.Forms
             //var pointCloudRenderer = new PointCloudRenderer(pointCloud, output2.Intensities, output2.Spacing, 67, 120, "pointcloud");
             //_SceneGraph.AddObject(pointCloudRenderer);
 
-            
-            
 
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
 
-            var output2 = Algorithm.Downsample(output, 2);
+            var output2 = Algorithm.Downsample(output, 3);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
-            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 80, 140, "pointcloud2");
+            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2");
+            pointCloudRenderer2.Position = new Vector3(0,0,-0.4f);
             _SceneGraph.AddObject(pointCloudRenderer2);
+
+            //sceneGraphTree.SelectedNode = null;
+
+            //var testCube = Algorithm.MarchCubes(output2, 65, true, false, false);
+            //var meshrenderer = new PrimitiveRenderer(testCube, "testmarchingCubeIndexedMedian");
+            //meshrenderer.Position = new Vector3(0, 0, 0.4f);
+            //_SceneGraph.AddObject(meshrenderer);
+
 
             sceneGraphTree.SelectedNode = null;
 
-            var grid = Algorithm.MakeGrid(output);
+            var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
+            Algorithm.Smoothen(ref testCube2, 5);
+            var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
+            _SceneGraph.AddObject(meshrenderer2);
 
-            var triangles = new List<Vector3[]>();
-            for (int i = 0; i < grid.Count; i++)
-            {
-                triangles.AddRange(Algorithm.Polygonize(grid[i], 80, 140));
-            }
+            //sceneGraphTree.SelectedNode = null;
 
-            var testCube = ObjectLoader.MakeMesh(triangles, output.Spacing, "test");
+            //var testCube3 = Algorithm.MarchCubes(output2, 90, true, true, false);
+            ////Algorithm.Smoothen(ref testCube2, 5);
+            //var meshrenderer3 = new MeshRenderer(testCube3, "no smooth");
+            //meshrenderer3.Position = new Vector3(0, 0, 0.4f);
+            //_SceneGraph.AddObject(meshrenderer3);
 
+            //sceneGraphTree.SelectedNode = null;
 
-            var meshrenderer = new IndexlessMeshRenderer(testCube, "testmarchingCube");
-            _SceneGraph.AddObject(meshrenderer);
+            //var testCube4 = Algorithm.MarchCubes(output2, 90, true, false,false);
+            //var meshrenderer4 = new PrimitiveRenderer(testCube4, "testmarchingCubeUnindexed");
+            //meshrenderer4.Position = new Vector3(0, 0, 0.8f);
+            //_SceneGraph.AddObject(meshrenderer4);
 
-            //var output3 = Algorithm.Downsample(output, 3);
-            //var mesh3 = ObjectLoader.MakeMeshFromVol(output3);
-            //var pointCloudRenderer3 = new PointCloudRenderer(mesh3, output3.Intensities, output3.Spacing, 67, 120, "pointcloud3");
-            //pointCloudRenderer3.Position = new Vector3(0, 0, -0.4f);
-            //_SceneGraph.AddObject(pointCloudRenderer3);
         }
 
         private void SetupTestScene()
@@ -317,7 +327,6 @@ namespace VertexBenderCS.Forms
                     MouseState = OpenTK.Input.Mouse.GetState();
                 }
             });
-
             //GLControl.Invoke((MethodInvoker)delegate ()
             //{
             //    GLControl.Invalidate();
@@ -1217,6 +1226,20 @@ namespace VertexBenderCS.Forms
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 ProcessOutputHandler.SaveIsoCurveOutputs(_IsoCurveOutputs, dialog.FileName);
+            }
+
+        }
+
+        private void MenuOffExport_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.Filter = "OFF files (*.off)|*.off|All files (*.*)|*.*";
+            dialog.Title = "Save off Files";
+            dialog.DefaultExt = "off";
+            dialog.FilterIndex = 2;
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                ProcessOutputHandler.SaveOffFile(((sceneGraphTree.SelectedNode as SceneNode).Transform as MeshRenderer).Mesh, dialog.FileName);
             }
 
         }

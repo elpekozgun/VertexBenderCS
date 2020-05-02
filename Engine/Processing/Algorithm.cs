@@ -8,6 +8,7 @@ using PriorityQueues;
 using System.Diagnostics;
 using System.Threading;
 using MathNet.Numerics.LinearAlgebra;
+using KdTree;
 
 namespace Engine.Processing
 {
@@ -1482,6 +1483,8 @@ namespace Engine.Processing
 
 
 
+        // Ultrasound
+
         public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
         {
             var intensities = new List<int>();
@@ -1493,7 +1496,7 @@ namespace Engine.Processing
 
             // This is utter crap for now..
             // needs a huge todo for this shit...
-            sampleSize = Math.Max(2, sampleSize);
+            //sampleSize = Math.Max(2, sampleSize);
             for (int z = 0; z < dimZ; z+= sampleSize)
             {
                 for (int y = 0; y < dimY; y+=sampleSize)
@@ -1507,18 +1510,17 @@ namespace Engine.Processing
                         intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
                         intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
                         intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-
                         intensity /= 6;
+                        //intensity = volumeInfo.Intensities[z * dimX * dimY + y * dimX + x];
+
 
                         intensities.Add(intensity);
                         intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x,y,z) / sampleSize, intensity));
                     }
                 }
             }
-
-
             
-            return new VolOutput(dimX / sampleSize, dimY / sampleSize, dimZ / sampleSize, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
+            return new VolOutput(dimX / sampleSize +1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
         }
 
         public static List<CubicCell> MakeGrid(VolOutput output)
@@ -1564,24 +1566,22 @@ namespace Engine.Processing
             return retval;
         }
 
-
-        public static List<Vector3[]> Polygonize(CubicCell cell, int min, int max)
+        private static List<Vector3[]> Polygonize(CubicCell cell, float isoLevel, bool interpolate)
         {
             int cubeIndex = 0;
             Vector3[] vertices = new Vector3[12];
 
             List<Vector3[]> triangles = new List<Vector3[]>();
+            
+            if (cell.Corners[0].Value >= isoLevel) cubeIndex |= 1;
+            if (cell.Corners[1].Value >= isoLevel) cubeIndex |= 2;
+            if (cell.Corners[2].Value >= isoLevel) cubeIndex |= 4;
+            if (cell.Corners[3].Value >= isoLevel) cubeIndex |= 8;
+            if (cell.Corners[4].Value >= isoLevel) cubeIndex |= 16;
+            if (cell.Corners[5].Value >= isoLevel) cubeIndex |= 32;
+            if (cell.Corners[6].Value >= isoLevel) cubeIndex |= 64;
+            if (cell.Corners[7].Value >= isoLevel) cubeIndex |= 128;
 
-            int isoLevel = min;
-
-            if (cell.Corners[0].Value <= max && cell.Corners[0].Value >= min) cubeIndex |= 1;
-            if (cell.Corners[1].Value <= max && cell.Corners[1].Value >= min) cubeIndex |= 2;
-            if (cell.Corners[2].Value <= max && cell.Corners[2].Value >= min) cubeIndex |= 4;
-            if (cell.Corners[3].Value <= max && cell.Corners[3].Value >= min) cubeIndex |= 8;
-            if (cell.Corners[4].Value <= max && cell.Corners[4].Value >= min) cubeIndex |= 16;
-            if (cell.Corners[5].Value <= max && cell.Corners[5].Value >= min) cubeIndex |= 32;
-            if (cell.Corners[6].Value <= max && cell.Corners[6].Value >= min) cubeIndex |= 64;
-            if (cell.Corners[7].Value <= max && cell.Corners[7].Value >= min) cubeIndex |= 128;
 
             if (MarchingCubesTables.CubeEdgeFlags[cubeIndex] == 0)
             {
@@ -1590,64 +1590,51 @@ namespace Engine.Processing
 
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 1) == 1)
             {
-                //vertices[0] = (cell.Corners[0].Key + cell.Corners[1].Key) * 0.5f;
-                vertices[0] = Interpolate(isoLevel, cell.Corners[0], cell.Corners[1]);
+                vertices[0] = Interpolate(isoLevel, cell.Corners[0], cell.Corners[1], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 2) == 2)
             {
-                //vertices[1] = (cell.Corners[1].Key + cell.Corners[2].Key) * 0.5f;
-                vertices[1] = Interpolate(isoLevel, cell.Corners[1], cell.Corners[2]);
-                
+                vertices[1] = Interpolate(isoLevel, cell.Corners[1], cell.Corners[2], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 4) == 4)
             {
-                //vertices[2] = (cell.Corners[2].Key + cell.Corners[3].Key) * 0.5f;
-                vertices[2] = Interpolate(isoLevel, cell.Corners[2], cell.Corners[3]);
+                vertices[2] = Interpolate(isoLevel, cell.Corners[2], cell.Corners[3], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 8) == 8)
             {
-                //vertices[3] = (cell.Corners[3].Key + cell.Corners[0].Key) * 0.5f;
-                vertices[3] = Interpolate(isoLevel, cell.Corners[3], cell.Corners[0]);
+                vertices[3] = Interpolate(isoLevel, cell.Corners[3], cell.Corners[0], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 16) == 16)
             {
-                //vertices[4] = (cell.Corners[4].Key + cell.Corners[5].Key) * 0.5f;
-                vertices[4] = Interpolate(isoLevel, cell.Corners[4], cell.Corners[5]);
+                vertices[4] = Interpolate(isoLevel, cell.Corners[4], cell.Corners[5], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 32) == 32)
             {
-                //vertices[5] = (cell.Corners[5].Key + cell.Corners[6].Key) * 0.5f;
-                vertices[5] = Interpolate(isoLevel, cell.Corners[5], cell.Corners[6]);
+                vertices[5] = Interpolate(isoLevel, cell.Corners[5], cell.Corners[6], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 64) == 64)
             {
-                //vertices[6] = (cell.Corners[6].Key + cell.Corners[7].Key) * 0.5f;
-                vertices[6] = Interpolate(isoLevel, cell.Corners[6], cell.Corners[7]);
+                vertices[6] = Interpolate(isoLevel, cell.Corners[6], cell.Corners[7],interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 128) == 128)
             {
-                //vertices[7] = (cell.Corners[7].Key + cell.Corners[4].Key) * 0.5f;
-                vertices[7] = Interpolate(isoLevel, cell.Corners[7], cell.Corners[4]);
+                vertices[7] = Interpolate(isoLevel, cell.Corners[7], cell.Corners[4], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 256) == 256)
             {
-                //vertices[8] = (cell.Corners[0].Key + cell.Corners[4].Key) * 0.5f;
-                vertices[8] = Interpolate(isoLevel, cell.Corners[0], cell.Corners[4]);
+                vertices[8] = Interpolate(isoLevel, cell.Corners[0], cell.Corners[4], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 512) == 512)
             {
-                //vertices[9] = (cell.Corners[1].Key + cell.Corners[5].Key) * 0.5f;
-                vertices[9] = Interpolate(isoLevel, cell.Corners[1], cell.Corners[5]);
+                vertices[9] = Interpolate(isoLevel, cell.Corners[1], cell.Corners[5], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 1024) == 1024)
             {
-                //vertices[10] = (cell.Corners[2].Key + cell.Corners[6].Key) * 0.5f;
-                vertices[10] = Interpolate(isoLevel, cell.Corners[2], cell.Corners[6]);
+                vertices[10] = Interpolate(isoLevel, cell.Corners[2], cell.Corners[6], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 2048) == 2048)
             {
-                //vertices[11] = (cell.Corners[3].Key + cell.Corners[7].Key) * 0.5f;
-                vertices[11] = Interpolate(isoLevel, cell.Corners[3], cell.Corners[7]);
+                vertices[11] = Interpolate(isoLevel, cell.Corners[3], cell.Corners[7], interpolate);
             }
 
             for (int i = 0; MarchingCubesTables.TriangleConnectionTable[cubeIndex, i] != -1; i += 3)
@@ -1656,14 +1643,21 @@ namespace Engine.Processing
                 var v2 = vertices[MarchingCubesTables.TriangleConnectionTable[cubeIndex, i + 1]];
                 var v3 = vertices[MarchingCubesTables.TriangleConnectionTable[cubeIndex, i + 2]];
 
+
+
                 triangles.Add(new Vector3[] { v1, v2, v3 });
             }
 
             return triangles;
         }
         
-        private static Vector3 Interpolate(int value, KeyValuePair<Vector3, int> c1, KeyValuePair<Vector3,int> c2)
+        private static Vector3 Interpolate(float value, KeyValuePair<Vector3, int> c1, KeyValuePair<Vector3,int> c2, bool interpolate = true)
         {
+            if (!interpolate)
+            {
+                return (c1.Key + c2.Key) * 0.5f;
+            }
+
             if (Math.Abs(value - c1.Value) < 0.0001f)
             {
                 return c1.Key;
@@ -1677,16 +1671,7 @@ namespace Engine.Processing
                 return c1.Key;
             }
 
-            float mu = ((float)(value - c1.Value) / (c2.Value - c1.Value));
-
-            if (mu > 1)
-            {
-                mu = 1;
-            }
-            if (mu < 0 )
-            {
-                mu = 0;
-            }
+            float mu = ((value - c1.Value) / (c2.Value - c1.Value));
 
             return new Vector3
             (
@@ -1696,6 +1681,114 @@ namespace Engine.Processing
             ); 
 
         }
+
+        public static Mesh MarchCubes(VolOutput output, float intensity, bool interpolate, bool isIndexed)
+        {
+            var grid = MakeGrid(output);
+
+            Dictionary<Vector3, int> vertexDict = new Dictionary<Vector3, int>();
+            HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
+            var triangles = new List<Vector3[]>();
+
+            var vertices = output.IntensityMap.Select(x => x.Key).ToList();
+
+
+            int id = 0;
+            int triId = 0;
+
+            for (int i = 0; i < grid.Count; i++)
+            {
+                var tris = Polygonize(grid[i], intensity, interpolate);
+
+                for (int j = 0; j < tris.Count; j++)
+                {
+                    int a, b, c = -1;
+                    if (!vertexDict.ContainsKey(tris[j][0]))
+                    {
+                        a = id;
+                        vertexDict.Add(tris[j][0], id++);
+                    }
+                    else
+                    {
+                        a = vertexDict[tris[j][0]];
+                    }
+
+                    if (!vertexDict.ContainsKey(tris[j][1]))
+                    {
+                        b = id;
+                        vertexDict.Add(tris[j][1], id++);
+                    }
+                    else
+                    {
+                        b = vertexDict[tris[j][1]];
+                    }
+
+                    if (!vertexDict.ContainsKey(tris[j][2]))
+                    {
+                        c = id;
+                        vertexDict.Add(tris[j][2], id++);
+                    }
+                    else
+                    {
+                        c = vertexDict[tris[j][2]];
+                    }
+
+                    if ( a != b && a != c && b != c)
+                    {
+                        triangleIDs.Add(new Triangle(triId++, a, b, c));
+                    }
+                }
+
+                triangles.AddRange(tris);
+            }
+
+            var verts = vertexDict.Select(x => x.Key).ToList();
+
+
+            if (isIndexed)
+            {
+                return ObjectLoader.MakeMeshIndexed(verts, triangleIDs.ToList(), output.Spacing, "test"); ;
+            }
+            else
+            {
+                return ObjectLoader.MakeMeshUnindexed(triangles, output.Spacing, "test");
+            }
+            
+        }
+
+        public static void Smoothen(ref Mesh mesh, int iteration)
+        {
+            var originalVertexCoords = new List<Vector3>(mesh.Vertices.Select(x => x.Coord));
+            while (iteration > 0)
+            {
+                for (int i = 0; i < mesh.Vertices.Count; i++)
+                {
+                    var Lu = Vector3.Zero;
+                    var normal = mesh.Vertices[i].Normal;
+
+                    if (mesh.Vertices[i].Verts.Count > 0)
+                    {
+                        for (int j = 0; j < mesh.Vertices[i].Verts.Count; j++)
+                        {
+                            Lu += mesh.Vertices[mesh.Vertices[i].Verts[j]].Coord;
+                            normal += mesh.Vertices[mesh.Vertices[i].Verts[j]].Normal;
+                        }
+                        Lu /= mesh.Vertices[i].Verts.Count;
+                        Lu -= mesh.Vertices[i].Coord;
+
+                        mesh.Vertices[i] = new Vertex(mesh.Vertices[i].Id, mesh.Vertices[i].Coord + Lu * 0.5f, normal.Normalized())
+                        {
+                            Verts = mesh.Vertices[i].Verts,
+                            Tris = mesh.Vertices[i].Tris,
+                            Edges = mesh.Vertices[i].Edges
+                        };
+                    }
+                }
+                iteration--;
+            }
+        }
+
+
     }
 
 

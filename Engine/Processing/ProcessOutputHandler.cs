@@ -189,6 +189,26 @@ namespace Engine.Processing
 
 
         }
+
+        public static void SaveOffFile(Mesh mesh, string file)
+        {
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+                writer.WriteLine("OFF");
+                writer.WriteLine($"{mesh.Vertices.Count} {mesh.Triangles.Count} 0");
+
+                for (int i = 0; i < mesh.Vertices.Count; i++)
+                {
+                    writer.WriteLine($"{mesh.Vertices[i].Coord.X} {mesh.Vertices[i].Coord.Y} {mesh.Vertices[i].Coord.Z}");
+                }
+
+                for (int i = 0; i < mesh.Triangles.Count; i++)
+                {
+                    writer.WriteLine($"3 {mesh.Triangles[i].V1} {mesh.Triangles[i].V2}  {mesh.Triangles[i].V3}");
+                }
+                //writer.Write(Environment.NewLine);
+            }
+        }
     }
 
 }

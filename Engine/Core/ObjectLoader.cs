@@ -531,7 +531,7 @@ namespace Engine.Core
             }
         }
 
-        public static Mesh MakeMesh(List<Vector3[]> tris, float spacing, string name = "")
+        public static Mesh MakeMeshUnindexed(List<Vector3[]> tris, float spacing, string name = "")
         {
             var mesh = new Mesh();
             
@@ -548,6 +548,25 @@ namespace Engine.Core
             }
 
             //mesh.CalculateVertexNormals();
+
+            return mesh;
+        }
+
+        public static Mesh MakeMeshIndexed(List<Vector3> vertices, List<Triangle> tris, float spacing, string name = "")
+        {
+            var mesh = new Mesh();
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                mesh.AddVertex(vertices[i] * -spacing, Vector3.Zero);
+            }
+
+            for (int i = 0; i < tris.Count; i++)
+            {
+                mesh.AddTriangle(tris[i].V3, tris[i].V2, tris[i].V1);
+            }
+
+            mesh.CalculateVertexNormals();
 
             return mesh;
         }

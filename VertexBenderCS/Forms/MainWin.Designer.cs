@@ -28,11 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 4));
+            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -117,12 +117,13 @@
             this.label7 = new System.Windows.Forms.Label();
             this.sliderMin = new System.Windows.Forms.TrackBar();
             this.pointCloudPanel = new System.Windows.Forms.Panel();
+            this.sliderMaxText = new System.Windows.Forms.Label();
+            this.sliderMinText = new System.Windows.Forms.Label();
             this.sliderMax = new System.Windows.Forms.TrackBar();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.sliderMinText = new System.Windows.Forms.Label();
-            this.sliderMaxText = new System.Windows.Forms.Label();
+            this.menuOffExport = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -200,48 +201,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea2.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea2.AxisX.LabelStyle.Interval = 0D;
-            chartArea2.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea2.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea2.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea2.AxisY.LabelStyle.Interval = 0D;
-            chartArea2.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea2.BackColor = System.Drawing.Color.White;
-            chartArea2.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea2);
-            legend2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend2.ForeColor = System.Drawing.Color.Gainsboro;
-            legend2.InterlacedRowsColor = System.Drawing.Color.White;
-            legend2.Name = "Legend1";
-            legend2.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend2);
+            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisX.LabelStyle.Interval = 0D;
+            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisY.LabelStyle.Interval = 0D;
+            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea1.BackColor = System.Drawing.Color.White;
+            chartArea1.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea1);
+            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend1.ForeColor = System.Drawing.Color.Gainsboro;
+            legend1.InterlacedRowsColor = System.Drawing.Color.White;
+            legend1.Name = "Legend1";
+            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend1);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series2.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series2.BackSecondaryColor = System.Drawing.Color.White;
-            series2.ChartArea = "isoCurve-Distances";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series2.Color = System.Drawing.Color.DodgerBlue;
-            series2.CustomProperties = "PointWidth=0.3";
-            series2.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series2.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series2.IsVisibleInLegend = false;
-            series2.LabelBackColor = System.Drawing.Color.White;
-            series2.LabelBorderColor = System.Drawing.Color.White;
-            series2.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series2.Legend = "Legend1";
-            series2.MarkerBorderColor = System.Drawing.Color.White;
-            series2.MarkerColor = System.Drawing.Color.White;
-            series2.MarkerSize = 3;
-            series2.Name = "IsoCurve";
-            series2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series2.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series2.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series2);
+            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series1.BackSecondaryColor = System.Drawing.Color.White;
+            series1.ChartArea = "isoCurve-Distances";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.Color = System.Drawing.Color.DodgerBlue;
+            series1.CustomProperties = "PointWidth=0.3";
+            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series1.IsVisibleInLegend = false;
+            series1.LabelBackColor = System.Drawing.Color.White;
+            series1.LabelBorderColor = System.Drawing.Color.White;
+            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series1.Legend = "Legend1";
+            series1.MarkerBorderColor = System.Drawing.Color.White;
+            series1.MarkerColor = System.Drawing.Color.White;
+            series1.MarkerSize = 3;
+            series1.Name = "IsoCurve";
+            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series1);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -437,7 +438,7 @@
             this.menuImport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuImport.Name = "menuImport";
             this.menuImport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.menuImport.Size = new System.Drawing.Size(149, 22);
+            this.menuImport.Size = new System.Drawing.Size(180, 22);
             this.menuImport.Text = "&Import";
             // 
             // menuImportOff
@@ -481,20 +482,21 @@
             // menuExport
             // 
             this.menuExport.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuIsoCurveExport});
+            this.menuIsoCurveExport,
+            this.menuOffExport});
             this.menuExport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExport.Image = ((System.Drawing.Image)(resources.GetObject("menuExport.Image")));
             this.menuExport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuExport.Name = "menuExport";
             this.menuExport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuExport.Size = new System.Drawing.Size(149, 22);
+            this.menuExport.Size = new System.Drawing.Size(180, 22);
             this.menuExport.Text = "&Export";
             // 
             // menuIsoCurveExport
             // 
             this.menuIsoCurveExport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuIsoCurveExport.Name = "menuIsoCurveExport";
-            this.menuIsoCurveExport.Size = new System.Drawing.Size(165, 22);
+            this.menuIsoCurveExport.Size = new System.Drawing.Size(180, 22);
             this.menuIsoCurveExport.Text = "Iso-Curve Output";
             // 
             // toolStripSeparator
@@ -502,7 +504,7 @@
             this.toolStripSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator.ForeColor = System.Drawing.SystemColors.Desktop;
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(177, 6);
             // 
             // menuSave
             // 
@@ -512,7 +514,7 @@
             this.menuSave.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(149, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save";
             // 
             // menuSaveAs
@@ -520,7 +522,7 @@
             this.menuSaveAs.Enabled = false;
             this.menuSaveAs.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuSaveAs.Name = "menuSaveAs";
-            this.menuSaveAs.Size = new System.Drawing.Size(149, 22);
+            this.menuSaveAs.Size = new System.Drawing.Size(180, 22);
             this.menuSaveAs.Text = "Save &As";
             // 
             // toolStripSeparator2
@@ -528,13 +530,13 @@
             this.toolStripSeparator2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator2.ForeColor = System.Drawing.SystemColors.Highlight;
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // menuExit
             // 
             this.menuExit.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(149, 22);
+            this.menuExit.Size = new System.Drawing.Size(180, 22);
             this.menuExit.Text = "E&xit";
             // 
             // processMenu
@@ -1145,6 +1147,24 @@
             this.pointCloudPanel.TabIndex = 24;
             this.pointCloudPanel.Visible = false;
             // 
+            // sliderMaxText
+            // 
+            this.sliderMaxText.AutoSize = true;
+            this.sliderMaxText.Location = new System.Drawing.Point(36, 56);
+            this.sliderMaxText.Name = "sliderMaxText";
+            this.sliderMaxText.Size = new System.Drawing.Size(25, 15);
+            this.sliderMaxText.TabIndex = 26;
+            this.sliderMaxText.Text = "255";
+            // 
+            // sliderMinText
+            // 
+            this.sliderMinText.AutoSize = true;
+            this.sliderMinText.Location = new System.Drawing.Point(38, 23);
+            this.sliderMinText.Name = "sliderMinText";
+            this.sliderMinText.Size = new System.Drawing.Size(13, 15);
+            this.sliderMinText.TabIndex = 25;
+            this.sliderMinText.Text = "0";
+            // 
             // sliderMax
             // 
             this.sliderMax.Location = new System.Drawing.Point(59, 54);
@@ -1181,23 +1201,12 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "Point Cloud";
             // 
-            // sliderMinText
+            // menuOffExport
             // 
-            this.sliderMinText.AutoSize = true;
-            this.sliderMinText.Location = new System.Drawing.Point(38, 23);
-            this.sliderMinText.Name = "sliderMinText";
-            this.sliderMinText.Size = new System.Drawing.Size(13, 15);
-            this.sliderMinText.TabIndex = 25;
-            this.sliderMinText.Text = "0";
-            // 
-            // sliderMaxText
-            // 
-            this.sliderMaxText.AutoSize = true;
-            this.sliderMaxText.Location = new System.Drawing.Point(36, 56);
-            this.sliderMaxText.Name = "sliderMaxText";
-            this.sliderMaxText.Size = new System.Drawing.Size(25, 15);
-            this.sliderMaxText.TabIndex = 26;
-            this.sliderMaxText.Text = "255";
+            this.menuOffExport.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuOffExport.Name = "menuOffExport";
+            this.menuOffExport.Size = new System.Drawing.Size(180, 22);
+            this.menuOffExport.Text = "Off file";
             // 
             // MainWin
             // 
@@ -1347,6 +1356,7 @@
         private System.Windows.Forms.TrackBar sliderMax;
         private System.Windows.Forms.Label sliderMaxText;
         private System.Windows.Forms.Label sliderMinText;
+        private System.Windows.Forms.ToolStripMenuItem menuOffExport;
     }
 }
 

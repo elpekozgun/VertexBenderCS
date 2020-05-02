@@ -168,7 +168,8 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
-            if (!EnableCull)
+
+            //if (!EnableCull)
             {
                 GL.Disable(EnableCap.CullFace);
             }
@@ -230,7 +231,7 @@ namespace Engine.GLApi
                 GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
                 Shader = temp;
             }
-            if (!EnableCull)
+            //if (!EnableCull)
             {
                 GL.Enable(EnableCap.CullFace);
             }
