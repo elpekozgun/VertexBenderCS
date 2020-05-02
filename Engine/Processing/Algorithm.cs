@@ -1686,12 +1686,11 @@ namespace Engine.Processing
         {
             var grid = MakeGrid(output);
 
-            Dictionary<Vector3, int> vertexDict = new Dictionary<Vector3, int>();
+            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
             HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
             var triangles = new List<Vector3[]>();
 
             var vertices = output.IntensityMap.Select(x => x.Key).ToList();
-
 
             int id = 0;
             int triId = 0;
@@ -1703,34 +1702,39 @@ namespace Engine.Processing
                 for (int j = 0; j < tris.Count; j++)
                 {
                     int a, b, c = -1;
-                    if (!vertexDict.ContainsKey(tris[j][0]))
+
+                    var dec = new Vector3d(Math.Round(tris[j][0].X,2), Math.Round(tris[j][0].Y,2), Math.Round(tris[j][0].Z,2)); 
+
+                    if (!vertexDict.ContainsKey(dec))
                     {
                         a = id;
-                        vertexDict.Add(tris[j][0], id++);
+                        vertexDict.Add(dec, id++);
                     }
                     else
                     {
-                        a = vertexDict[tris[j][0]];
+                        a = vertexDict[dec];
                     }
 
-                    if (!vertexDict.ContainsKey(tris[j][1]))
+                    dec = new Vector3d(Math.Round(tris[j][1].X,2), Math.Round(tris[j][1].Y,2), Math.Round(tris[j][1].Z,2)); 
+                    if (!vertexDict.ContainsKey(dec))
                     {
                         b = id;
-                        vertexDict.Add(tris[j][1], id++);
+                        vertexDict.Add(dec, id++);
                     }
                     else
                     {
-                        b = vertexDict[tris[j][1]];
+                        b = vertexDict[dec];
                     }
 
-                    if (!vertexDict.ContainsKey(tris[j][2]))
+                    dec = new Vector3d(Math.Round(tris[j][2].X,2), Math.Round(tris[j][2].Y,2), Math.Round(tris[j][2].Z,2));
+                    if (!vertexDict.ContainsKey(dec))
                     {
                         c = id;
-                        vertexDict.Add(tris[j][2], id++);
+                        vertexDict.Add(dec, id++);
                     }
                     else
                     {
-                        c = vertexDict[tris[j][2]];
+                        c = vertexDict[dec];
                     }
 
                     if ( a != b && a != c && b != c)
@@ -1742,7 +1746,7 @@ namespace Engine.Processing
                 triangles.AddRange(tris);
             }
 
-            var verts = vertexDict.Select(x => x.Key).ToList();
+            var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
 
 
             if (isIndexed)
@@ -1788,7 +1792,78 @@ namespace Engine.Processing
             }
         }
 
+        public static void RemoveIslands(ref Mesh mesh)
+        {
+            //Graph g = new Graph(mesh);
+            bool[] visited = new bool[mesh.Vertices.Count];
+            Queue<int> queue = new Queue<int>(mesh.Vertices.Count);
 
+            HashSet<int> deleteVertices = new HashSet<int>(); 
+
+            int trueCount = 0;
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                if (!visited[i])
+                {
+                    queue.Enqueue(mesh.Vertices[i].Id);
+
+
+                    while (queue.Count > 0)
+                    {
+                        int v = queue.Dequeue();
+                        visited[v] = true;
+                        trueCount++;
+
+                        for (int j = 0; j < mesh.Vertices[v].Verts.Count; j++)
+                        {
+                            int adj = mesh.Vertices[mesh.Vertices[v].Verts[j]].Id;
+                            if (!visited[adj])
+                            {
+                                visited[adj] = true;
+                                queue.Enqueue(adj);
+                                trueCount++;
+                            }
+                        }
+                    }
+                }
+
+                if (trueCount < mesh.Vertices.Count * 0.75)
+                {
+                    for (int j = 0; j < visited.Length; j++)
+                    {
+                        if (visited[j])
+                        {
+                            deleteVertices.Add(j);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < visited.Length; j++)
+                    {
+                        if (!visited[j])
+                        {
+                            deleteVertices.Add(j);
+                        }
+                    }
+                }
+
+            }
+
+            var list = new List<Vertex>();
+            foreach (var item in deleteVertices)
+            {
+                list.Add(mesh.Vertices[item]);
+            }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                mesh.RemoveVertex(list[i]);
+            }
+        }
+
+
+                                    
     }
 
 

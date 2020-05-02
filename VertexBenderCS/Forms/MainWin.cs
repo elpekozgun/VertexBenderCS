@@ -267,7 +267,7 @@ namespace VertexBenderCS.Forms
 
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
 
-            var output2 = Algorithm.Downsample(output, 3);
+            var output2 = Algorithm.Downsample(output, 5);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
             var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2");
             pointCloudRenderer2.Position = new Vector3(0,0,-0.4f);
@@ -284,9 +284,11 @@ namespace VertexBenderCS.Forms
             sceneGraphTree.SelectedNode = null;
 
             var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
-            Algorithm.Smoothen(ref testCube2, 5);
+            //Algorithm.Smoothen(ref testCube2, 5);
+            Algorithm.RemoveIslands(ref testCube2);
             var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
             _SceneGraph.AddObject(meshrenderer2);
+
 
             //sceneGraphTree.SelectedNode = null;
 
