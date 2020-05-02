@@ -246,27 +246,6 @@ namespace Engine.Core
             Vertices.Remove(Vertices[id]);
         }
 
-        internal void RemoveVertex(Vertex v)
-        {
-            v.Verts.Remove(v.Id);
-            for (int i = 0; i < v.Verts.Count; i++)
-            {
-                var dd = Vertices.Find(x => x.Id == v.Verts[i]);
-                Vertices.Remove(dd);
-            }
-            for (int i = 0; i < v.Edges.Count; i++)
-            {
-                var dd = Edges.Find(x=>x.Id == v.Edges[i]);
-                Edges.Remove(dd);
-            }
-            for (int i = 0; i < v.Tris.Count; i++)
-            {
-                var dd = Triangles.Find(x => x.Id == v.Tris[i]);
-                Triangles.Remove(dd);
-            }
-            Vertices.Remove(v);
-        }
-
         internal void RemoveTriangle(Triangle tri)
         {
             

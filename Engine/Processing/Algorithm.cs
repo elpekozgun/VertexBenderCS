@@ -1850,15 +1850,9 @@ namespace Engine.Processing
 
             }
 
-            var list = new List<Vertex>();
             foreach (var item in deleteVertices)
             {
-                list.Add(mesh.Vertices[item]);
-            }
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                mesh.RemoveVertex(list[i]);
+                mesh.RemoveVertex(item);
             }
         }
 
