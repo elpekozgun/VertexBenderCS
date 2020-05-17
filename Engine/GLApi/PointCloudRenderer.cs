@@ -49,14 +49,17 @@ namespace Engine.GLApi
         private void ExtractVertices(Mesh mesh, List<int> intensities)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            int i = 0;
+
+            foreach(var vertex in mesh.Vertices)
             {
                 vertices[i] = new GpuVertex()
                 {
-                    Coord = mesh.Vertices[i].Coord,
-                    Normal = mesh.Vertices[i].Normal,
-                    Color =  new Vector3((float)intensities[i] / 255.0f, 0.5f * (float)intensities[i] / 255.0f, 0)
+                    Coord = vertex.Value.Coord,
+                    Normal = vertex.Value.Normal,
+                    Color = new Vector3((float)intensities[i] / 255.0f, 0.5f * (float)intensities[i] / 255.0f, 0)
                 };
+                i++;
             }
         }
 
@@ -121,6 +124,10 @@ namespace Engine.GLApi
             GL.BindVertexArray(_VAO);
 
             var pointCloudShader = Shader.DefaultCuberille;
+            if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
+            {
+                pointCloudShader = Shader.DefaultPointCloud;
+            }
 
             pointCloudShader.Use();
             pointCloudShader.SetMat4("Model", ModelMatrix);
@@ -143,38 +150,6 @@ namespace Engine.GLApi
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
         }
-
-        public void Render2(Camera cam, eRenderMode mode = eRenderMode.shaded)
-        {
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
-
-            GL.BindVertexArray(_VAO);
-
-            var pointCloudShader = Shader.DefaultCuberille;
-
-            pointCloudShader.Use();
-            pointCloudShader.SetMat4("Model", ModelMatrix);
-            pointCloudShader.SetMat4("View", cam.View);
-            pointCloudShader.SetMat4("Projection", cam.Projection);
-            pointCloudShader.SetVec4("OutColor", Color);
-            pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
-            pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
-            pointCloudShader.SetFloat("Spacing", Spacing);
-
-            var temp = Shader;
-            Shader = pointCloudShader;
-
-            GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
-            GL.PointSize(2);
-
-            GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
-            Shader = temp;
-
-            GL.BindVertexArray(0);
-            GL.ActiveTexture(TextureUnit.Texture0);
-        }
-
 
         protected virtual void Dispose(bool disposing)
         {

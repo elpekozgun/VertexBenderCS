@@ -58,6 +58,8 @@ namespace VertexBenderCS.Forms
         private eRenderMode         _renderMode;
         private bool                _isPerspective;
 
+        private VolOutput _TESTVOL;
+
         private Transform           _selectedTransform;
         private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
         
@@ -163,6 +165,7 @@ namespace VertexBenderCS.Forms
             toolbarWireframe.Click += ToolbarWireframe_Click;
             toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
             toolbarIsBlinn.Click += ToolbarIsBlinn_Click;
+            toolStripButton2.Click += ToolStripButton2_Click;
 
             Logger.OnItemLogged += Logger_OnItemLogged;
             Logger.OnLogCleaned += Logger_OnLogCleaned;
@@ -175,9 +178,13 @@ namespace VertexBenderCS.Forms
             _SceneGraph.OnItemAdded += SceneGraph_OnItemAdded;
             _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
+
+
+            // temp
+            numericMarch.ValueChanged += NumericMarch_ValueChanged;
+            IntensityMarch.ValueChanged += IntensityMarch_ValueChanged;
         }
-
-
+               
 
         private void StarTest()
         {
@@ -201,8 +208,8 @@ namespace VertexBenderCS.Forms
 
             for (int i = 0; i < m2.PointsOnSphere.Count; i++)
             {
-                sphere2.Vertices.Add(new Vertex(i, m2.PointsOnSphere[i], m2.Normals[i]));
-                sphere3.Vertices.Add(new Vertex(i, m3.PointsOnSphere[i], m3.Normals[i]));
+                sphere2.Vertices.Add(i, new Vertex(i, m2.PointsOnSphere[i], m2.Normals[i]));
+                sphere3.Vertices.Add(i, new Vertex(i, m3.PointsOnSphere[i], m3.Normals[i]));
             }
             sphere2.Triangles = mesh.Mesh.Triangles;
             sphere3.Triangles = mesh.Mesh.Triangles;
@@ -251,7 +258,7 @@ namespace VertexBenderCS.Forms
         private void GeometryShaderTest()
         {
             var mesh = new Mesh();
-            mesh.Vertices.Add(new Vertex(0, Vector3.Zero));
+            mesh.Vertices.Add(0, new Vertex(0, Vector3.Zero));
             var pointCloud = new PointCloudRenderer(mesh, new List<int>() { 255 }, 1);
             _SceneGraph.AddObject(pointCloud);
         }
@@ -266,26 +273,24 @@ namespace VertexBenderCS.Forms
 
 
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
+            _TESTVOL = output;
 
-            var output2 = Algorithm.Downsample(output, 5);
+            var output2 = Algorithm.Downsample(output, 2);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
-            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2");
-            pointCloudRenderer2.Position = new Vector3(0,0,-0.4f);
+            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2")
+            {
+                Position = new Vector3(0, 0, -0.4f)
+            };
             _SceneGraph.AddObject(pointCloudRenderer2);
 
             //sceneGraphTree.SelectedNode = null;
-
-            //var testCube = Algorithm.MarchCubes(output2, 65, true, false, false);
-            //var meshrenderer = new PrimitiveRenderer(testCube, "testmarchingCubeIndexedMedian");
-            //meshrenderer.Position = new Vector3(0, 0, 0.4f);
-            //_SceneGraph.AddObject(meshrenderer);
 
 
             sceneGraphTree.SelectedNode = null;
 
             var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
-            //Algorithm.Smoothen(ref testCube2, 5);
-            Algorithm.RemoveIslands(ref testCube2);
+            Algorithm.Smoothen(ref testCube2, 5);
+            //Algorithm.RemoveIslands(ref testCube2);
             var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
             _SceneGraph.AddObject(meshrenderer2);
 
@@ -555,7 +560,7 @@ namespace VertexBenderCS.Forms
                 for (int i = 0; i < output.Output.Count; i++)
                 {
                     var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y), Vector3.UnitY);
-                    outputmesh.Vertices.Add(v);
+                    outputmesh.Vertices.Add(v.Id, v);
                 }
                 outputmesh.Triangles = mesh.Mesh.Triangles;
 
@@ -598,7 +603,7 @@ namespace VertexBenderCS.Forms
 
                 for (int i = 0; i < output.PointsOnSphere.Count; i++)
                 {
-                    sphere.Vertices.Add(new Vertex(i, output.PointsOnSphere[i], output.Normals[i]));
+                    sphere.Vertices.Add(i, new Vertex(i, output.PointsOnSphere[i], output.Normals[i]));
                 }
 
                 sphere.Triangles = mesh.Mesh.Triangles;
@@ -1399,8 +1404,47 @@ namespace VertexBenderCS.Forms
             }
         }
 
+        private void ToolStripButton2_Click(object sender, EventArgs e)
+        {
+            if (_SceneGraph != null)
+            {
+                if (_selectedTransform != null)
+                {
+                    var mesh = (_selectedTransform as MeshRenderer).Mesh;
+                    Algorithm.RemoveIslands(ref mesh);
+                    var meshRenderer = new MeshRenderer(mesh, "smoothen");
+                    _SceneGraph.DeleteObject(_selectedTransform);
+                    _SceneGraph.AddObject(meshRenderer);
+                }
+
+                _SceneGraph.IsBlinnPhong = !_SceneGraph.IsBlinnPhong;
+            }
+        }
+
         #endregion
 
+        private void NumericMarch_ValueChanged(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var output = Algorithm.Downsample(_TESTVOL, (int)numericMarch.Value);
+                var testCube = Algorithm.MarchCubes(output, IntensityMarch.Value, true, true);
+                Algorithm.Smoothen(ref testCube, 5);
+                //Algorithm.RemoveIslands(ref testCube);
+                var meshrenderer2 = new MeshRenderer(testCube, "smooth");
+                _SceneGraph.AddObject(meshrenderer2);
+            }
+        }
+
+        private void IntensityMarch_ValueChanged(object sender, EventArgs e)
+        {
+            var output = Algorithm.Downsample(_TESTVOL, (int)numericMarch.Value);
+            var testCube2 = Algorithm.MarchCubes(output, IntensityMarch.Value, true, true);
+            Algorithm.Smoothen(ref testCube2, 5);
+            //Algorithm.RemoveIslands(ref testCube2);
+            var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
+            _SceneGraph.AddObject(meshrenderer2);
+        }
 
     }
 

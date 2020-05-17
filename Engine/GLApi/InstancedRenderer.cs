@@ -46,26 +46,49 @@ namespace Engine.GLApi
         private void ExtractVertices(Mesh mesh)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            int i = 0;
+            foreach(var vertex in mesh.Vertices)
             {
                 vertices[i] = new GpuVertex()
                 {
-                    Coord = mesh.Vertices[i].Coord,
-                    Normal = mesh.Vertices[i].Normal,
+                    Coord = vertex.Value.Coord,
+                    Normal = vertex.Value.Normal,
                     Color = new Vector3(0.0f, 0.0f, 0.0f),
                     TexCoord = new Vector2(0.0f, 0.0f)
                 };
+                i++;
             }
-
+            i = 0;
             indices = new int[mesh.Triangles.Count * 3];
-            for (int i = 0; i < mesh.Triangles.Count; i++)
+            foreach(var tri in mesh.Triangles)
             {
-                var tri = mesh.Triangles[i];
-
-                indices[i * 3] = tri.V1;
-                indices[i * 3 + 1] = tri.V2;
-                indices[i * 3 + 2] = tri.V3;
+                indices[i * 3] = tri.Value.V1;
+                indices[i * 3 + 1] = tri.Value.V2;
+                indices[i * 3 + 2] = tri.Value.V3;
+                i++;
             }
+
+            //vertices = new GpuVertex[mesh.Vertices.Count];
+            //for (int i = 0; i < mesh.Vertices.Count; i++)
+            //{
+            //    vertices[i] = new GpuVertex()
+            //    {
+            //        Coord = mesh.Vertices[i].Coord,
+            //        Normal = mesh.Vertices[i].Normal,
+            //        Color = new Vector3(0.0f, 0.0f, 0.0f),
+            //        TexCoord = new Vector2(0.0f, 0.0f)
+            //    };
+            //}
+
+            //indices = new int[mesh.Triangles.Count * 3];
+            //for (int i = 0; i < mesh.Triangles.Count; i++)
+            //{
+            //    var tri = mesh.Triangles[i];
+
+            //    indices[i * 3] = tri.V1;
+            //    indices[i * 3 + 1] = tri.V2;
+            //    indices[i * 3 + 2] = tri.V3;
+            //}
         }
 
         public InstancedRenderer(Mesh mesh, int count, string name = "")

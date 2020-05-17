@@ -74,6 +74,7 @@
     <Compile Include="Core\KretzTag.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\MeshOld.cs" />
     <Compile Include="Core\ObjectLoader.cs" />
     <Compile Include="Core\PrimitiveObjectFactory.cs" />
     <Compile Include="Core\MathExtensions.cs" />

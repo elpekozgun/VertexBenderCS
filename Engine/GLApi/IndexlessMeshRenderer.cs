@@ -42,16 +42,19 @@ namespace Engine.GLApi
         private void ExtractVertices(Mesh mesh)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            int i = 0;
+            foreach(var vertex in Mesh.Vertices)
             {
                 vertices[i] = new GpuVertex()
                 {
-                    Coord = mesh.Vertices[i].Coord,
-                    Normal = mesh.Vertices[i].Normal,
+                    Coord = vertex.Value.Coord,
+                    Normal = vertex.Value.Normal,
                     Color = new Vector3(0.0f, 0.0f, 0.0f),
                     TexCoord = new Vector2(0.0f, 0.0f)
                 };
+                i++;
             }
+            
         }
 
         public IndexlessMeshRenderer(Mesh mesh, string name = "")

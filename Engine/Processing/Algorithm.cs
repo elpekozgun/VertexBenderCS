@@ -354,18 +354,20 @@ namespace Engine.Processing
         {
             List<float> Curvatures = new List<float>();
 
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            foreach (var vertex in mesh.Vertices)
             {
-                var vertex = mesh.Vertices[i];
                 float curvature = 2.0f * (float)Math.PI;
-                foreach (var triId in vertex.Tris)
+                foreach (var triId in vertex.Value.Tris)
                 {
-                    var ang = mesh.GetTriangleAngle(triId, vertex.Id);
+                    var ang = mesh.GetTriangleAngle(triId, vertex.Key);
 
                     curvature -= ang;
                 }
                 Curvatures.Add(curvature);
             }
+
+
+
 
             return Curvatures;
         }
@@ -433,14 +435,13 @@ namespace Engine.Processing
                 float isoCurveLength = 0;
 
                 var isoCurve = new List<Vector3>();
-
-                for (int j = 0; j < mesh.Triangles.Count; j++)
+                
+                foreach(var tri in mesh.Triangles) 
                 {
-                    var tri = mesh.Triangles[j];
 
-                    var v1Id = tri.V1;
-                    var v2Id = tri.V2;
-                    var v3Id = tri.V3;
+                    var v1Id = tri.Value.V1;
+                    var v2Id = tri.Value.V2;
+                    var v3Id = tri.Value.V3;
 
                     var distV1 = distances[v1Id];
                     var distV2 = distances[v2Id];
@@ -523,9 +524,9 @@ namespace Engine.Processing
                     isoCurve.Add(p1);
                     isoCurve.Add(p2);
 
-                    updateProgress((int)(100 * ((float)(i * mesh.Triangles.Count + j) / (float)(mesh.Triangles.Count * k))));
+                    updateProgress((int)(100 * ((float)(i * mesh.Triangles.Count + tri.Key) / (float)(mesh.Triangles.Count * k))));
                 }
-                isoCurveDistances[i] = isoCurveLength;
+
 
                 for (int j = 0; j < isoCurve.Count - 1; j++)
                 {
@@ -590,17 +591,6 @@ namespace Engine.Processing
             return new GeodesicMatrixOutput(matrix, _watch.ElapsedMilliseconds);
         }
 
-        internal static float[] DijkstraFibonacciHeap(Mesh mesh, int src)
-        {
-            var graph = new Graph(mesh);
-            return DijkstraFibonacciHeap(graph, src);
-        }
-
-        internal static float[] DijkstraMinHeap(Mesh mesh, int src)
-        {
-            var graph = new Graph(mesh);
-            return DijkstraMinHeap(graph, src);
-        }
 
         #endregion
 
@@ -768,10 +758,11 @@ namespace Engine.Processing
 
         private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, List<Dictionary<int,Vertex>> allBoundaries, eParameterizationMethod method, float weight, bool fixInternals = false)
         {
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            foreach (var vertex in mesh.Vertices)
             {
                 bool isBoundary = false;
                 int boundaryIndex = 0;
+                int i = vertex.Key;
 
                 for (int j = 0; j < allBoundaries.Count; j++)
                 {
@@ -804,6 +795,7 @@ namespace Engine.Processing
                     }
                 }
             }
+
         }
 
         private static Dictionary<int, Vector2> MakeDiscTopology(Dictionary<int,Vertex> vertices, bool uniformBoundary)
@@ -857,10 +849,7 @@ namespace Engine.Processing
             var tris = new List<Triangle>();
             foreach (var triId in vi.Tris)
             {
-                var id = mesh.GetTriangleIndex(triId);
-
-                var tri = mesh.Triangles[id];
-                //var tri = mesh.Triangles[triId];
+                var tri = mesh.Triangles[triId];
                 if (tri.V1 == j || tri.V2 == j || tri.V3 == j)
                 {
                     tris.Add(tri);
@@ -980,11 +969,15 @@ namespace Engine.Processing
 
             var meshCenter = mesh.Center();
 
-            List<Vector3> vertices = mesh.Vertices.Select(x => x.Coord).ToList();
+            List<Vector3> vertices = mesh.Vertices.Select(x => x.Value.Coord).ToList();
 
-            for (int j = 0; j < mesh.Vertices.Count; j++)
+            var keys = mesh.Vertices.Select(x => x.Key).ToList();
+
+            for (int i = 0; i < keys.Count; i++)
             {
-                var neighbors = mesh.Vertices[j].Verts;
+                var vertex = mesh.Vertices[keys[i]];
+
+                var neighbors = vertex.Verts;
 
                 Vector3 newCenter = Vector3.Zero;
                 for (int k = 0; k < neighbors.Count; k++)
@@ -993,8 +986,10 @@ namespace Engine.Processing
                 }
                 newCenter /= neighbors.Count;
 
-                vertices[j] = newCenter;
+                vertices[keys[i]] = newCenter;
             }
+
+
 
             List<Vector3> spherePoints = new List<Vector3>();
             List<Vector3> normals = new List<Vector3>();
@@ -1111,7 +1106,7 @@ namespace Engine.Processing
             }
             else
             {
-                RecursivelyFindAllBoundaries(mesh.Vertices, boundaryEdges, ref allBoundaries);
+                RecursivelyFindAllBoundaries(mesh.Vertices.Select(x=>x.Value).ToList(), boundaryEdges, ref allBoundaries);
                 path = allBoundaries[0].Select(x => x.Key).ToList();
             }
 
@@ -1172,13 +1167,12 @@ namespace Engine.Processing
             List<Vector3> normals = new List<Vector3>();
 
 
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            foreach (var vertex in mesh.Vertices)
             {
-                var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
+                var normal = (vertex.Value.Coord - meshCenter).Normalized();
                 spherePoints.Add(normal * box.Size);
                 normals.Add(normal);
             }
-
 
             for (int i = 0; i < iterationCount; i++)
             {
@@ -1220,9 +1214,9 @@ namespace Engine.Processing
             List<Vector3> normals = new List<Vector3>();
             List<Vector3> centerList = new List<Vector3>();
 
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            foreach (var vertex in mesh.Vertices)
             {
-                var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
+                var normal = (vertex.Value.Coord - meshCenter).Normalized();
                 spherePoints.Add(meshCenter + normal * box.Size);
                 normals.Add(normal);
             }
@@ -1251,7 +1245,7 @@ namespace Engine.Processing
                 meshCenter = sphereCenter / (totalTriArea);
                 centerList.Add(meshCenter);
 
-                for (int i = 0; i < mesh.Vertices.Count; i++)
+                for (int i = 0; i < spherePoints.Count; i++)
                 {
                     var normal = (spherePoints[i] - meshCenter).Normalized();
                     spherePoints[i] = (meshCenter + normal * box.Size);
@@ -1260,70 +1254,7 @@ namespace Engine.Processing
 
             }
 
-            //for (int j = 0; j < iterationCount; j++)
-            //{
 
-            //    //var dist = float.MinValue;
-            //    //for (int i = 0; i < mesh.Vertices.Count; i++)
-            //    //{
-            //    //    dist = (mesh.Vertices[i].Coord - meshCenter).Length > dist ? (mesh.Vertices[i].Coord - meshCenter).Length : dist;
-            //    //}
-
-            //    spherePoints.Clear();
-            //    normals.Clear();
-
-
-            //    for (int i = 0; i < mesh.Vertices.Count; i++)
-            //    {
-            //        var normal = (mesh.Vertices[i].Coord - meshCenter).Normalized();
-            //        spherePoints.Add(meshCenter + normal * box.Size);
-            //        normals.Add(normal);
-            //    }
-
-            //    var sphereCenter = Vector3.Zero;
-            //    var totalTriArea = 0.0f;
-
-            //    for (int i = 0; i < spherePoints.Count; i++)
-            //    {
-            //        var weight = 0.0f;
-            //        foreach (var triId in mesh.Vertices[i].Tris)
-            //        {
-            //            var tri = mesh.Triangles[triId];
-            //            //var triArea = mesh.TriangleArea(spherePoints[tri.V1], spherePoints[tri.V2], spherePoints[tri.V3]);
-            //            var triArea = mesh.TriangleArea(tri);
-            //            var triNormal = mesh.CalculateTriangleNormals(spherePoints[tri.V1], spherePoints[tri.V2], spherePoints[tri.V3]);
-            //            var or = Vector3.Dot(spherePoints[i] - meshCenter, triNormal);
-            //            if (or < 0)
-            //            {
-            //                weight += 1 * (triArea);
-            //            }
-            //            else
-            //            {
-            //                weight += (triArea);
-            //            }
-            //        }
-            //        totalTriArea += weight;
-            //        sphereCenter += (spherePoints[i] * weight);
-            //    }
-            //    meshCenter = sphereCenter / (totalTriArea);
-            //    centerList.Add(meshCenter);
-
-            //    //var sphereCenter = meshCenter;
-
-            //    //for (int i = 0; i < spherePoints.Count; i++)
-            //    //{
-            //    //    var weight = 0.0f;
-            //    //    foreach (var triId in mesh.Vertices[i].Tris)
-            //    //    {
-            //    //        weight += (mesh.TriangleArea(triId) / maxTriArea);
-            //    //    }
-            //    //    sphereCenter += spherePoints[i] * weight;
-            //    //}
-            //    //sphereCenter /= ( spherePoints.Count);
-
-            //    //meshCenter = sphereCenter;
-            //    //centerList.Add(meshCenter);
-            //}
 
             _watch.Stop();
             Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
@@ -1341,7 +1272,7 @@ namespace Engine.Processing
 
             var boundaryVertices = new HashSet<Vertex>();
 
-            var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Id)).ToList();
+            var vertices = mesh.Vertices.Where(x => sp.Path.Contains(x.Key)).ToList();
 
             var cutMesh = mesh.Copy();
 
@@ -1366,30 +1297,23 @@ namespace Engine.Processing
                 vj.Tris = new List<int>();
 
                 var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
-                int triIndex = mesh.GetTriangleIndex(commonTris[0]);
+                int triIndex = commonTris[0];
+                
                 var tri = mesh.Triangles[triIndex];
-
-                //Triangles[commonTris[0]];
-                //int triIndex = tri.Id;
                 if (i != 1)
                 {
                     for (int j = 0; j < commonTris.Count; j++)
                     {
-                        var a = mesh.GetTriangleIndex(commonTris[j]);
-                        if (cutMesh.Triangles[a].ContainsId(mesh.Vertices.Count + i - 2))
+                        if (cutMesh.Triangles[triIndex].ContainsId(mesh.Vertices.Count + i - 2))
                         {
-                            triIndex = a;  //mesh.GetTriangleIndex(commonTris[j]);
+                            triIndex = commonTris[j];
                             tri = mesh.Triangles[triIndex];
-                            //tri = mesh.Triangles[commonTris[j]];
-                            //triIndex = tri.Id;
                             break;
                         }
                     }
                 }
                 var i3rd = tri.GetThirdVertexId(v1.Id, vi.Id);
 
-                //vj.Tris.Add(tri.Id);
-                //vi.Tris.Remove(tri.Id);
                 vi.Tris.Add(triIndex);
                 vj.Tris.Remove(triIndex);
 
@@ -1406,12 +1330,11 @@ namespace Engine.Processing
 
                     commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
                     commonTris.Remove(tri.Id);
-                    //var next = commonTris[0];
-                    var next = mesh.GetTriangleIndex(commonTris[0]);
-
+                    
+                    var next = commonTris[0];
+                    
                     tri = cutMesh.Triangles[next];
                     i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
-
 
                     vi.Tris.Remove(next);
                     vj.Tris.Add(next);
@@ -1487,6 +1410,11 @@ namespace Engine.Processing
 
         public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
         {
+            if (sampleSize <= 1)
+            {
+                return volumeInfo;
+            }
+
             var intensities = new List<int>();
             var intensityMap = new List<KeyValuePair<Vector3, int>>();
 
@@ -1762,20 +1690,24 @@ namespace Engine.Processing
 
         public static void Smoothen(ref Mesh mesh, int iteration)
         {
-            var originalVertexCoords = new List<Vector3>(mesh.Vertices.Select(x => x.Coord));
+            var originalVertexCoords = new List<Vector3>(mesh.Vertices.Select(x => x.Value.Coord));
+
+            var keys = mesh.Vertices.Select(x => x.Key).ToList();
+
             while (iteration > 0)
             {
-                for (int i = 0; i < mesh.Vertices.Count; i++)
+                for (int j = 0; j < keys.Count; j++)
                 {
+                    var i = keys[j];
                     var Lu = Vector3.Zero;
                     var normal = mesh.Vertices[i].Normal;
 
                     if (mesh.Vertices[i].Verts.Count > 0)
                     {
-                        for (int j = 0; j < mesh.Vertices[i].Verts.Count; j++)
+                        for (int k = 0; k < mesh.Vertices[i].Verts.Count; k++)
                         {
-                            Lu += mesh.Vertices[mesh.Vertices[i].Verts[j]].Coord;
-                            normal += mesh.Vertices[mesh.Vertices[i].Verts[j]].Normal;
+                            Lu += mesh.Vertices[mesh.Vertices[i].Verts[k]].Coord;
+                            normal += mesh.Vertices[mesh.Vertices[i].Verts[k]].Normal;
                         }
                         Lu /= mesh.Vertices[i].Verts.Count;
                         Lu -= mesh.Vertices[i].Coord;
@@ -1789,24 +1721,25 @@ namespace Engine.Processing
                     }
                 }
                 iteration--;
+
             }
         }
 
         public static void RemoveIslands(ref Mesh mesh)
         {
-            //Graph g = new Graph(mesh);
+            
             bool[] visited = new bool[mesh.Vertices.Count];
             Queue<int> queue = new Queue<int>(mesh.Vertices.Count);
 
             HashSet<int> deleteVertices = new HashSet<int>(); 
 
             int trueCount = 0;
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            foreach(var vertex in mesh.Vertices)
             {
+                int i = vertex.Key;
                 if (!visited[i])
                 {
                     queue.Enqueue(mesh.Vertices[i].Id);
-
 
                     while (queue.Count > 0)
                     {
@@ -1825,27 +1758,28 @@ namespace Engine.Processing
                             }
                         }
                     }
-                }
 
-                if (trueCount < mesh.Vertices.Count * 0.75)
-                {
-                    for (int j = 0; j < visited.Length; j++)
+                    if (trueCount < mesh.Vertices.Count * 0.75)
                     {
-                        if (visited[j])
+                        for (int j = 0; j < visited.Length; j++)
                         {
-                            deleteVertices.Add(j);
+                            if (visited[j])
+                            {
+                                deleteVertices.Add(j);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    for (int j = 0; j < visited.Length; j++)
+                    else
                     {
-                        if (!visited[j])
+                        for (int j = 0; j < visited.Length; j++)
                         {
-                            deleteVertices.Add(j);
+                            if (!visited[j])
+                            {
+                                deleteVertices.Add(j);
+                            }
                         }
                     }
+
                 }
 
             }

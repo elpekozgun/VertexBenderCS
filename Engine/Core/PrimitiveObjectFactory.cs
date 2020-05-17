@@ -284,9 +284,9 @@ namespace Engine.Core
 
                 Vertex v1, v2, v3;
 
-                var c1 = (mesh.Vertices[item.V2].Coord + mesh.Vertices[item.V3].Coord) * 0.5f;
-                var c2 = (mesh.Vertices[item.V1].Coord + mesh.Vertices[item.V3].Coord) * 0.5f;
-                var c3 = (mesh.Vertices[item.V2].Coord + mesh.Vertices[item.V1].Coord) * 0.5f;
+                var c1 = (mesh.Vertices[item.Value.V2].Coord + mesh.Vertices[item.Value.V3].Coord) * 0.5f;
+                var c2 = (mesh.Vertices[item.Value.V1].Coord + mesh.Vertices[item.Value.V3].Coord) * 0.5f;
+                var c3 = (mesh.Vertices[item.Value.V2].Coord + mesh.Vertices[item.Value.V1].Coord) * 0.5f;
 
                 if (!verts.ContainsKey(c1))
                 {
@@ -318,21 +318,21 @@ namespace Engine.Core
 
 
 
-                copyMesh.AddTriangle(item.V1, v3.Id, v2.Id);
-                copyMesh.AddTriangle(v3.Id, item.V2, v1.Id);
-                copyMesh.AddTriangle(v2.Id, v1.Id, item.V3);
+                copyMesh.AddTriangle(item.Value.V1, v3.Id, v2.Id);
+                copyMesh.AddTriangle(v3.Id, item.Value.V2, v1.Id);
+                copyMesh.AddTriangle(v2.Id, v1.Id, item.Value.V3);
                 copyMesh.AddTriangle(v1.Id, v2.Id, v3.Id);
 
-                copyMesh.Vertices[item.V1].Verts.Remove(item.V2);
-                copyMesh.Vertices[item.V1].Verts.Remove(item.V3);
+                copyMesh.Vertices[item.Value.V1].Verts.Remove(item.Value.V2);
+                copyMesh.Vertices[item.Value.V1].Verts.Remove(item.Value.V3);
 
-                copyMesh.Vertices[item.V2].Verts.Remove(item.V1);
-                copyMesh.Vertices[item.V2].Verts.Remove(item.V3);
-
-                copyMesh.Vertices[item.V3].Verts.Remove(item.V1);
-                copyMesh.Vertices[item.V3].Verts.Remove(item.V2);
+                copyMesh.Vertices[item.Value.V2].Verts.Remove(item.Value.V1);
+                copyMesh.Vertices[item.Value.V2].Verts.Remove(item.Value.V3);
                 
-                copyMesh.RemoveTriangle(item);
+                copyMesh.Vertices[item.Value.V3].Verts.Remove(item.Value.V1);
+                copyMesh.Vertices[item.Value.V3].Verts.Remove(item.Value.V2);
+                
+                copyMesh.RemoveTriangle(item.Key);
             }
 
             mesh = copyMesh.Copy();
@@ -362,17 +362,34 @@ namespace Engine.Core
                 DivideFace(ref sphere, recursionLevel, ref vertDict);
                 recursionLevel--;
             }
-            for (int i = 0; i < sphere.Vertices.Count; i++)
-            {
-                var normal = sphere.Vertices[i].Coord.Normalized();
 
-                sphere.Vertices[i] = new Vertex(sphere.Vertices[i].Id, normal * radius, normal)
+            var keys = sphere.Vertices.Select(x => x.Key).ToList();
+
+            for (int i = 0; i < keys.Count; i++)
+            {
+                var v = sphere.Vertices[keys[i]];
+
+                var normal = v.Coord.Normalized();
+
+                sphere.Vertices[keys[i]] = new Vertex(keys[i], normal * radius, normal)
                 {
-                    Verts = sphere.Vertices[i].Verts,
-                    Edges = sphere.Vertices[i].Edges,
-                    Tris = sphere.Vertices[i].Tris
+                    Verts = v.Verts,
+                    Edges = v.Edges,
+                    Tris = v.Tris
                 };
             }
+
+            //for (int i = 0; i < sphere.Vertices.Count; i++)
+            //{
+            //    var normal = sphere.Vertices[i].Coord.Normalized();
+
+            //    sphere.Vertices[i] = new Vertex(sphere.Vertices[i].Id, normal * radius, normal)
+            //    {
+            //        Verts = sphere.Vertices[i].Verts,
+            //        Edges = sphere.Vertices[i].Edges,
+            //        Tris = sphere.Vertices[i].Tris
+            //    };
+            //}
 
 
             return new Sphere(radius, subdivision, type, sphere);
@@ -392,7 +409,6 @@ namespace Engine.Core
             this.Triangles = mesh.Triangles;
             this.Edges = mesh.Edges;
             this.Name = mesh.Name;
-            this.hasDirtyTriangles = mesh.hasDirtyTriangles;
 
             Size = size;
             Subdivision = subdivision;
