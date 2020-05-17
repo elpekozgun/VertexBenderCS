@@ -124,6 +124,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="Resources\Compute\MarchingCubes.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\Shader\MarchingCubeCompute.glsl" />
     <None Include="Resources\Shader\PointCloudFragment.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
