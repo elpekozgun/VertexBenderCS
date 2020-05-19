@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using System.IO;
+using Engine.Core;
 
 namespace Engine.GLApi
 {
@@ -30,7 +31,7 @@ namespace Engine.GLApi
 
             GL.ShaderSource(id, source);
             GL.CompileShader(id);
-
+            CheckCompileError(id, "");
             return id;
         }
 
@@ -52,28 +53,41 @@ namespace Engine.GLApi
 
         }
 
+        public static ComputeShader CreateComputeShader(string name, int shader)
+        {
+            int id = GL.CreateProgram();
+            GL.AttachShader(id, shader);
+            GL.LinkProgram(id);
+            GL.DeleteShader(shader);
+
+            return new ComputeShader(name, id);
+
+        }
+
         private static void CheckCompileError(int id, string type)
         {
-            //int success;
-            //char infolog[1024];
-            //if (type != "PROGRAM" || type != "program")
-            //{
-            //    glGetShaderiv(id, GL_COMPILE_STATUS, &success);
-            //    if (!success)
-            //    {
-            //        glGetShaderInfoLog(id, sizeof(infolog), NULL, infolog);
-            //        //TITAN_LOG(type << " Compilation Error: " << infolog << "\n" << std::endl);
-            //    }
-            //}
-            //else
-            //{
-            //    glGetShaderiv(id, GL_COMPILE_STATUS, &success);
-            //    if (!success)
-            //    {
-            //        glGetShaderInfoLog(id, sizeof(infolog), NULL, infolog);
-            //        //TITAN_LOG(type << "Linking Error: " << infolog << "\n" << std::endl);
-            //    }
-            //}
+            int success;
+            char[] infolog = new char[1024];
+            if (type != "PROGRAM" || type != "program")
+            {
+                //Logger.Log(GL.GetShaderInfoLog(id));
+                //glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+                //if (!success)
+                //{
+                //    glGetShaderInfoLog(id, sizeof(infolog), NULL, infolog);
+                //    //TITAN_LOG(type << " Compilation Error: " << infolog << "\n" << std::endl);
+                //}
+            }
+            else
+            {
+                //glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+                //if (!success)
+                //{
+                //Logger.Log(GL.GetShaderInfoLog(id));
+                //glGetShaderInfoLog(id, sizeof(infolog), NULL, infolog);
+                    //TITAN_LOG(type << "Linking Error: " << infolog << "\n" << std::endl);
+                //}
+            }
         }
 
     }

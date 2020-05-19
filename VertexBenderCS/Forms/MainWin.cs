@@ -185,6 +185,17 @@ namespace VertexBenderCS.Forms
             IntensityMarch.ValueChanged += IntensityMarch_ValueChanged;
         }
                
+        
+        
+        private void SetupTestScene()
+        {
+            //UltrasonLoadTest();
+            //GeometryShaderTest();
+            ComputeTest();
+        }
+
+
+
 
         private void StarTest()
         {
@@ -290,7 +301,7 @@ namespace VertexBenderCS.Forms
 
             var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
             Algorithm.Smoothen(ref testCube2, 5);
-            //Algorithm.RemoveIslands(ref testCube2);
+            Algorithm.RemoveIslands(ref testCube2);
             var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
             _SceneGraph.AddObject(meshrenderer2);
 
@@ -312,11 +323,41 @@ namespace VertexBenderCS.Forms
 
         }
 
-        private void SetupTestScene()
+        private void ComputeTest()
         {
-            UltrasonLoadTest();
-            //GeometryShaderTest();
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
+            _TESTVOL = output;
+
+            // downsample2 => 396744 v
+            // downsample3 => 161760 v
+
+            var output2 = output; //Algorithm.Downsample(output, 3);
+
+            var testCube2 = Algorithm.MarchCubes(output2, 60, true, false);
+            var meshrenderer2 = new PrimitiveRenderer(testCube2, "smooth");
+            meshrenderer2.Position = new Vector3(0, 0, 0.4f);
+            _SceneGraph.AddObject(meshrenderer2);
+
+            _SceneGraph.SelectedItem = null;
+
+            Vector4[] input = new Vector4[output2.Intensities.Count];
+
+            int i = 0;
+            foreach (var item in output2.IntensityMap)
+            {
+                input[i] = new Vector4(item.Key, item.Value);
+                i++;
+            }
+
+            var m = Algorithm.MarchCubesGPU(input, output2.XCount, output2.YCount, output2.ZCount, output2.Spacing, 60, true, false);
+
+
+            PrimitiveRenderer r = new PrimitiveRenderer(m,"compute");
+            _SceneGraph.AddObject(r);
+            
+            Logger.Log($"CPU = {testCube2.Vertices.Count} GPU:{m.Vertices.Count}");
         }
+
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
         {

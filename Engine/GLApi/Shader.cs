@@ -42,6 +42,13 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudFragment.glsl", ShaderType.FragmentShader)
         );
 
+        private static Shader _marchingCubesCompute = ShaderBuilder.CreateShader
+        (
+            "marchingCubes",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubes.glsl", ShaderType.ComputeShader)
+            //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
         //private static Shader _defaultIndicator = ShaderBuilder.CreateShader
         //(
         //    "Indicator",
@@ -53,6 +60,7 @@ namespace Engine.GLApi
         public static Shader DefaultUnlitShader=> _defaultUnlit;
         public static Shader DefaultPointCloud => _defaultPointCloud;
         public static Shader DefaultCuberille => _defaultCuberille;
+        public static Shader DefaultMarchingCompute => _marchingCubesCompute;
         //public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Threading;
 using MathNet.Numerics.LinearAlgebra;
 using KdTree;
+using Engine.GLApi;
 
 namespace Engine.Processing
 {
@@ -1612,6 +1613,9 @@ namespace Engine.Processing
 
         public static Mesh MarchCubes(VolOutput output, float intensity, bool interpolate, bool isIndexed)
         {
+            _watch.Reset();
+            _watch.Start();
+
             var grid = MakeGrid(output);
 
             Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
@@ -1676,6 +1680,9 @@ namespace Engine.Processing
 
             var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
 
+
+            _watch.Stop();
+            Logger.Log($"Cpu Generation: {_watch.ElapsedMilliseconds}");
 
             if (isIndexed)
             {
@@ -1790,6 +1797,85 @@ namespace Engine.Processing
             }
         }
 
+
+
+        public static Mesh MarchCubesGPU(Vector4[] input, int xCount, int yCount, int zCount, float spacing, float intensity, bool interpolate, bool isIndexed)
+        {
+            _watch.Reset();
+            _watch.Start();
+
+            Shader shader = Shader.DefaultMarchingCompute;
+
+            //ComputeBuffer<Vector4> inputBuffer = new ComputeBuffer<Vector4>(input, 4 * sizeof(float), OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicDraw, BufferUsage.source);
+            //ComputeBuffer<ComputeTriangle> outputBuffer = new ComputeBuffer<ComputeTriangle>(new ComputeTriangle[input.Length] , 3 * 4 * sizeof(float), OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicDraw, BufferUsage.target);
+            //ComputeBuffer<uint> counterBuffer = new ComputeBuffer<uint>(new uint[] { 0 }, sizeof(uint), OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicDraw, BufferUsage.counter);
+
+            ComputeTriangle[] triangles = new ComputeTriangle[input.Length];
+
+            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_in);
+            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_mc);
+            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_out);
+            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int atomic_count);
+
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_mc);
+            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, (256 * 16) * sizeof(uint), MarchingCubesTables.TriangleConnectionTableLinear, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
+            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 3, ssbo_mc);
+
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_in);
+            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(uint), input, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
+            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 4, ssbo_in);
+
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_out);
+            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, triangles.Length * 4 * 3 * sizeof(uint), IntPtr.Zero, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
+            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 5, ssbo_out);
+
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, atomic_count);
+            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, sizeof(uint), IntPtr.Zero, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
+            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.AtomicCounterBuffer, 6, atomic_count);
+
+            shader.Use();
+
+            shader.SetInt("xCount", xCount);
+            shader.SetInt("yCount", yCount);
+            shader.SetInt("zCount", zCount);
+            shader.SetInt("intensity", 60);
+            shader.SetInt("counter", 0);
+
+            var a = xCount + (8 - xCount % 8);
+            var b = yCount + (8 - yCount % 8);
+            var c = zCount + (8 - zCount % 8);
+
+
+            OpenTK.Graphics.OpenGL4.GL.DispatchCompute(a / 8 , b / 8, c / 8);
+            OpenTK.Graphics.OpenGL4.GL.MemoryBarrier(OpenTK.Graphics.OpenGL4.MemoryBarrierFlags.AllBarrierBits);
+
+            OpenTK.Graphics.OpenGL4.GL.GetBufferSubData
+            (
+                OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, 
+                IntPtr.Zero, 
+                triangles.Length * 4 * 3 * sizeof(uint), 
+                triangles
+            );
+
+            HashSet<Vector3[]> tris = new HashSet<Vector3[]>();
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                var t = triangles[i];
+                if ((t.v0 != t.v1 && t.v1 != t.v2 && t.v2 != t.v0))
+                {
+                    tris.Add(new Vector3[]
+                    {
+                        t.v0.Xyz,
+                        t.v1.Xyz,
+                        t.v2.Xyz
+                    });
+                }
+            }
+
+            _watch.Stop();
+            Logger.Log($"Compute Shader: {_watch.ElapsedMilliseconds}");
+            return ObjectLoader.MakeMeshUnindexed(tris.ToList(), spacing);
+        }
 
                                     
     }

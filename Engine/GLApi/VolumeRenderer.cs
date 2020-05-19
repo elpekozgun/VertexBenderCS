@@ -12,39 +12,26 @@ namespace Engine.GLApi
     public class VolumeRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
+        public ComputeShader ComputeShader;
+
         public Vector3 Center { get; private set; }
         public Texture DiffuseTexture { get; set; }
 
         private GpuVertex[] vertices;
+        private VolOutput volData;
 
         private bool _initialized;
 
         private int _VAO;
         private int _VBO;
 
-        public int Min { get; private set; }
-        public int Max { get; private set; }
-        public float Spacing { get; private set; }
-
-        public void SetMax(int max)
-        {
-            Max = max;
-        }
-
-        public void SetMin(int min)
-        {
-            Min = min;
-        }
-
-
-        public Mesh Mesh { get; set; }
 
         public Vector4 Color { get; set; }
 
         private void ExtractVertices(Mesh mesh, List<int> intensities)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
-            int i = 0;
+            int i = 0; 
 
             foreach (var vertex in mesh.Vertices)
             {
@@ -58,20 +45,16 @@ namespace Engine.GLApi
             }
         }
 
-        public VolumeRenderer(Mesh mesh, List<int> intensities, float spacing, int min = 0, int max = 255, string name = "")
+        public VolumeRenderer(Mesh mesh, List<int> intensities, string name = "")
             : base(name)
         {
-            Max = max;
-            Min = min;
-            Spacing = spacing;
             ExtractVertices(mesh, intensities);
             Setup();
             _initialized = true;
-            Mesh = mesh;
             Shader = Shader.DefaultPointCloud;
         }
 
-        public VolumeRenderer(Mesh mesh, List<int> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)
+        public VolumeRenderer(Mesh mesh, List<int> intensity, Shader shader, string name = "") : this(mesh, intensity, name)
         {
             Shader = shader;
         }
@@ -129,9 +112,6 @@ namespace Engine.GLApi
             pointCloudShader.SetMat4("View", cam.View);
             pointCloudShader.SetMat4("Projection", cam.Projection);
             pointCloudShader.SetVec4("OutColor", Color);
-            pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
-            pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
-            pointCloudShader.SetFloat("Spacing", Spacing);
 
             var temp = Shader;
             Shader = pointCloudShader;
