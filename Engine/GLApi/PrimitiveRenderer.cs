@@ -105,6 +105,7 @@ namespace Engine.GLApi
 
             GL.Disable(EnableCap.CullFace);
 
+
             if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
                 Shader.Use();

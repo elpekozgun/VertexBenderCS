@@ -10,6 +10,10 @@ using System.Threading;
 using MathNet.Numerics.LinearAlgebra;
 using KdTree;
 using Engine.GLApi;
+using System.Security.Policy;
+using MathNet.Numerics;
+using System.Windows.Forms;
+using OpenTK.Graphics.ES10;
 
 namespace Engine.Processing
 {
@@ -1263,7 +1267,7 @@ namespace Engine.Processing
             return new SphereParameterizeOutput(spherePoints, normals, centerList );
         }
 
-        //This part is kind of chaos due to deleting triangles in tetrahedron sphere creation. I had to find indexes
+        // This function needs a redo in terms of indexing of triangles, after switching to dictionary.
         private static CutMeshOutput CutMesh(Mesh mesh)
         {
             Graph g = new Graph(mesh);
@@ -1404,8 +1408,6 @@ namespace Engine.Processing
 
             return new CutMeshOutput(cutMesh, sp, allBoundaries);
         }
-
-
 
         // Ultrasound
 
@@ -1627,6 +1629,7 @@ namespace Engine.Processing
             int id = 0;
             int triId = 0;
 
+
             for (int i = 0; i < grid.Count; i++)
             {
                 var tris = Polygonize(grid[i], intensity, interpolate);
@@ -1635,7 +1638,7 @@ namespace Engine.Processing
                 {
                     int a, b, c = -1;
 
-                    var dec = new Vector3d(Math.Round(tris[j][0].X,2), Math.Round(tris[j][0].Y,2), Math.Round(tris[j][0].Z,2)); 
+                    var dec = new Vector3d(Math.Round(tris[j][0].X, 2), Math.Round(tris[j][0].Y, 2), Math.Round(tris[j][0].Z, 2));
 
                     if (!vertexDict.ContainsKey(dec))
                     {
@@ -1647,7 +1650,7 @@ namespace Engine.Processing
                         a = vertexDict[dec];
                     }
 
-                    dec = new Vector3d(Math.Round(tris[j][1].X,2), Math.Round(tris[j][1].Y,2), Math.Round(tris[j][1].Z,2)); 
+                    dec = new Vector3d(Math.Round(tris[j][1].X, 2), Math.Round(tris[j][1].Y, 2), Math.Round(tris[j][1].Z, 2));
                     if (!vertexDict.ContainsKey(dec))
                     {
                         b = id;
@@ -1658,7 +1661,7 @@ namespace Engine.Processing
                         b = vertexDict[dec];
                     }
 
-                    dec = new Vector3d(Math.Round(tris[j][2].X,2), Math.Round(tris[j][2].Y,2), Math.Round(tris[j][2].Z,2));
+                    dec = new Vector3d(Math.Round(tris[j][2].X, 2), Math.Round(tris[j][2].Y, 2), Math.Round(tris[j][2].Z, 2));
                     if (!vertexDict.ContainsKey(dec))
                     {
                         c = id;
@@ -1669,7 +1672,7 @@ namespace Engine.Processing
                         c = vertexDict[dec];
                     }
 
-                    if ( a != b && a != c && b != c)
+                    if (a != b && a != c && b != c)
                     {
                         triangleIDs.Add(new Triangle(triId++, a, b, c));
                     }
@@ -1679,7 +1682,6 @@ namespace Engine.Processing
             }
 
             var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
-
 
             _watch.Stop();
             Logger.Log($"Cpu Generation: {_watch.ElapsedMilliseconds}");
@@ -1799,7 +1801,7 @@ namespace Engine.Processing
 
 
 
-        public static Mesh MarchCubesGPU(Vector4[] input, int xCount, int yCount, int zCount, float spacing, float intensity, bool interpolate, bool isIndexed)
+        public static Mesh MarchCubesGPU(Vector4[] input, int xCount, int yCount, int zCount, float spacing, int intensity, bool interpolate, bool isIndexed)
         {
             _watch.Reset();
             _watch.Start();
@@ -1838,43 +1840,37 @@ namespace Engine.Processing
             shader.SetInt("xCount", xCount);
             shader.SetInt("yCount", yCount);
             shader.SetInt("zCount", zCount);
-            shader.SetInt("intensity", 60);
+            shader.SetInt("intensity", intensity);
             shader.SetInt("counter", 0);
 
             var a = xCount + (8 - xCount % 8);
             var b = yCount + (8 - yCount % 8);
             var c = zCount + (8 - zCount % 8);
 
-
             OpenTK.Graphics.OpenGL4.GL.DispatchCompute(a / 8 , b / 8, c / 8);
             OpenTK.Graphics.OpenGL4.GL.MemoryBarrier(OpenTK.Graphics.OpenGL4.MemoryBarrierFlags.AllBarrierBits);
 
+            int counter = -1;
+            OpenTK.Graphics.OpenGL4.GL.GetBufferSubData<int>
+            (
+                OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer,
+                IntPtr.Zero,
+                sizeof(uint),
+                ref counter
+            );
+
+            ComputeTriangle[] tris = new ComputeTriangle[counter];
             OpenTK.Graphics.OpenGL4.GL.GetBufferSubData
             (
                 OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, 
                 IntPtr.Zero, 
-                triangles.Length * 4 * 3 * sizeof(uint), 
-                triangles
+                tris.Length * 4 * 3 * sizeof(uint), 
+                tris
             );
-
-            HashSet<Vector3[]> tris = new HashSet<Vector3[]>();
-            for (int i = 0; i < triangles.Length; i++)
-            {
-                var t = triangles[i];
-                if ((t.v0 != t.v1 && t.v1 != t.v2 && t.v2 != t.v0))
-                {
-                    tris.Add(new Vector3[]
-                    {
-                        t.v0.Xyz,
-                        t.v1.Xyz,
-                        t.v2.Xyz
-                    });
-                }
-            }
 
             _watch.Stop();
             Logger.Log($"Compute Shader: {_watch.ElapsedMilliseconds}");
-            return ObjectLoader.MakeMeshUnindexed(tris.ToList(), spacing);
+            return ObjectLoader.MakeMeshUnindexed(tris, spacing); ;
         }
 
                                     

@@ -68,6 +68,11 @@ layout(std430, binding = 5) buffer triangleBuffer_in
 	Triangle triangles[];
 };
 
+//layout(std430, binding = 5) buffer triangleBuffer_in
+//{
+//	vec4 triangles[];
+//};
+
 layout(std430, binding = 5) buffer test_in
 {
 	vec4 test[];
@@ -84,6 +89,16 @@ vec3 interpolate(vec4 v1, vec4 v2)
 {
 	float t = (intensity - v1.w) / (v2.w - v1.w);
 	return v1.xyz + t * (v2.xyz - v1.xyz);
+};
+
+vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2)
+{
+    return normalize(cross(v0 - v2, v0 - v1));
+};
+
+bool areVec3Equal(vec3 a, vec3 b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z; 
 };
 
 void main()
@@ -135,12 +150,19 @@ void main()
         int b2 = cornerIndexEdgeV1[triangulations[cubeIndex * 16 + i + 2]];
 
         Triangle tri;
-        tri.c= vec4(interpolate(corners[a0], corners[b0]), 0);
-        tri.b= vec4(interpolate(corners[a1], corners[b1]), 0);
-        tri.a= vec4(interpolate(corners[a2], corners[b2]), 0);
+        vec3 v0 = interpolate(corners[a0], corners[b0]);
+        vec3 v1 = interpolate(corners[a1], corners[b1]);
+        vec3 v2 = interpolate(corners[a2], corners[b2]);
+        vec3 n = calculateNormal(v0,v1,v2);
 
-        triangles[atomicCounterIncrement(counter)] = tri;
-        
+        if( !areVec3Equal(v0,v1) && !areVec3Equal(v0,v2) && !areVec3Equal(v2,v0) )
+        {
+            tri.a= vec4(v0, n.x);
+            tri.b= vec4(v1, n.y);
+            tri.c= vec4(v2, n.z);
+
+            triangles[atomicCounterIncrement(counter)] = tri;
+        }
     };
 
 };

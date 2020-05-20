@@ -78,9 +78,9 @@ namespace VertexBenderCS.Forms
 
             PrepareUI();
             SubscribeEvents();
-#if DEBUG
+//#if DEBUG
             SetupTestScene();
-#endif
+//#endif
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -286,7 +286,7 @@ namespace VertexBenderCS.Forms
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
             _TESTVOL = output;
 
-            var output2 = Algorithm.Downsample(output, 2);
+            var output2 = Algorithm.Downsample(output, 5);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
             var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2")
             {
@@ -331,9 +331,11 @@ namespace VertexBenderCS.Forms
             // downsample2 => 396744 v
             // downsample3 => 161760 v
 
-            var output2 = output; //Algorithm.Downsample(output, 3);
+            var output2 = Algorithm.Downsample(output, 2);
 
-            var testCube2 = Algorithm.MarchCubes(output2, 60, true, false);
+            int intensity = 60;
+            
+            var testCube2 = Algorithm.MarchCubes(output2, intensity, true, false);
             var meshrenderer2 = new PrimitiveRenderer(testCube2, "smooth");
             meshrenderer2.Position = new Vector3(0, 0, 0.4f);
             _SceneGraph.AddObject(meshrenderer2);
@@ -349,13 +351,13 @@ namespace VertexBenderCS.Forms
                 i++;
             }
 
-            var m = Algorithm.MarchCubesGPU(input, output2.XCount, output2.YCount, output2.ZCount, output2.Spacing, 60, true, false);
+            var m = Algorithm.MarchCubesGPU(input, output2.XCount, output2.YCount, output2.ZCount, output2.Spacing, intensity, true, false);
 
 
             PrimitiveRenderer r = new PrimitiveRenderer(m,"compute");
             _SceneGraph.AddObject(r);
             
-            Logger.Log($"CPU = {testCube2.Vertices.Count} GPU:{m.Vertices.Count}");
+            //Logger.Log($"CPU = {testCube2.Vertices.Count} GPU:{m.Vertices.Count}");
         }
 
 
