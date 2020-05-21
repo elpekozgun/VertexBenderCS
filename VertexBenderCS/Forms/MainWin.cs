@@ -184,14 +184,15 @@ namespace VertexBenderCS.Forms
             numericMarch.ValueChanged += NumericMarch_ValueChanged;
             IntensityMarch.ValueChanged += IntensityMarch_ValueChanged;
         }
-               
-        
+
+        private Stopwatch _watch = new Stopwatch();
         
         private void SetupTestScene()
         {
-            //UltrasonLoadTest();
             //GeometryShaderTest();
-            ComputeTest();
+            //UltrasonLoadTest();
+            //ComputeTest();
+            ComputeTest2();
         }
 
 
@@ -286,7 +287,7 @@ namespace VertexBenderCS.Forms
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
             _TESTVOL = output;
 
-            var output2 = Algorithm.Downsample(output, 5);
+            var output2 = Algorithm.Downsample(output, 2);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
             var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2")
             {
@@ -297,11 +298,11 @@ namespace VertexBenderCS.Forms
             //sceneGraphTree.SelectedNode = null;
 
 
-            sceneGraphTree.SelectedNode = null;
+            _SceneGraph.SelectedItem = null;
 
             var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
             Algorithm.Smoothen(ref testCube2, 5);
-            Algorithm.RemoveIslands(ref testCube2);
+            //Algorithm.RemoveIslands(ref testCube2);
             var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
             _SceneGraph.AddObject(meshrenderer2);
 
@@ -331,7 +332,7 @@ namespace VertexBenderCS.Forms
             // downsample2 => 396744 v
             // downsample3 => 161760 v
 
-            var output2 = Algorithm.Downsample(output, 2);
+            var output2 = Algorithm.Downsample(output, 3);
 
             int intensity = 60;
             
@@ -342,6 +343,9 @@ namespace VertexBenderCS.Forms
 
             _SceneGraph.SelectedItem = null;
 
+            _watch.Reset();
+            _watch.Start();
+
             Vector4[] input = new Vector4[output2.Intensities.Count];
 
             int i = 0;
@@ -350,14 +354,61 @@ namespace VertexBenderCS.Forms
                 input[i] = new Vector4(item.Key, item.Value);
                 i++;
             }
-
+            //var m = Algorithm.MarchCubesGPU(output, intensity, 2, true, false);
             var m = Algorithm.MarchCubesGPU(input, output2.XCount, output2.YCount, output2.ZCount, output2.Spacing, intensity, true, false);
-
-
             PrimitiveRenderer r = new PrimitiveRenderer(m,"compute");
             _SceneGraph.AddObject(r);
+
+            _watch.Stop();
+            Logger.Log($"old mc gpu:{_watch.ElapsedMilliseconds}");
+
+
+            Logger.Log($"vertex count:{m.Vertices.Count}");
+        }
+
+        private void ComputeTest2()
+        {
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
+
+            // downsample2 => 396744 v
+            // downsample3 => 161760 v
+            _watch.Reset();
+            _watch.Start();
             
-            //Logger.Log($"CPU = {testCube2.Vertices.Count} GPU:{m.Vertices.Count}");
+            //var output2 = Algorithm.Downsample(output, 3);
+
+            _watch.Stop();
+            Logger.Log($"downsample:{_watch.ElapsedMilliseconds} ms");
+
+            _TESTVOL = output;
+
+            int intensity = 60;
+
+            _watch.Reset();
+            _watch.Start();
+
+            //var output2 = Algorithm.Downsample(output, 1);
+            //var testCube2 = Algorithm.MarchCubes(output2, intensity, true, false);
+            //var meshrenderer2 = new PrimitiveRenderer(testCube2, "smooth");
+            //meshrenderer2.Position = new Vector3(0, 0, 0.4f);
+            //_SceneGraph.AddObject(meshrenderer2);
+            //_SceneGraph.SelectedItem = null;
+
+            _watch.Stop();
+
+            Logger.Log($"mc cpu:{_watch.ElapsedMilliseconds} ms");
+
+
+            _watch.Reset();
+            _watch.Start();
+
+            var volRenderer = new VolumeRenderer(output, "Compute");
+            volRenderer.Compute(60, 3);
+            _SceneGraph.AddObject(volRenderer);
+
+            _watch.Stop();
+
+            Logger.Log($"mc new gpu:{_watch.ElapsedMilliseconds} ms");
         }
 
 
@@ -1468,25 +1519,32 @@ namespace VertexBenderCS.Forms
 
         private void NumericMarch_ValueChanged(object sender, EventArgs e)
         {
-            if (_selectedTransform != null)
+            var volRend = (_selectedTransform as VolumeRenderer);
+
+            if (volRend != null)
             {
-                var output = Algorithm.Downsample(_TESTVOL, (int)numericMarch.Value);
-                var testCube = Algorithm.MarchCubes(output, IntensityMarch.Value, true, true);
-                Algorithm.Smoothen(ref testCube, 5);
-                //Algorithm.RemoveIslands(ref testCube);
-                var meshrenderer2 = new MeshRenderer(testCube, "smooth");
-                _SceneGraph.AddObject(meshrenderer2);
+                _watch.Reset();
+                _watch.Start();
+                volRend.Compute(IntensityMarch.Value, (int)numericMarch.Value);
+
+                _watch.Stop();
+                Logger.Log($"mc new gpu:{_watch.ElapsedMilliseconds} ms");
             }
+
         }
 
         private void IntensityMarch_ValueChanged(object sender, EventArgs e)
         {
-            var output = Algorithm.Downsample(_TESTVOL, (int)numericMarch.Value);
-            var testCube2 = Algorithm.MarchCubes(output, IntensityMarch.Value, true, true);
-            Algorithm.Smoothen(ref testCube2, 5);
-            //Algorithm.RemoveIslands(ref testCube2);
-            var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
-            _SceneGraph.AddObject(meshrenderer2);
+            var volRend = (_selectedTransform as VolumeRenderer);
+
+            if ( volRend != null)
+            {
+                _watch.Reset();
+                _watch.Start();
+                volRend.Compute(IntensityMarch.Value, (int)numericMarch.Value);
+                _watch.Stop();
+                Logger.Log($"mc new gpu:{_watch.ElapsedMilliseconds} ms");
+            }
         }
 
     }

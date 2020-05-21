@@ -1436,13 +1436,12 @@ namespace Engine.Processing
                     {
                         var intensity = 0;
                         intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        intensity /= 6;
-                        //intensity = volumeInfo.Intensities[z * dimX * dimY + y * dimX + x];
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        //intensity /= 6;
 
 
                         intensities.Add(intensity);
@@ -1683,8 +1682,8 @@ namespace Engine.Processing
 
             var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
 
-            _watch.Stop();
             Logger.Log($"Cpu Generation: {_watch.ElapsedMilliseconds}");
+            _watch.Stop();
 
             if (isIndexed)
             {
@@ -1694,7 +1693,6 @@ namespace Engine.Processing
             {
                 return ObjectLoader.MakeMeshUnindexed(triangles, output.Spacing, "test");
             }
-            
         }
 
         public static void Smoothen(ref Mesh mesh, int iteration)
@@ -1736,6 +1734,8 @@ namespace Engine.Processing
 
         public static void RemoveIslands(ref Mesh mesh)
         {
+            _watch.Reset();
+            _watch.Start();
             
             bool[] visited = new bool[mesh.Vertices.Count];
             Queue<int> queue = new Queue<int>(mesh.Vertices.Count);
@@ -1797,9 +1797,10 @@ namespace Engine.Processing
             {
                 mesh.RemoveVertex(item);
             }
+            _watch.Stop();
+            Logger.Log($"island removal: {_watch.ElapsedMilliseconds} ms");
+
         }
-
-
 
         public static Mesh MarchCubesGPU(Vector4[] input, int xCount, int yCount, int zCount, float spacing, int intensity, bool interpolate, bool isIndexed)
         {
@@ -1808,27 +1809,24 @@ namespace Engine.Processing
 
             Shader shader = Shader.DefaultMarchingCompute;
 
-            //ComputeBuffer<Vector4> inputBuffer = new ComputeBuffer<Vector4>(input, 4 * sizeof(float), OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicDraw, BufferUsage.source);
-            //ComputeBuffer<ComputeTriangle> outputBuffer = new ComputeBuffer<ComputeTriangle>(new ComputeTriangle[input.Length] , 3 * 4 * sizeof(float), OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicDraw, BufferUsage.target);
-            //ComputeBuffer<uint> counterBuffer = new ComputeBuffer<uint>(new uint[] { 0 }, sizeof(uint), OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicDraw, BufferUsage.counter);
-
             ComputeTriangle[] triangles = new ComputeTriangle[input.Length];
+            //Vector4[] triangles = new Vector4[input.Length * 3];
 
             OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_in);
-            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_mc);
+            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ubo_mc);
             OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_out);
             OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int atomic_count);
 
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_mc);
-            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, (256 * 16) * sizeof(uint), MarchingCubesTables.TriangleConnectionTableLinear, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
-            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 3, ssbo_mc);
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.UniformBuffer, ubo_mc);
+            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.UniformBuffer, (256 * 16) * sizeof(uint), MarchingCubesTables.TriangleConnectionTableLinear, OpenTK.Graphics.OpenGL4.BufferUsageHint.StaticRead);
+            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.UniformBuffer, 3, ubo_mc);
 
             OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_in);
             OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(uint), input, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
             OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 4, ssbo_in);
 
             OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_out);
-            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, triangles.Length * 4 * 3 * sizeof(uint), IntPtr.Zero, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
+            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, triangles.Length * 3 * 4 * sizeof(uint), IntPtr.Zero, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
             OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 5, ssbo_out);
 
             OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, atomic_count);
@@ -1836,7 +1834,6 @@ namespace Engine.Processing
             OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.AtomicCounterBuffer, 6, atomic_count);
 
             shader.Use();
-
             shader.SetInt("xCount", xCount);
             shader.SetInt("yCount", yCount);
             shader.SetInt("zCount", zCount);
@@ -1858,18 +1855,23 @@ namespace Engine.Processing
                 sizeof(uint),
                 ref counter
             );
-
+            
             ComputeTriangle[] tris = new ComputeTriangle[counter];
             OpenTK.Graphics.OpenGL4.GL.GetBufferSubData
             (
                 OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, 
                 IntPtr.Zero, 
-                tris.Length * 4 * 3 * sizeof(uint), 
+                tris.Length * 3 * 4 * sizeof(uint), 
                 tris
             );
 
             _watch.Stop();
             Logger.Log($"Compute Shader: {_watch.ElapsedMilliseconds}");
+
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, 0);
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, 0);
+            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.UniformBuffer, 0);
+
             return ObjectLoader.MakeMeshUnindexed(tris, spacing); ;
         }
 

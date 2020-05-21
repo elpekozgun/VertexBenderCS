@@ -552,6 +552,24 @@ namespace Engine.Core
             return mesh;
         }
 
+        public static Mesh MakeMeshUnindexed(Vector4[] tris, float spacing, string name = "")
+        {
+            var mesh = new Mesh();
+
+            //Parallel.For(0, tris.Count, (i) => 
+            for (int i = 0; i < tris.Length; i+=3)
+            {
+                Vector3 normal = new Vector3(tris[i].W, tris[i+1].W, tris[i+2].W).Normalized();
+
+                mesh.AddVertex(tris[i].Xyz * -spacing, normal);
+                mesh.AddVertex(tris[i+1].Xyz * -spacing, normal);
+                mesh.AddVertex(tris[i+2].Xyz * -spacing, normal);
+            }
+            //mesh.CalculateVertexNormals();
+
+            return mesh;
+        }
+
 
         public static Mesh MakeMeshUnindexed(List<Vector3[]> tris, float spacing, string name = "")
         {
