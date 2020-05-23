@@ -1,7 +1,7 @@
 ﻿#version 430 core
 //#extension GL_ARB_compute_shader: enable
 //#extension GL_ARB_shader_storage_buffer_object: enable
-//#extension ARB_arrays_of_arrays: enable
+#extension GL_NV_shader_atomic_float: enable
 
 // align 16bytes
 struct Triangle
@@ -20,6 +20,7 @@ uniform int xCount;
 uniform int yCount;
 uniform int zCount;
 uniform int intensity;
+uniform float spacing;
 
 // Layouts
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
@@ -36,20 +37,10 @@ layout(std430, binding = 2) buffer pointBuffer_in
 
 layout(std430, binding = 3) buffer triangleBuffer_out
 {
-	Triangle triangles[];
+	vec4[] vertices;
 };
-
-layout(std430, binding = 4) buffer indexBuffer_out
-{
-	vec4[] indices;
-};
-
 
 layout(binding = 5) uniform atomic_uint counter;
-layout(binding = 5, offset = 4) uniform atomic_uint aa;
-layout(binding = 5, offset = 8) uniform atomic_uint bb;
-layout(binding = 5, offset = 12) uniform atomic_uint cc;
-
 
 int indexFromCoord(int x, int y, int z)
 {
@@ -71,26 +62,6 @@ bool areVec3Equal(vec3 a, vec3 b)
 {
     return a.x == b.x && a.y == b.y && a.z == b.z; 
 };
-
-uint UpdateIndex(vec4 vec, uint id, uint next)
-{
-    for(uint i = 0; i < id ; i++)
-    {
-        if(abs(triangles[i].a.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].a.y) - abs(vec.y) < 0.0001f && abs(triangles[i].a.z) - abs(vec.z) < 0.0001f  )
-        {
-            return uint(indices[i].x);
-        }
-        else if(abs(triangles[i].b.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].b.y) - abs(vec.y) < 0.0001f && abs(triangles[i].b.z) - abs(vec.z) < 0.0001f )
-        {
-            return uint(indices[i].y);
-        }
-        else if(abs(triangles[i].c.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].c.y) - abs(vec.y) < 0.0001f && abs(triangles[i].c.z) - abs(vec.z) < 0.0001f )
-        {
-            return uint(indices[i].z);
-        }
-    }
-    return next;
-}
 
 void main()
 {
@@ -148,26 +119,20 @@ void main()
 
             if( !areVec3Equal(v0,v1) && !areVec3Equal(v0,v2) && !areVec3Equal(v2,v0) )
             {
-                tri.a= vec4(v0, n.x);
-                tri.b= vec4(v1, n.y);
-                tri.c= vec4(v2, n.z);
-
-//                indices[atomicCounterIncrement(counter)].x = UpdateIndex(tri.a);
-//                indices[atomicCounterIncrement(counter)].y = UpdateIndex(tri.b);
-//                indices[atomicCounterIncrement(counter)].z = UpdateIndex(tri.c);
-//                indices[atomicCounterIncrement(counter)].w = atomicCounterIncrement(counter);
-        
-                //indices[atomicCounterIncrement].x = atomicCounter(counter);
+                tri.a= vec4(v0, 0);
+                tri.b= vec4(v1, 0);
+                tri.c= vec4(v2, 0);
 
                 uint a = atomicCounterIncrement(counter);
-
-                indices[a].x = UpdateIndex(tri.a, a, a);
-                indices[a].y = UpdateIndex(tri.b, a, a);
-                indices[a].z = UpdateIndex(tri.c, a, a);
                 
-                indices[a].w = a; 
+                vertices[6 * a - 6] = tri.a * -spacing;
+                vertices[6 * a + 1 - 6] = vec4(n,0);
                 
-                triangles[a] = tri;
+                vertices[6 * a + 2 - 6] = tri.b * -spacing;
+                vertices[6 * a + 3 - 6] = vec4(n,0);
+                
+                vertices[6 * a + 4 - 6] = tri.c * -spacing;
+                vertices[6 * a + 5 - 6] = vec4(n,0);
 
             }
         };

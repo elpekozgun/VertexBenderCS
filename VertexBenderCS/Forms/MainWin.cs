@@ -112,12 +112,11 @@ namespace VertexBenderCS.Forms
             _mouseY = (int)(Height * 0.5);
             _isFirstMouse = true;
 
-            _timer = new System.Timers.Timer(16);
+            _timer = new System.Timers.Timer(8);
             _timer.Elapsed += Update;
             _timer.Start();
 
             _frmProcess = null;
-            //_Logger = new Logger();
             _SceneGraph = new SceneGraph();
             _camera = new Camera(GLControl.Width, GLControl.Height);
             _cameraController = new CameraController(_camera);
@@ -403,7 +402,8 @@ namespace VertexBenderCS.Forms
             _watch.Start();
 
             var volRenderer = new VolumeRenderer(output, "Compute");
-            volRenderer.Compute(60, 3);
+            volRenderer.Compute(60, 4);
+            
             _SceneGraph.AddObject(volRenderer);
 
             _watch.Stop();

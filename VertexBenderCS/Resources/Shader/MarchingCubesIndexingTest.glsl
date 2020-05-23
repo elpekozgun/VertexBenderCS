@@ -1,4 +1,4 @@
-﻿#version 430 core
+﻿#version 430 core#version 430 core
 //#extension GL_ARB_compute_shader: enable
 //#extension GL_ARB_shader_storage_buffer_object: enable
 //#extension ARB_arrays_of_arrays: enable
@@ -45,10 +45,10 @@ layout(std430, binding = 4) buffer indexBuffer_out
 };
 
 
-layout(binding = 5) uniform atomic_uint counter;
-layout(binding = 5, offset = 4) uniform atomic_uint aa;
-layout(binding = 5, offset = 8) uniform atomic_uint bb;
-layout(binding = 5, offset = 12) uniform atomic_uint cc;
+layout(std430, binding = 5) buffer counter_buffer
+{
+    uint[2] counter;
+};
 
 
 int indexFromCoord(int x, int y, int z)
@@ -72,9 +72,9 @@ bool areVec3Equal(vec3 a, vec3 b)
     return a.x == b.x && a.y == b.y && a.z == b.z; 
 };
 
-uint UpdateIndex(vec4 vec, uint id, uint next)
+uint UpdateIndex(vec4 vec)
 {
-    for(uint i = 0; i < id ; i++)
+    for(uint i = 1; i < counter[0] ; i++)
     {
         if(abs(triangles[i].a.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].a.y) - abs(vec.y) < 0.0001f && abs(triangles[i].a.z) - abs(vec.z) < 0.0001f  )
         {
@@ -89,7 +89,7 @@ uint UpdateIndex(vec4 vec, uint id, uint next)
             return uint(indices[i].z);
         }
     }
-    return next;
+    return atomicAdd(counter[1] ,1);
 }
 
 void main()
@@ -152,22 +152,19 @@ void main()
                 tri.b= vec4(v1, n.y);
                 tri.c= vec4(v2, n.z);
 
-//                indices[atomicCounterIncrement(counter)].x = UpdateIndex(tri.a);
-//                indices[atomicCounterIncrement(counter)].y = UpdateIndex(tri.b);
-//                indices[atomicCounterIncrement(counter)].z = UpdateIndex(tri.c);
-//                indices[atomicCounterIncrement(counter)].w = atomicCounterIncrement(counter);
-        
-                //indices[atomicCounterIncrement].x = atomicCounter(counter);
-
-                uint a = atomicCounterIncrement(counter);
-
-                indices[a].x = UpdateIndex(tri.a, a, a);
-                indices[a].y = UpdateIndex(tri.b, a, a);
-                indices[a].z = UpdateIndex(tri.c, a, a);
                 
-                indices[a].w = a; 
-                
-                triangles[a] = tri;
+                uint d = atomicAdd(counter[1],1);
+                indices[d].x = UpdateIndex(tri.a);
+                indices[d].y = UpdateIndex(tri.b);
+                indices[d].z = UpdateIndex(tri.c);
+
+                uint pos = atomicAdd(counter[0],1);
+                triangles[pos] = tri;
+
+                indices[d].w = pos;
+//                indices[pos].x =  UpdateIndex(tri.a);
+//                indices[pos].y =  UpdateIndex(tri.a);
+//                indices[pos].z =  UpdateIndex(tri.a);
 
             }
         };

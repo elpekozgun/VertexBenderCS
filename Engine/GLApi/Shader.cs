@@ -49,6 +49,20 @@ namespace Engine.GLApi
             //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
         );
 
+        private static Shader _marchingCubesComputeEfficient = ShaderBuilder.CreateShader
+        (
+            "marchingCubesEfficient",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubesEfficient.glsl", ShaderType.ComputeShader)
+        //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
+        private static Shader _computePaint = ShaderBuilder.CreateShader
+        (
+            "ComputePaint",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeFragment.glsl", ShaderType.FragmentShader)
+        );
+
         //private static Shader _defaultIndicator = ShaderBuilder.CreateShader
         //(
         //    "Indicator",
@@ -61,6 +75,8 @@ namespace Engine.GLApi
         public static Shader DefaultPointCloud => _defaultPointCloud;
         public static Shader DefaultCuberille => _defaultCuberille;
         public static Shader DefaultMarchingCompute => _marchingCubesCompute;
+        public static Shader MarchingComputeEfficient => _marchingCubesComputeEfficient;
+        public static Shader DefaultComputePaint => _computePaint;
         //public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion
