@@ -66,6 +66,12 @@
   <ItemGroup>
     <Compile Include="Forms\CustomColorTable.cs" />
     <Compile Include="Forms\CustomToolStripRenderer.cs" />
+    <Compile Include="Forms\FrmFinalize.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FrmFinalize.Designer.cs">
+      <DependentUpon>FrmFinalize.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\MainWin.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -97,6 +103,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Forms\FrmFinalize.resx">
+      <DependentUpon>FrmFinalize.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainWin.resx">
       <DependentUpon>MainWin.cs</DependentUpon>
     </EmbeddedResource>
@@ -130,13 +139,19 @@
     <None Include="Resources\Shader\ComputeVertex.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\MarchingCubesEfficient.glsl">
+    <None Include="Resources\Shader\GizmoFragment.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\Shader\GizmoVertex.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\Shader\MarchingCubesVertexBased.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\Shader\MarchingCubesIndexingTest.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\MarchingCubes.glsl">
+    <None Include="Resources\Shader\MarchingCubesTriBased.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\Shader\MarchingCubeTable.glsl">

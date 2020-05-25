@@ -138,14 +138,10 @@ namespace Engine.GLApi
             pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
             pointCloudShader.SetFloat("Spacing", Spacing);
 
-            var temp = Shader;
-            Shader = pointCloudShader;
-
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
             GL.PointSize(2);
 
             GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
-            Shader = temp;
 
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);

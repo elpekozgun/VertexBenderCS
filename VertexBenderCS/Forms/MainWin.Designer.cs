@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl();
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
@@ -124,8 +124,17 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.IntensityMarch = new System.Windows.Forms.TrackBar();
             this.numericMarch = new System.Windows.Forms.NumericUpDown();
+            this.volumeRendererPanel = new System.Windows.Forms.Panel();
+            this.cmbVolMethod = new System.Windows.Forms.ComboBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.labelIntensityMarch = new System.Windows.Forms.Label();
+            this.intensityMarch = new System.Windows.Forms.TrackBar();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.btnEdit = new System.Windows.Forms.Button();
+            this.btnFinalize = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -146,8 +155,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.sliderMin)).BeginInit();
             this.pointCloudPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.sliderMax)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.IntensityMarch)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).BeginInit();
+            this.volumeRendererPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -205,48 +215,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisX.LabelStyle.Interval = 0D;
-            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.LabelStyle.Interval = 0D;
-            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea1.BackColor = System.Drawing.Color.White;
-            chartArea1.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea1);
-            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend1.ForeColor = System.Drawing.Color.Gainsboro;
-            legend1.InterlacedRowsColor = System.Drawing.Color.White;
-            legend1.Name = "Legend1";
-            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend1);
+            chartArea4.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea4.AxisX.LabelStyle.Interval = 0D;
+            chartArea4.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea4.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea4.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea4.AxisY.LabelStyle.Interval = 0D;
+            chartArea4.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea4.BackColor = System.Drawing.Color.White;
+            chartArea4.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea4);
+            legend4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend4.ForeColor = System.Drawing.Color.Gainsboro;
+            legend4.InterlacedRowsColor = System.Drawing.Color.White;
+            legend4.Name = "Legend1";
+            legend4.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend4);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series1.BackSecondaryColor = System.Drawing.Color.White;
-            series1.ChartArea = "isoCurve-Distances";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series1.Color = System.Drawing.Color.DodgerBlue;
-            series1.CustomProperties = "PointWidth=0.3";
-            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series1.IsVisibleInLegend = false;
-            series1.LabelBackColor = System.Drawing.Color.White;
-            series1.LabelBorderColor = System.Drawing.Color.White;
-            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series1.Legend = "Legend1";
-            series1.MarkerBorderColor = System.Drawing.Color.White;
-            series1.MarkerColor = System.Drawing.Color.White;
-            series1.MarkerSize = 3;
-            series1.Name = "IsoCurve";
-            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series1);
+            series4.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series4.BackSecondaryColor = System.Drawing.Color.White;
+            series4.ChartArea = "isoCurve-Distances";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series4.Color = System.Drawing.Color.DodgerBlue;
+            series4.CustomProperties = "PointWidth=0.3";
+            series4.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series4.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series4.IsVisibleInLegend = false;
+            series4.LabelBackColor = System.Drawing.Color.White;
+            series4.LabelBorderColor = System.Drawing.Color.White;
+            series4.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series4.Legend = "Legend1";
+            series4.MarkerBorderColor = System.Drawing.Color.White;
+            series4.MarkerColor = System.Drawing.Color.White;
+            series4.MarkerSize = 3;
+            series4.Name = "IsoCurve";
+            series4.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series4.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series4.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series4);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -794,7 +804,7 @@
             this.transformPanel.Controls.Add(this.labelTransform);
             this.transformPanel.Location = new System.Drawing.Point(15, 444);
             this.transformPanel.Name = "transformPanel";
-            this.transformPanel.Size = new System.Drawing.Size(226, 155);
+            this.transformPanel.Size = new System.Drawing.Size(226, 142);
             this.transformPanel.TabIndex = 21;
             // 
             // numericScaleZ
@@ -1059,7 +1069,7 @@
             this.spherePanel.Controls.Add(this.label6);
             this.spherePanel.Controls.Add(this.numericSize);
             this.spherePanel.Controls.Add(this.label7);
-            this.spherePanel.Location = new System.Drawing.Point(15, 605);
+            this.spherePanel.Location = new System.Drawing.Point(15, 591);
             this.spherePanel.Name = "spherePanel";
             this.spherePanel.Size = new System.Drawing.Size(226, 93);
             this.spherePanel.TabIndex = 22;
@@ -1152,7 +1162,7 @@
             this.pointCloudPanel.Controls.Add(this.sliderMin);
             this.pointCloudPanel.Controls.Add(this.label2);
             this.pointCloudPanel.Controls.Add(this.label3);
-            this.pointCloudPanel.Location = new System.Drawing.Point(15, 605);
+            this.pointCloudPanel.Location = new System.Drawing.Point(15, 591);
             this.pointCloudPanel.Name = "pointCloudPanel";
             this.pointCloudPanel.Size = new System.Drawing.Size(226, 93);
             this.pointCloudPanel.TabIndex = 24;
@@ -1212,21 +1222,11 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "Point Cloud";
             // 
-            // IntensityMarch
-            // 
-            this.IntensityMarch.Location = new System.Drawing.Point(15, 696);
-            this.IntensityMarch.Maximum = 255;
-            this.IntensityMarch.Name = "IntensityMarch";
-            this.IntensityMarch.Size = new System.Drawing.Size(167, 45);
-            this.IntensityMarch.TabIndex = 25;
-            this.IntensityMarch.TabStop = false;
-            this.IntensityMarch.Value = 60;
-            // 
             // numericMarch
             // 
-            this.numericMarch.Location = new System.Drawing.Point(25, 730);
+            this.numericMarch.Location = new System.Drawing.Point(85, 54);
             this.numericMarch.Maximum = new decimal(new int[] {
-            10,
+            15,
             0,
             0,
             0});
@@ -1236,6 +1236,7 @@
             0,
             0});
             this.numericMarch.Name = "numericMarch";
+            this.numericMarch.ReadOnly = true;
             this.numericMarch.Size = new System.Drawing.Size(120, 24);
             this.numericMarch.TabIndex = 26;
             this.numericMarch.Value = new decimal(new int[] {
@@ -1244,6 +1245,112 @@
             0,
             0});
             // 
+            // volumeRendererPanel
+            // 
+            this.volumeRendererPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
+            this.volumeRendererPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.volumeRendererPanel.Controls.Add(this.btnFinalize);
+            this.volumeRendererPanel.Controls.Add(this.btnEdit);
+            this.volumeRendererPanel.Controls.Add(this.cmbVolMethod);
+            this.volumeRendererPanel.Controls.Add(this.label9);
+            this.volumeRendererPanel.Controls.Add(this.label4);
+            this.volumeRendererPanel.Controls.Add(this.labelIntensityMarch);
+            this.volumeRendererPanel.Controls.Add(this.numericMarch);
+            this.volumeRendererPanel.Controls.Add(this.intensityMarch);
+            this.volumeRendererPanel.Controls.Add(this.label10);
+            this.volumeRendererPanel.Controls.Add(this.label11);
+            this.volumeRendererPanel.Location = new System.Drawing.Point(15, 591);
+            this.volumeRendererPanel.Name = "volumeRendererPanel";
+            this.volumeRendererPanel.Size = new System.Drawing.Size(226, 147);
+            this.volumeRendererPanel.TabIndex = 27;
+            this.volumeRendererPanel.Visible = false;
+            // 
+            // cmbVolMethod
+            // 
+            this.cmbVolMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbVolMethod.FormattingEnabled = true;
+            this.cmbVolMethod.Items.AddRange(new object[] {
+            "GPU Boost",
+            "GPU",
+            "CPU"});
+            this.cmbVolMethod.Location = new System.Drawing.Point(84, 84);
+            this.cmbVolMethod.Name = "cmbVolMethod";
+            this.cmbVolMethod.Size = new System.Drawing.Size(121, 23);
+            this.cmbVolMethod.TabIndex = 29;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(30, 86);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(49, 15);
+            this.label9.TabIndex = 28;
+            this.label9.Text = "Method";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(4, 56);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(77, 15);
+            this.label4.TabIndex = 27;
+            this.label4.Text = "down sample";
+            // 
+            // labelIntensityMarch
+            // 
+            this.labelIntensityMarch.AutoSize = true;
+            this.labelIntensityMarch.Location = new System.Drawing.Point(38, 23);
+            this.labelIntensityMarch.Name = "labelIntensityMarch";
+            this.labelIntensityMarch.Size = new System.Drawing.Size(13, 15);
+            this.labelIntensityMarch.TabIndex = 25;
+            this.labelIntensityMarch.Text = "0";
+            // 
+            // intensityMarch
+            // 
+            this.intensityMarch.Location = new System.Drawing.Point(59, 21);
+            this.intensityMarch.Maximum = 255;
+            this.intensityMarch.Name = "intensityMarch";
+            this.intensityMarch.Size = new System.Drawing.Size(167, 45);
+            this.intensityMarch.TabIndex = 23;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(4, 23);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(31, 15);
+            this.label10.TabIndex = 2;
+            this.label10.Text = "Min:";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(3, 3);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(97, 15);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "Volume Renderer";
+            // 
+            // btnEdit
+            // 
+            this.btnEdit.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.btnEdit.Location = new System.Drawing.Point(8, 116);
+            this.btnEdit.Name = "btnEdit";
+            this.btnEdit.Size = new System.Drawing.Size(102, 23);
+            this.btnEdit.TabIndex = 30;
+            this.btnEdit.Text = "Edit";
+            this.btnEdit.UseVisualStyleBackColor = true;
+            // 
+            // btnFinalize
+            // 
+            this.btnFinalize.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.btnFinalize.Location = new System.Drawing.Point(115, 116);
+            this.btnFinalize.Name = "btnFinalize";
+            this.btnFinalize.Size = new System.Drawing.Size(102, 23);
+            this.btnFinalize.TabIndex = 31;
+            this.btnFinalize.Text = "Finalize";
+            this.btnFinalize.UseVisualStyleBackColor = true;
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -1251,8 +1358,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1298, 905);
-            this.Controls.Add(this.numericMarch);
-            this.Controls.Add(this.IntensityMarch);
+            this.Controls.Add(this.volumeRendererPanel);
             this.Controls.Add(this.pointCloudPanel);
             this.Controls.Add(this.spherePanel);
             this.Controls.Add(this.transformPanel);
@@ -1296,8 +1402,10 @@
             this.pointCloudPanel.ResumeLayout(false);
             this.pointCloudPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.sliderMax)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.IntensityMarch)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).EndInit();
+            this.volumeRendererPanel.ResumeLayout(false);
+            this.volumeRendererPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1397,8 +1505,17 @@
         private System.Windows.Forms.Label sliderMaxText;
         private System.Windows.Forms.Label sliderMinText;
         private System.Windows.Forms.ToolStripMenuItem menuOffExport;
-        private System.Windows.Forms.TrackBar IntensityMarch;
         private System.Windows.Forms.NumericUpDown numericMarch;
+        private System.Windows.Forms.Panel volumeRendererPanel;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label labelIntensityMarch;
+        private System.Windows.Forms.TrackBar intensityMarch;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.ComboBox cmbVolMethod;
+        private System.Windows.Forms.Button btnFinalize;
+        private System.Windows.Forms.Button btnEdit;
     }
 }
 

@@ -40,6 +40,11 @@ layout(std430, binding = 3) buffer triangleBuffer_out
 	vec4[] vertices;
 };
 
+layout(std430, binding = 4) buffer indexBuffer_out
+{
+	vec4[] indices;
+};
+
 layout(binding = 5) uniform atomic_uint counter;
 
 int indexFromCoord(int x, int y, int z)
@@ -58,10 +63,29 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2)
     return normalize(cross(v0 - v2, v0 - v1));
 };
 
-bool areVec3Equal(vec3 a, vec3 b)
+bool IsSame(vec4 v1, vec4 v2)
 {
-    return a.x == b.x && a.y == b.y && a.z == b.z; 
-};
+    return abs(v1.x - v2.x) <= EPSILON && abs(v1.y - v2.y) <= EPSILON && abs(v1.z - v2.z) <= EPSILON && abs(v1.w - v2.w) <= EPSILON;
+}
+
+bool IsSame(vec3 v1, vec3 v2)
+{
+    return abs(v1.x - v2.x) <= EPSILON && abs(v1.y - v2.y) <= EPSILON && abs(v1.z - v2.z) <= EPSILON;
+}
+
+uint UpdateIndex(vec4 vec, uint id, uint count, uint next)
+{
+    for(uint i =id; i < count ; i++)
+    {
+        if(IsSame(vertices[i], vec))
+        {
+            return uint(indices[i].x);
+        }
+    }
+    return next;
+}
+
+
 
 void main()
 {
@@ -111,28 +135,23 @@ void main()
             int a2 = cornerIndexEdgeV0[triangulations[cubeIndex * 16 + i + 2]];
             int b2 = cornerIndexEdgeV1[triangulations[cubeIndex * 16 + i + 2]];
 
-            Triangle tri;
             vec3 v0 = interpolate(corners[a0], corners[b0]);
             vec3 v1 = interpolate(corners[a1], corners[b1]);
             vec3 v2 = interpolate(corners[a2], corners[b2]);
             vec3 n = calculateNormal(v0,v1,v2);
 
-            if( !areVec3Equal(v0,v1) && !areVec3Equal(v0,v2) && !areVec3Equal(v2,v0) )
+            if( !IsSame(v0,v1) && !IsSame(v0,v2) && !IsSame(v2,v1) )
             {
-                tri.a= vec4(v0, 0);
-                tri.b= vec4(v1, 0);
-                tri.c= vec4(v2, 0);
-
                 uint a = atomicCounterIncrement(counter);
                 
-                vertices[6 * a - 6] = tri.a * -spacing;
-                vertices[6 * a + 1 - 6] = vec4(n,0);
+                vertices[6 * a ] = vec4(v0 * -spacing, 6 * a );
+                vertices[6 * a + 1 ] = vec4(n,31);
+
+                vertices[6 * a + 2 ] = vec4(v1 * -spacing, 6 * a + 1);
+                vertices[6 * a + 3 ] = vec4(n,31);
                 
-                vertices[6 * a + 2 - 6] = tri.b * -spacing;
-                vertices[6 * a + 3 - 6] = vec4(n,0);
-                
-                vertices[6 * a + 4 - 6] = tri.c * -spacing;
-                vertices[6 * a + 5 - 6] = vec4(n,0);
+                vertices[6 * a + 4 ] = vec4(v2 * -spacing, 6 * a + 2);
+                vertices[6 * a + 5 ] = vec4(n,31);
 
             }
         };

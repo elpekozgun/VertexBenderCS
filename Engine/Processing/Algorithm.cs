@@ -14,6 +14,7 @@ using System.Security.Policy;
 using MathNet.Numerics;
 using System.Windows.Forms;
 using OpenTK.Graphics.ES10;
+using System.Runtime.Remoting.Messaging;
 
 namespace Engine.Processing
 {
@@ -440,8 +441,8 @@ namespace Engine.Processing
                 float isoCurveLength = 0;
 
                 var isoCurve = new List<Vector3>();
-                
-                foreach(var tri in mesh.Triangles) 
+
+                foreach (var tri in mesh.Triangles)
                 {
 
                     var v1Id = tri.Value.V1;
@@ -694,7 +695,7 @@ namespace Engine.Processing
             return retVal;
         }
 
-        private static void RecursivelyAddNeighbor(Vertex source, ref Dictionary<int,Vertex> candidates, ref Dictionary<int,Vertex> boundary)
+        private static void RecursivelyAddNeighbor(Vertex source, ref Dictionary<int, Vertex> candidates, ref Dictionary<int, Vertex> boundary)
         {
             foreach (var neighbor in source.Verts)
             {
@@ -714,7 +715,7 @@ namespace Engine.Processing
 
 
 
-        private static void FillVectors(ref Vector<float> vectorX, ref Vector<float> vectorY, List<Dictionary<int,Vertex>> allBoundaries, bool fixInternals = false, bool uniformBoundary = true)
+        private static void FillVectors(ref Vector<float> vectorX, ref Vector<float> vectorY, List<Dictionary<int, Vertex>> allBoundaries, bool fixInternals = false, bool uniformBoundary = true)
         {
             if (allBoundaries.Count > 0)
             {
@@ -758,10 +759,10 @@ namespace Engine.Processing
                     }
                 }
             }
-            
+
         }
 
-        private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, List<Dictionary<int,Vertex>> allBoundaries, eParameterizationMethod method, float weight, bool fixInternals = false)
+        private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, List<Dictionary<int, Vertex>> allBoundaries, eParameterizationMethod method, float weight, bool fixInternals = false)
         {
             foreach (var vertex in mesh.Vertices)
             {
@@ -803,7 +804,7 @@ namespace Engine.Processing
 
         }
 
-        private static Dictionary<int, Vector2> MakeDiscTopology(Dictionary<int,Vertex> vertices, bool uniformBoundary)
+        private static Dictionary<int, Vector2> MakeDiscTopology(Dictionary<int, Vertex> vertices, bool uniformBoundary)
         {
             Dictionary<int, Vector2> DiskPoints = new Dictionary<int, Vector2>();
 
@@ -817,7 +818,7 @@ namespace Engine.Processing
                 new Vector3(initialItem.Value.Coord.X - box.Center.X, 0.0f, initialItem.Value.Coord.Z - box.Center.Z),
                 Vector3.UnitX
             );
-            
+
 
             if (uniformBoundary)
             {
@@ -872,7 +873,7 @@ namespace Engine.Processing
                 }
                 weight *= 0.5f;
             }
-            else if(method == eParameterizationMethod.MeanValue)
+            else if (method == eParameterizationMethod.MeanValue)
             {
                 foreach (var tri in tris)
                 {
@@ -885,10 +886,10 @@ namespace Engine.Processing
 
         #endregion
 
-        public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int,Vertex>> totalBoundaries)
+        public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
         {
 
-            var candidateItems = candidates.Select(x => x).ToDictionary(x=>x.Id);
+            var candidateItems = candidates.Select(x => x).ToDictionary(x => x.Id);
 
             while (candidateItems.Count > 0)
             {
@@ -930,7 +931,7 @@ namespace Engine.Processing
             else
             {
                 RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
-                path = allBoundaries[0].Select(x=>x.Key).ToList();
+                path = allBoundaries[0].Select(x => x.Key).ToList();
             }
 
 
@@ -1029,7 +1030,7 @@ namespace Engine.Processing
             _watch.Stop();
             Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
 
-            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3>{ meshCenter });
+            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> { meshCenter });
 
         }
 
@@ -1111,7 +1112,7 @@ namespace Engine.Processing
             }
             else
             {
-                RecursivelyFindAllBoundaries(mesh.Vertices.Select(x=>x.Value).ToList(), boundaryEdges, ref allBoundaries);
+                RecursivelyFindAllBoundaries(mesh.Vertices.Select(x => x.Value).ToList(), boundaryEdges, ref allBoundaries);
                 path = allBoundaries[0].Select(x => x.Key).ToList();
             }
 
@@ -1203,7 +1204,7 @@ namespace Engine.Processing
             _watch.Stop();
             Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
 
-            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> {  meshCenter });
+            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> { meshCenter });
 
         }
 
@@ -1240,8 +1241,8 @@ namespace Engine.Processing
                         var tri = mesh.Triangles[triId];
                         var triArea = mesh.TriangleArea(spherePoints[tri.V1], spherePoints[tri.V2], spherePoints[tri.V3]);
                         //var triArea = mesh.TriangleArea(tri);
-                        
-                        
+
+
                         weight += triArea;
                     }
                     totalTriArea += weight;
@@ -1264,7 +1265,7 @@ namespace Engine.Processing
             _watch.Stop();
             Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
 
-            return new SphereParameterizeOutput(spherePoints, normals, centerList );
+            return new SphereParameterizeOutput(spherePoints, normals, centerList);
         }
 
         // This function needs a redo in terms of indexing of triangles, after switching to dictionary.
@@ -1303,7 +1304,7 @@ namespace Engine.Processing
 
                 var commonTris = vi.Tris.Intersect(v1.Tris).ToList();
                 int triIndex = commonTris[0];
-                
+
                 var tri = mesh.Triangles[triIndex];
                 if (i != 1)
                 {
@@ -1335,9 +1336,9 @@ namespace Engine.Processing
 
                     commonTris = vi.Tris.Intersect(mesh.Vertices[i3rd].Tris).ToList();
                     commonTris.Remove(tri.Id);
-                    
+
                     var next = commonTris[0];
-                    
+
                     tri = cutMesh.Triangles[next];
                     i3rd = tri.GetThirdVertexId(vi.Id, i3rd);
 
@@ -1428,11 +1429,11 @@ namespace Engine.Processing
             // This is utter crap for now..
             // needs a huge todo for this shit...
             //sampleSize = Math.Max(2, sampleSize);
-            for (int z = 0; z < dimZ; z+= sampleSize)
+            for (int z = 0; z < dimZ; z += sampleSize)
             {
-                for (int y = 0; y < dimY; y+=sampleSize)
+                for (int y = 0; y < dimY; y += sampleSize)
                 {
-                    for (int x = 0; x < dimX; x+=sampleSize)
+                    for (int x = 0; x < dimX; x += sampleSize)
                     {
                         var intensity = 0;
                         intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
@@ -1445,12 +1446,12 @@ namespace Engine.Processing
 
 
                         intensities.Add(intensity);
-                        intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x,y,z) / sampleSize, intensity));
+                        intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x, y, z) / sampleSize, intensity));
                     }
                 }
             }
-            
-            return new VolOutput(dimX / sampleSize +1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
+
+            return new VolOutput(dimX / sampleSize + 1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
         }
 
         public static List<CubicCell> MakeGrid(VolOutput output)
@@ -1502,7 +1503,7 @@ namespace Engine.Processing
             Vector3[] vertices = new Vector3[12];
 
             List<Vector3[]> triangles = new List<Vector3[]>();
-            
+
             if (cell.Corners[0].Value >= isoLevel) cubeIndex |= 1;
             if (cell.Corners[1].Value >= isoLevel) cubeIndex |= 2;
             if (cell.Corners[2].Value >= isoLevel) cubeIndex |= 4;
@@ -1544,7 +1545,7 @@ namespace Engine.Processing
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 64) == 64)
             {
-                vertices[6] = Interpolate(isoLevel, cell.Corners[6], cell.Corners[7],interpolate);
+                vertices[6] = Interpolate(isoLevel, cell.Corners[6], cell.Corners[7], interpolate);
             }
             if ((MarchingCubesTables.CubeEdgeFlags[cubeIndex] & 128) == 128)
             {
@@ -1580,8 +1581,8 @@ namespace Engine.Processing
 
             return triangles;
         }
-        
-        private static Vector3 Interpolate(float value, KeyValuePair<Vector3, int> c1, KeyValuePair<Vector3,int> c2, bool interpolate = true)
+
+        private static Vector3 Interpolate(float value, KeyValuePair<Vector3, int> c1, KeyValuePair<Vector3, int> c2, bool interpolate = true)
         {
             if (!interpolate)
             {
@@ -1608,15 +1609,12 @@ namespace Engine.Processing
                 c1.Key.X + mu * (c2.Key.X - c1.Key.X),
                 c1.Key.Y + mu * (c2.Key.Y - c1.Key.Y),
                 c1.Key.Z + mu * (c2.Key.Z - c1.Key.Z)
-            ); 
+            );
 
         }
 
         public static Mesh MarchCubes(VolOutput output, float intensity, bool interpolate, bool isIndexed)
         {
-            _watch.Reset();
-            _watch.Start();
-
             var grid = MakeGrid(output);
 
             Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
@@ -1682,9 +1680,6 @@ namespace Engine.Processing
 
             var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
 
-            Logger.Log($"Cpu Generation: {_watch.ElapsedMilliseconds}");
-            _watch.Stop();
-
             if (isIndexed)
             {
                 return ObjectLoader.MakeMeshIndexed(verts, triangleIDs.ToList(), output.Spacing, "test"); ;
@@ -1695,8 +1690,113 @@ namespace Engine.Processing
             }
         }
 
+        public static Mesh CreateMeshFromVolRendererOutput(Vector4[] vertices)
+        {
+            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
+            HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
+
+            var mesh = new Mesh();
+
+            int id = 0;
+            int triId = 0;
+
+            for (int i = 0; i < vertices.Length ; i+=6)
+            {
+                int a, b, c = -1;
+
+                var dec = new Vector3d(Math.Round(vertices[i].X, 6), Math.Round(vertices[i].Y, 6), Math.Round(vertices[i].Z, 6));
+                if (!vertexDict.ContainsKey(dec))
+                {
+                    a = id;
+                    vertexDict.Add(dec, id++);
+                }
+                else
+                {
+                    a = vertexDict[dec];
+                }
+
+
+                dec = new Vector3d(Math.Round(vertices[i + 2].X, 6), Math.Round(vertices[i + 2].Y, 6), Math.Round(vertices[i + 2].Z, 6));
+                if (!vertexDict.ContainsKey(dec))
+                {
+                    b = id;
+                    vertexDict.Add(dec, id++);
+                }
+                else
+                {
+                    b = vertexDict[dec];
+                }
+
+                dec = new Vector3d(Math.Round(vertices[i + 4].X, 6), Math.Round(vertices[i + 4].Y, 6), Math.Round(vertices[i + 4].Z, 6));
+                if (!vertexDict.ContainsKey(dec))
+                {
+                    c = id;
+                    vertexDict.Add(dec, id++);
+                }
+                else
+                {
+                    c = vertexDict[dec];
+                }
+
+                if (a != b && a != c && b != c)
+                {
+                    triangleIDs.Add(new Triangle(triId++, a, b, c));
+                }
+
+            }
+
+            var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
+
+            for (int i = 0; i < verts.Count; i++)
+            {
+                mesh.AddVertex(verts[i], Vector3.Zero);
+            }
+
+            var tris = triangleIDs.ToList();
+
+            for (int i = 0; i < tris.Count; i++)
+            {
+                mesh.AddTriangle(tris[i].V1, tris[i].V2, tris[i].V3);
+            }
+
+            mesh.CalculateVertexNormals();
+
+            return mesh;
+        }
+
+
+
+        public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)
+        {
+            var grid = MakeGrid(output);
+
+            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
+            HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
+            var triangles = new List<Vector3[]>();
+
+            var vertices = output.IntensityMap.Select(x => x.Key).ToList();
+
+            for (int i = 0; i < grid.Count; i++)
+            {
+                var tris = Polygonize(grid[i], intensity, interpolate);
+
+                for (int j = 0; j < tris.Count; j++)
+                {
+                    if(tris[j][0] != tris[j][1] && tris[j][1] != tris[j][2] && tris[j][2] != tris[j][0])
+                    {
+                        triangles.Add(tris[j]);
+                    }
+                }
+            }
+
+            return triangles;
+        }
+
+
         public static void Smoothen(ref Mesh mesh, int iteration)
         {
+            _watch.Reset();
+            _watch.Start();
             var originalVertexCoords = new List<Vector3>(mesh.Vertices.Select(x => x.Value.Coord));
 
             var keys = mesh.Vertices.Select(x => x.Key).ToList();
@@ -1730,6 +1830,9 @@ namespace Engine.Processing
                 iteration--;
 
             }
+
+            _watch.Stop();
+            Logger.Log($" smooth: {_watch.ElapsedMilliseconds} ms");
         }
 
         public static void RemoveIslands(ref Mesh mesh)
@@ -1801,80 +1904,6 @@ namespace Engine.Processing
             Logger.Log($"island removal: {_watch.ElapsedMilliseconds} ms");
 
         }
-
-        public static Mesh MarchCubesGPU(Vector4[] input, int xCount, int yCount, int zCount, float spacing, int intensity, bool interpolate, bool isIndexed)
-        {
-            _watch.Reset();
-            _watch.Start();
-
-            Shader shader = Shader.DefaultMarchingCompute;
-
-            ComputeTriangle[] triangles = new ComputeTriangle[input.Length];
-            //Vector4[] triangles = new Vector4[input.Length * 3];
-
-            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_in);
-            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ubo_mc);
-            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int ssbo_out);
-            OpenTK.Graphics.OpenGL4.GL.GenBuffers(1, out int atomic_count);
-
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.UniformBuffer, ubo_mc);
-            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.UniformBuffer, (256 * 16) * sizeof(uint), MarchingCubesTables.TriangleConnectionTableLinear, OpenTK.Graphics.OpenGL4.BufferUsageHint.StaticRead);
-            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.UniformBuffer, 3, ubo_mc);
-
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_in);
-            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(uint), input, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
-            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 4, ssbo_in);
-
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, ssbo_out);
-            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, triangles.Length * 3 * 4 * sizeof(uint), IntPtr.Zero, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
-            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.ShaderStorageBuffer, 5, ssbo_out);
-
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, atomic_count);
-            OpenTK.Graphics.OpenGL4.GL.BufferData(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, sizeof(uint), IntPtr.Zero, OpenTK.Graphics.OpenGL4.BufferUsageHint.DynamicRead);
-            OpenTK.Graphics.OpenGL4.GL.BindBufferBase(OpenTK.Graphics.OpenGL4.BufferRangeTarget.AtomicCounterBuffer, 6, atomic_count);
-
-            shader.Use();
-            shader.SetInt("xCount", xCount);
-            shader.SetInt("yCount", yCount);
-            shader.SetInt("zCount", zCount);
-            shader.SetInt("intensity", intensity);
-            shader.SetInt("counter", 0);
-
-            var a = xCount + (8 - xCount % 8);
-            var b = yCount + (8 - yCount % 8);
-            var c = zCount + (8 - zCount % 8);
-
-            OpenTK.Graphics.OpenGL4.GL.DispatchCompute(a / 8 , b / 8, c / 8);
-            OpenTK.Graphics.OpenGL4.GL.MemoryBarrier(OpenTK.Graphics.OpenGL4.MemoryBarrierFlags.AllBarrierBits);
-
-            int counter = -1;
-            OpenTK.Graphics.OpenGL4.GL.GetBufferSubData<int>
-            (
-                OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer,
-                IntPtr.Zero,
-                sizeof(uint),
-                ref counter
-            );
-            
-            ComputeTriangle[] tris = new ComputeTriangle[counter];
-            OpenTK.Graphics.OpenGL4.GL.GetBufferSubData
-            (
-                OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, 
-                IntPtr.Zero, 
-                tris.Length * 3 * 4 * sizeof(uint), 
-                tris
-            );
-
-            _watch.Stop();
-            Logger.Log($"Compute Shader: {_watch.ElapsedMilliseconds}");
-
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.ShaderStorageBuffer, 0);
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.AtomicCounterBuffer, 0);
-            OpenTK.Graphics.OpenGL4.GL.BindBuffer(OpenTK.Graphics.OpenGL4.BufferTarget.UniformBuffer, 0);
-
-            return ObjectLoader.MakeMeshUnindexed(tris, spacing); ;
-        }
-
                                     
     }
 

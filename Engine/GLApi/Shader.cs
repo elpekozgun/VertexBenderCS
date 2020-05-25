@@ -42,17 +42,17 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudFragment.glsl", ShaderType.FragmentShader)
         );
 
-        private static Shader _marchingCubesCompute = ShaderBuilder.CreateShader
+        private static Shader _marchingCubesComputeTribased = ShaderBuilder.CreateShader
         (
-            "marchingCubes",
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubes.glsl", ShaderType.ComputeShader)
+            "marchingCubesTri",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubesTriBased.glsl", ShaderType.ComputeShader)
             //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
         );
 
-        private static Shader _marchingCubesComputeEfficient = ShaderBuilder.CreateShader
+        private static Shader _marchingCubesComputeVertexBased = ShaderBuilder.CreateShader
         (
-            "marchingCubesEfficient",
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubesEfficient.glsl", ShaderType.ComputeShader)
+            "marchingCubesVertex",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubesVertexBased.glsl", ShaderType.ComputeShader)
         //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
         );
 
@@ -61,6 +61,13 @@ namespace Engine.GLApi
             "ComputePaint",
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeVertex.glsl", ShaderType.VertexShader),
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeFragment.glsl", ShaderType.FragmentShader)
+        );
+
+        private static Shader _gizmoShader = ShaderBuilder.CreateShader
+        (
+            "gizmo",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoFragment.glsl", ShaderType.FragmentShader)
         );
 
         //private static Shader _defaultIndicator = ShaderBuilder.CreateShader
@@ -74,9 +81,10 @@ namespace Engine.GLApi
         public static Shader DefaultUnlitShader=> _defaultUnlit;
         public static Shader DefaultPointCloud => _defaultPointCloud;
         public static Shader DefaultCuberille => _defaultCuberille;
-        public static Shader DefaultMarchingCompute => _marchingCubesCompute;
-        public static Shader MarchingComputeEfficient => _marchingCubesComputeEfficient;
+        public static Shader MarchingComputeTriBased => _marchingCubesComputeTribased;
+        public static Shader MarchingComputeVertexBased => _marchingCubesComputeVertexBased;
         public static Shader DefaultComputePaint => _computePaint;
+        public static Shader DefaultGizmo => _gizmoShader;
         //public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion
