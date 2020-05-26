@@ -59,7 +59,7 @@ namespace Engine.Core
         {
             int id = _lastE++;
             //int id = Edges.Count;
-            Edges.Add(new Edge(id, v1, v2, length));
+            Edges.Add(new Edge(id, v1, v2, length, false));
 
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);

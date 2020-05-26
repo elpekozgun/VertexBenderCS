@@ -15,6 +15,7 @@ using MathNet.Numerics;
 using System.Windows.Forms;
 using OpenTK.Graphics.ES10;
 using System.Runtime.Remoting.Messaging;
+using System.Windows.Forms.VisualStyles;
 
 namespace Engine.Processing
 {
@@ -764,6 +765,7 @@ namespace Engine.Processing
 
         private static void FillMatrix(ref Matrix<float> matrix, Mesh mesh, List<Dictionary<int, Vertex>> allBoundaries, eParameterizationMethod method, float weight, bool fixInternals = false)
         {
+            int k = 0;
             foreach (var vertex in mesh.Vertices)
             {
                 bool isBoundary = false;
@@ -782,24 +784,25 @@ namespace Engine.Processing
 
                 if (isBoundary && boundaryIndex == 0)
                 {
-                    matrix[i, i] = 1;
+                    matrix[k, k] = 1;
                 }
                 else
                 {
                     if (isBoundary && fixInternals)
                     {
-                        matrix[i, i] = 1;
+                        matrix[k, k] = 1;
                     }
                     else
                     {
                         for (int j = 0; j < mesh.Vertices[i].Verts.Count; j++)
                         {
                             CalculateWeight(mesh, method, i, mesh.Vertices[i].Verts[j], ref weight);
-                            matrix[i, mesh.Vertices[i].Verts[j]] = weight;
-                            matrix[i, i] -= weight;
+                            matrix[k, mesh.Vertices[i].Verts[j]] = weight;
+                            matrix[k, k] -= weight;
                         }
                     }
                 }
+                k++;
             }
 
         }
@@ -885,157 +888,7 @@ namespace Engine.Processing
         }
 
         #endregion
-
-        public static void RecursivelyFindAllBoundaries(List<Vertex> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
-        {
-
-            var candidateItems = candidates.Select(x => x).ToDictionary(x => x.Id);
-
-            while (candidateItems.Count > 0)
-            {
-                var itemList = new List<Vertex>();
-                var boundary = new Dictionary<int, Vertex>();
-
-                var first = candidateItems.First();
-                boundary.Add(first.Key, first.Value);
-                candidateItems.Remove(first.Key);
-                RecursivelyAddNeighbor(first.Value, ref candidateItems, ref boundary);
-
-                totalBoundaries.Add(boundary);
-            }
-            totalBoundaries = totalBoundaries.OrderByDescending(x => Box3.CalculateBoundingBox(x).Volume).ToList();
-        }
-
-        public static DiscParameterizeOutput ParameterizeMeshToDiscOld(Mesh mesh, eParameterizationMethod method, Action<int> updateProgress, float weight = 0.5f, bool fixInternals = false, bool uniformBoundary = true)
-        {
-            var allBoundaries = new List<Dictionary<int, Vertex>>();
-            var boundaryVertices = mesh.GetBoundaryVertices();
-
-            boundaryVertices = boundaryVertices.OrderByDescending(x => x.Coord.X).ToList();
-
-            List<int> path = new List<int>();
-            if (boundaryVertices.Count == 0)
-            {
-                string extra = "";
-                if (!uniformBoundary)
-                {
-                    extra = "Uniformly distributing boundaries.";
-                    uniformBoundary = true;
-                }
-                Logger.Log($"No holes detected, cutting {mesh.Name}. {extra}");
-                var cutOutput = CutMesh(mesh);
-                allBoundaries = cutOutput.boundary;
-                mesh = cutOutput.Cutmesh;
-                path = cutOutput.ShortestPath.Path;
-            }
-            else
-            {
-                RecursivelyFindAllBoundaries(boundaryVertices, ref allBoundaries);
-                path = allBoundaries[0].Select(x => x.Key).ToList();
-            }
-
-
-            updateProgress(20);
-
-            MathNet.Numerics.Control.UseNativeOpenBLAS();
-            Matrix<float> W = Matrix<float>.Build.Dense(mesh.Vertices.Count, mesh.Vertices.Count, 0.0f);
-            Vector<float> Bx = Vector<float>.Build.Dense(mesh.Vertices.Count, 0.0f);
-            Vector<float> By = Vector<float>.Build.Dense(mesh.Vertices.Count, 0.0f);
-
-
-            FillMatrix(ref W, mesh, allBoundaries, method, weight, fixInternals);
-            FillVectors(ref Bx, ref By, allBoundaries, fixInternals, uniformBoundary);
-
-            _watch.Reset();
-            _watch.Start();
-
-
-            var Xx = W.Solve(Bx);
-            var Xy = W.Solve(By);
-
-            updateProgress(80);
-
-            _watch.Stop();
-            Logger.Log($"Matrix of size {W.ColumnCount} x {W.ColumnCount} Solved in: {_watch.ElapsedMilliseconds} ms");
-
-            var list = new List<Vector2>();
-            for (int i = 0; i < Xx.Count; i++)
-            {
-                list.Add(new Vector2(Xx[i], Xy[i]));
-            }
-            updateProgress(100);
-
-            return new DiscParameterizeOutput(list, mesh, path);
-        }
-
-        public static SphereParameterizeOutput ParameterizeMeshToSphereOld(Mesh mesh, int iterationCount, Action<int> updateProgress)
-        {
-            _watch.Reset();
-            _watch.Start();
-
-            var meshCenter = mesh.Center();
-
-            List<Vector3> vertices = mesh.Vertices.Select(x => x.Value.Coord).ToList();
-
-            var keys = mesh.Vertices.Select(x => x.Key).ToList();
-
-            for (int i = 0; i < keys.Count; i++)
-            {
-                var vertex = mesh.Vertices[keys[i]];
-
-                var neighbors = vertex.Verts;
-
-                Vector3 newCenter = Vector3.Zero;
-                for (int k = 0; k < neighbors.Count; k++)
-                {
-                    newCenter += vertices[neighbors[k]];
-                }
-                newCenter /= neighbors.Count;
-
-                vertices[keys[i]] = newCenter;
-            }
-
-
-
-            List<Vector3> spherePoints = new List<Vector3>();
-            List<Vector3> normals = new List<Vector3>();
-            for (int i = 0; i < vertices.Count; i++)
-            {
-                var normal = (vertices[i] - meshCenter).Normalized();
-                spherePoints.Add(RayCaster.Cast(meshCenter, normal, 0.5f, 0.5f).Normalized());
-                normals.Add(normal);
-            }
-
-            for (int i = 0; i < iterationCount; i++)
-            {
-                for (int j = 0; j < spherePoints.Count; j++)
-                {
-                    var neighbors = mesh.Vertices[j].Verts;
-
-                    Vector3 newCenter = Vector3.Zero;
-                    for (int k = 0; k < neighbors.Count; k++)
-                    {
-                        newCenter += spherePoints[neighbors[k]];
-                    }
-                    newCenter /= neighbors.Count;
-
-                    spherePoints[j] = newCenter.Normalized();
-                    normals[j] = (spherePoints[j] - meshCenter).Normalized();
-                }
-                updateProgress((int)(100 * (float)(i) / iterationCount));
-            }
-            updateProgress(100);
-
-
-            _watch.Stop();
-            Logger.Log($"Sphere Parametrization completed in: {_watch.ElapsedMilliseconds} ms -> iteration Count = {iterationCount}");
-
-            return new SphereParameterizeOutput(spherePoints, normals, new List<Vector3> { meshCenter });
-
-        }
-
-
-
+ 
         private static void RecursivelyAddEdge(Edge source, ref Dictionary<int, Edge> candidates, ref Dictionary<int, Edge> boundary)
         {
 
@@ -1052,7 +905,7 @@ namespace Engine.Processing
             }
         }
 
-        public static void RecursivelyFindAllBoundaries(List<Vertex> vertices, List<Edge> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
+        public static void RecursivelyFindAllBoundaries(Dictionary<int,Vertex> vertices, List<Edge> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
         {
 
             var candidateItems = candidates.Select(x => x).ToDictionary(x => x.Id);
@@ -1077,10 +930,15 @@ namespace Engine.Processing
                 HashSet<Vertex> boundaryVertices = new HashSet<Vertex>();
                 var pairs = boundaries.ToList();
 
-                for (int i = 0; i < pairs.Count; i++)
+                foreach (var pair in pairs)
                 {
-                    boundaryVertices.Add(vertices[pairs[i].Value.Start]);
+                    boundaryVertices.Add(vertices[pair.Value.Start]);
                 }
+
+                //for (int i = 0; i < pairs.Count; i++)
+                //{
+                //    boundaryVertices.Add(vertices[pairs[i].Value.Start]);
+                //}
                 boundaryVertices.Add(vertices[pairs.Last().Value.End]);
 
                 totalBoundaries.Add(boundaryVertices.Select(x => x).ToDictionary(x => x.Id));
@@ -1112,7 +970,7 @@ namespace Engine.Processing
             }
             else
             {
-                RecursivelyFindAllBoundaries(mesh.Vertices.Select(x => x.Value).ToList(), boundaryEdges, ref allBoundaries);
+                RecursivelyFindAllBoundaries(mesh.Vertices, boundaryEdges, ref allBoundaries);
                 path = allBoundaries[0].Select(x => x.Key).ToList();
             }
 
@@ -1410,8 +1268,9 @@ namespace Engine.Processing
             return new CutMeshOutput(cutMesh, sp, allBoundaries);
         }
 
-        // Ultrasound
 
+        // Marching Cubes and Ultrasound
+        
         public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
         {
             if (sampleSize <= 1)
@@ -1453,7 +1312,7 @@ namespace Engine.Processing
 
             return new VolOutput(dimX / sampleSize + 1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
         }
-
+        
         public static List<CubicCell> MakeGrid(VolOutput output)
         {
             var x = output.XCount;
@@ -1496,7 +1355,7 @@ namespace Engine.Processing
 
             return retval;
         }
-
+        
         private static List<Vector3[]> Polygonize(CubicCell cell, float isoLevel, bool interpolate)
         {
             int cubeIndex = 0;
@@ -1581,7 +1440,7 @@ namespace Engine.Processing
 
             return triangles;
         }
-
+        
         private static Vector3 Interpolate(float value, KeyValuePair<Vector3, int> c1, KeyValuePair<Vector3, int> c2, bool interpolate = true)
         {
             if (!interpolate)
@@ -1690,6 +1549,32 @@ namespace Engine.Processing
             }
         }
 
+        public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)
+        {
+            var grid = MakeGrid(output);
+
+            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
+            HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
+            var triangles = new List<Vector3[]>();
+
+            var vertices = output.IntensityMap.Select(x => x.Key).ToList();
+
+            for (int i = 0; i < grid.Count; i++)
+            {
+                var tris = Polygonize(grid[i], intensity, interpolate);
+
+                for (int j = 0; j < tris.Count; j++)
+                {
+                    if(tris[j][0] != tris[j][1] && tris[j][1] != tris[j][2] && tris[j][2] != tris[j][0])
+                    {
+                        triangles.Add(tris[j]);
+                    }
+                }
+            }
+
+            return triangles;
+        }
+
         public static Mesh CreateMeshFromVolRendererOutput(Vector4[] vertices)
         {
             Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
@@ -1763,35 +1648,6 @@ namespace Engine.Processing
 
             return mesh;
         }
-
-
-
-        public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)
-        {
-            var grid = MakeGrid(output);
-
-            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
-            HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
-            var triangles = new List<Vector3[]>();
-
-            var vertices = output.IntensityMap.Select(x => x.Key).ToList();
-
-            for (int i = 0; i < grid.Count; i++)
-            {
-                var tris = Polygonize(grid[i], intensity, interpolate);
-
-                for (int j = 0; j < tris.Count; j++)
-                {
-                    if(tris[j][0] != tris[j][1] && tris[j][1] != tris[j][2] && tris[j][2] != tris[j][0])
-                    {
-                        triangles.Add(tris[j]);
-                    }
-                }
-            }
-
-            return triangles;
-        }
-
 
         public static void Smoothen(ref Mesh mesh, int iteration)
         {
@@ -1901,10 +1757,70 @@ namespace Engine.Processing
                 mesh.RemoveVertex(item);
             }
             _watch.Stop();
+            mesh.RefreshMesh();
+
             Logger.Log($"island removal: {_watch.ElapsedMilliseconds} ms");
 
         }
-                                    
+
+        public static void FillHoles(ref Mesh mesh)
+        {
+            List<Dictionary<int, Vertex>> allBoundaries = new List<Dictionary<int, Vertex>>();
+
+            var boundaryEdges = mesh.GetBoundaryEdges();
+
+            // Step-1: Find All Boundary vertices.
+            RecursivelyFindAllBoundaries(mesh.Vertices, boundaryEdges, ref allBoundaries);
+
+            // Step-2: calculate angle Theta between 2 adjacent boundary edges.
+
+            List<List<float>> anglesList = new List<List<float>>();
+
+            foreach (var boundary in allBoundaries)
+            {
+                List<float> angles = new List<float>();
+                foreach (var boundaryVertex in boundary)
+                {
+                    List<int> neighbors = new List<int>();
+                    for (int i = 0; i < boundaryVertex.Value.Verts.Count; i++)
+                    {
+                        var edge = mesh.Edges[boundaryVertex.Value.Verts[i]];
+                        var e1 = edge.Start;
+                        var e2 = edge.End;
+
+                        var commonTris = mesh.Vertices[e1].Tris.Intersect(mesh.Vertices[e2].Tris).ToList().Count;
+
+                        if (commonTris == 1)
+                        {
+                            if (e1 != boundaryVertex.Key)
+                            {
+                                neighbors.Add(e2);
+                            }
+                            else if (e2 != boundaryVertex.Key)
+                            {
+                                neighbors.Add(e1);
+                            }
+                        }
+                    }
+                    if (neighbors.Count == 2)
+                    {
+                        float theta = (float)Math.Acos(Vector3.Dot((boundaryVertex.Value.Coord - mesh.Vertices[neighbors[0]].Coord).Normalized(), (boundaryVertex.Value.Coord - mesh.Vertices[neighbors[1]].Coord).Normalized()));
+                        angles.Add(theta);
+                    }
+                }
+                anglesList.Add(angles);
+            }
+
+
+            // Step-3: Start from vertex with smallest theta angle. Apply rules such that,
+            // theta <= 75 => connect, theta > 75 && theta <=135 => add new vertex, theta > 135 => add 2 new vertices
+
+            // Step-4: Compute distance between newly created vertices with related boundary vertices. if the distance is smaller than a threshhold merge them
+
+            // Step-5: Update the front, go 2. repeat etc.
+
+        }
+        
     }
 
 

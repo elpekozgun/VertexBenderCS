@@ -58,18 +58,20 @@ namespace Engine.Core
 
     public struct Edge
     {
-        public Edge(int id, int v1, int v2, float length)
+        public Edge(int id, int v1, int v2, float length, bool isBoundary)
         {
             Id = id;
             Start = v1;
             End = v2;
             Length = length;
+            IsBoundary = isBoundary;
         }
 
         public int Id;
         public int Start;
         public int End;
         public float Length { get; set; }
+        public bool IsBoundary;
 
         public int GetOppositeEnd(int id)
         {
@@ -77,6 +79,10 @@ namespace Engine.Core
             return ret;
         }
 
+        public void SetBoundary()
+        {
+            IsBoundary = true;
+        }
     }
 
     public struct Triangle
@@ -181,23 +187,23 @@ namespace Engine.Core
 
             if (!AreNeighbors(v1,v2))
             {
-                AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length);
+                AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length, false);
             }
             if (!AreNeighbors(v2, v3))
             {
-                AddEdge(v2, v3, (Vertices[v2].Coord - Vertices[v3].Coord).Length);
+                AddEdge(v2, v3, (Vertices[v2].Coord - Vertices[v3].Coord).Length, false);
             }
             if (!AreNeighbors(v3, v1))
             {
-                AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length);
+                AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length, false);
             }
 
         }
         
-        internal void AddEdge(int v1, int v2, float length)
+        internal void AddEdge(int v1, int v2, float length, bool isBoundary)
         {
             int id = _lastE++;
-            Edges.Add(id, new Edge(id, v1, v2, length));
+            Edges.Add(id, new Edge(id, v1, v2, length, isBoundary));
 
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);
@@ -276,8 +282,8 @@ namespace Engine.Core
             var vert2 = Vertices[e.End];
 
             
-            AddEdge(e.Start, id, (vert1.Coord - Vertices[id].Coord).Length);
-            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length);
+            AddEdge(e.Start, id, (vert1.Coord - Vertices[id].Coord).Length, false);
+            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length,false);
 
             var commonTris = vert1.Tris.Intersect(vert2.Tris).ToList();
             
@@ -466,7 +472,9 @@ namespace Engine.Core
 
                 if (commonTris == 1)
                 {
-                    boundaries.Add(Edges[edge.Key]);
+                    var e = Edges[edge.Key];
+                    e.IsBoundary = true;
+                    boundaries.Add(e);
                 }
             }
 
@@ -487,6 +495,40 @@ namespace Engine.Core
             };
 
             return mesh;
+        }
+
+        public void RefreshMesh()
+        {
+            var tempV = new Dictionary<int,Vertex>(Vertices);
+            var tempT = new Dictionary<int,Triangle>(Triangles);
+
+            _lastT = 0;
+            _lastV = 0;
+            _lastE = 0;
+
+            Vertices.Clear();
+            Triangles.Clear();
+            Edges.Clear();// = newMesh.Edges;
+
+            Dictionary<int, int> vertexMap = new Dictionary<int, int>();
+
+            int id = 0;
+            foreach (var vertex in tempV)
+            {
+                //newMesh.AddVertex(vertex.Value.Coord, vertex.Value.Normal);
+                vertexMap.Add(vertex.Key, id++);
+                AddVertex(vertex.Value.Coord, vertex.Value.Normal);
+            }
+
+            foreach (var tri in tempT)
+            {
+                AddTriangle(vertexMap[tri.Value.V1], vertexMap[tri.Value.V2], vertexMap[tri.Value.V3]);
+            }
+
+            //Vertices = newMesh.Vertices;
+            //Triangles = newMesh.Triangles;
+            //Edges = newMesh.Edges;
+
         }
 
     }

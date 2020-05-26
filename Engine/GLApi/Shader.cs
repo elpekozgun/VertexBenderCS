@@ -56,6 +56,14 @@ namespace Engine.GLApi
         //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
         );
 
+        private static Shader _intersectionCompute = ShaderBuilder.CreateShader
+        (
+            "intersection Compute",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\IntersectionCompute.glsl", ShaderType.ComputeShader)
+        //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
+
         private static Shader _computePaint = ShaderBuilder.CreateShader
         (
             "ComputePaint",
@@ -70,12 +78,6 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoFragment.glsl", ShaderType.FragmentShader)
         );
 
-        //private static Shader _defaultIndicator = ShaderBuilder.CreateShader
-        //(
-        //    "Indicator",
-        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorVertex.glsl", ShaderType.VertexShader),
-        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorFragment.glsl", ShaderType.FragmentShader)
-        //);
 
         public static Shader DefaultShader => _defaultShader;
         public static Shader DefaultUnlitShader=> _defaultUnlit;
@@ -83,6 +85,7 @@ namespace Engine.GLApi
         public static Shader DefaultCuberille => _defaultCuberille;
         public static Shader MarchingComputeTriBased => _marchingCubesComputeTribased;
         public static Shader MarchingComputeVertexBased => _marchingCubesComputeVertexBased;
+        public static Shader IntersectionCompute => _intersectionCompute;
         public static Shader DefaultComputePaint => _computePaint;
         public static Shader DefaultGizmo => _gizmoShader;
         //public static Shader DefaultIndicator => _defaultIndicator;

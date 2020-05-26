@@ -192,7 +192,7 @@ namespace Engine.GLApi
 
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-                GL.Enable(EnableCap.PolygonSmooth);
+                //GL.Enable(EnableCap.PolygonSmooth);
 
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
 

@@ -25,6 +25,8 @@ namespace Engine.GLApi
     {
         public Shader Shader { get; set; }
         public Shader ComputeShader { get; set; }
+        public Shader IntersectionComputeShader { get; set; }
+        public Shader EditVolComputeShader { get; set; }
 
         public Vector3 Center { get; private set; }
         public Texture DiffuseTexture { get; set; }
@@ -38,7 +40,7 @@ namespace Engine.GLApi
         private VolOutput subVolData;
         private Vector4[] input;
 
-        private int _drawCount = 0;
+        private int _vertexCount = 0;
 
         private bool _initialized;
         private int _currentDownSample;
@@ -50,6 +52,8 @@ namespace Engine.GLApi
         private int _UBO_mc;
         private int _ACBO;
         private int _EBO;
+        private int _ACBO_Intersect;
+        private int _SSBO_Intersect;
 
         private Stopwatch _watch;
 
@@ -68,6 +72,7 @@ namespace Engine.GLApi
 
             Shader = Shader.DefaultComputePaint;
             ComputeShader = Shader.MarchingComputeVertexBased;
+            IntersectionComputeShader = Shader.IntersectionCompute;
 
             Init();
             UpdateInputFromVol(rawVolData);
@@ -91,10 +96,14 @@ namespace Engine.GLApi
             GL.GenVertexArrays(1, out _VAO);
             GL.GenBuffers(1, out _VBO);
 
+            GL.GenBuffers(1, out _ACBO_Intersect);
+            GL.GenBuffers(1, out _SSBO_Intersect);
+
 
             GL.BindBuffer(BufferTarget.UniformBuffer, _UBO_mc);
             GL.BufferData(BufferTarget.UniformBuffer, (256 * 16) * sizeof(float), MarchingCubesTables.TriangleConnectionTableLinear, BufferUsageHint.StaticRead);
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, 1, _UBO_mc);
+
 
         }
 
@@ -136,7 +145,7 @@ namespace Engine.GLApi
         public Mesh FinalizeMesh(bool smoothen, bool removeIslands)
         {
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
-            Vector4[] vertices = new Vector4[_drawCount * 2];
+            Vector4[] vertices = new Vector4[_vertexCount * 2];
             GL.GetBufferSubData
             (
                 BufferTarget.ShaderStorageBuffer,
@@ -146,12 +155,130 @@ namespace Engine.GLApi
             );
 
             var mesh = Algorithm.CreateMeshFromVolRendererOutput(vertices);
-            
+
             if (removeIslands)
                 Algorithm.RemoveIslands(ref mesh);
             if (smoothen)
                 Algorithm.Smoothen(ref mesh, 3);
             return mesh;
+        }
+
+        public Vector3 ComputeIntersection(Vector3 origin, Vector3 direction)
+        {
+            Vector4 intersection = Vector4.Zero;
+            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_Intersect);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, sizeof(float) * 4, ref intersection, BufferUsageHint.DynamicCopy);
+            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_Intersect);
+
+            uint counter = 0;
+            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
+            GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
+            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 5, _ACBO);
+
+            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
+
+            IntersectionComputeShader.Use();
+            IntersectionComputeShader.SetVec3("origin", origin);
+            IntersectionComputeShader.SetVec3("direction", direction);
+            IntersectionComputeShader.SetInt("counter", 0);
+
+            int amount = _vertexCount / 3; //(_vertexCount / 3 + 512 - (_vertexCount / 3) % 512);
+
+            GL.DispatchCompute(amount / 128, 1, 1);
+            GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+
+            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
+            GL.GetBufferSubData
+            (
+                BufferTarget.AtomicCounterBuffer,
+                IntPtr.Zero,
+                sizeof(uint),
+                ref counter
+            );
+
+            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_Intersect);
+            GL.GetBufferSubData
+            (
+                BufferTarget.ShaderStorageBuffer,
+                IntPtr.Zero,
+                sizeof(float) * 4,
+                ref intersection
+            );
+
+            Logger.Log($"{intersection.X}, {intersection.Y}, {intersection.Z}, {intersection.W}");
+
+            return intersection.Xyz;
+        }
+
+        private void ComputeEfficient(int intensity, int downSample)
+        {
+            if (downSample != _currentDownSample)
+            {
+                subVolData = Algorithm.Downsample(rawVolData, downSample);
+                UpdateInputFromVol(subVolData);
+                _currentDownSample = downSample;
+
+                GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_in);
+                GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), input, BufferUsageHint.DynamicCopy);
+                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_in);
+
+                GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
+                GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 6 * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 3, _SSBO_out);
+
+            }
+
+            uint counter = 0;
+            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
+            GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
+            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 5, _ACBO);
+
+            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _EBO);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 4, _EBO);
+
+            int dimx = subVolData.XCount;
+            int dimy = subVolData.YCount;
+            int dimz = subVolData.ZCount;
+
+            ComputeShader.Use();
+            ComputeShader.SetInt("xCount", dimx);
+            ComputeShader.SetInt("yCount", dimy);
+            ComputeShader.SetInt("zCount", dimz);
+            ComputeShader.SetInt("intensity", intensity);
+            ComputeShader.SetInt("counter", 0);
+            ComputeShader.SetFloat("spacing", subVolData.Spacing);
+
+            var a = dimx + (8 - dimx % 8);
+            var b = dimy + (8 - dimy % 8);
+            var c = dimz + (8 - dimz % 8);
+
+            GL.DispatchCompute(a / 8, b / 8, c / 8);
+            GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+
+            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
+            GL.GetBufferSubData
+            (
+                BufferTarget.AtomicCounterBuffer,
+                IntPtr.Zero,
+                sizeof(uint),
+                ref counter
+            );
+
+
+            _vertexCount = (int)counter * 3;
+
+            GL.BindVertexArray(_VAO);
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _SSBO_out);
+
+            GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float), 16);
+            GL.EnableVertexAttribArray(1);
+
+            GL.BindVertexArray(0);
         }
 
         private void ComputeBottleNeck(int intensity, int downSample)
@@ -243,98 +370,8 @@ namespace Engine.GLApi
                 };
             }
 
-            _drawCount = vertices.Length;
+            _vertexCount = vertices.Length;
             Setup();
-        }
-
-        private void ComputeEfficient(int intensity, int downSample)
-        {
-            if (downSample != _currentDownSample)
-            {
-                subVolData = Algorithm.Downsample(rawVolData, downSample);
-                UpdateInputFromVol(subVolData);
-                _currentDownSample = downSample;
-
-                GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_in);
-                GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), input, BufferUsageHint.DynamicCopy);
-                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_in);
-
-                GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
-                GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 6 * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
-                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 3, _SSBO_out);
-
-            }
-
-            uint counter = 0;
-            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
-            GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
-            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 5, _ACBO);
-
-            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _EBO);
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 4, _EBO);
-
-            int dimx = subVolData.XCount;
-            int dimy = subVolData.YCount;
-            int dimz = subVolData.ZCount;
-
-            ComputeShader.Use();
-            ComputeShader.SetInt("xCount", dimx);
-            ComputeShader.SetInt("yCount", dimy);
-            ComputeShader.SetInt("zCount", dimz);
-            ComputeShader.SetInt("intensity", intensity);
-            ComputeShader.SetInt("counter", 0);
-            ComputeShader.SetFloat("spacing", subVolData.Spacing);
-
-            var a = dimx + (8 - dimx % 8);
-            var b = dimy + (8 - dimy % 8);
-            var c = dimz + (8 - dimz % 8);
-
-            GL.DispatchCompute(a / 8, b / 8, c / 8);
-            GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
-
-            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
-            GL.GetBufferSubData
-            (
-                BufferTarget.AtomicCounterBuffer,
-                IntPtr.Zero,
-                sizeof(uint),
-                ref counter
-            );
-
-            //GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
-            //Vector4[] tris = new Vector4[counter * 3];
-            //GL.GetBufferSubData
-            //(
-            //    BufferTarget.ShaderStorageBuffer,
-            //    IntPtr.Zero,
-            //    tris.Length * 4 * sizeof(float),
-            //    tris
-            //);
-
-            //GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _EBO);
-            //Vector4[] indices = new Vector4[counter];
-            //GL.GetBufferSubData
-            //(
-            //    BufferTarget.ShaderStorageBuffer,
-            //    IntPtr.Zero,
-            //    indices.Length * 4 * sizeof(float),
-            //    indices
-            //);
-
-            _drawCount = (int)counter * 3;
-
-            GL.BindVertexArray(_VAO);
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _SSBO_out);
-
-            GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float), 16);
-            GL.EnableVertexAttribArray(1);
-
-            GL.BindVertexArray(0);
         }
 
         private void ComputeCPU(int intensity, int downSample)
@@ -364,7 +401,7 @@ namespace Engine.GLApi
                 }
             }
 
-            _drawCount = vertices.Length;
+            _vertexCount = vertices.Length;
 
             Setup();
 
@@ -429,9 +466,9 @@ namespace Engine.GLApi
             Shader.SetVec4("Color", Color);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-            GL.PointSize(2);
+            //GL.Enable(EnableCap.PolygonSmooth);
 
-            GL.DrawArrays(PrimitiveType.Triangles, 0, _drawCount);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, _vertexCount);
 
             GL.Enable(EnableCap.CullFace);
 

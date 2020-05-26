@@ -60,11 +60,12 @@ namespace VertexBenderCS.Forms
         private eRenderMode _renderMode;
         private bool _isPerspective;
 
-        private VolOutput _TESTVOL;
         private eMarchMethod _MarchMethod;
         private bool _editMode;
         private bool _mouseOnGL;
         private GizmoRenderer _gizmo;
+
+        private MeshRenderer _sphereRenderer;
 
         private Transform _selectedTransform;
         private Dictionary<Transform, IsoCurveOutput> _IsoCurveOutputs;
@@ -288,7 +289,6 @@ namespace VertexBenderCS.Forms
 
 
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
-            _TESTVOL = output;
 
             var output2 = Algorithm.Downsample(output, 2);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
@@ -326,7 +326,6 @@ namespace VertexBenderCS.Forms
             //_SceneGraph.AddObject(meshrenderer2);
 
 
-            _TESTVOL = output;
             _MarchMethod = eMarchMethod.GpuBoost;
 
             sceneGraphTree.SelectedNode = null;
@@ -334,13 +333,26 @@ namespace VertexBenderCS.Forms
             var volRenderer = new VolumeRenderer(output, "Compute")
             {
                 Intensity = 60,
-                DownSample = 3,
+                DownSample = 6,
                 Method = eMarchMethod.GpuBoost
             };
             volRenderer.Compute();
-
             _SceneGraph.AddObject(volRenderer);
 
+            sceneGraphTree.SelectedNode = null;
+
+            var mesh = volRenderer.FinalizeMesh(false, true);
+
+            Algorithm.FillHoles(ref mesh);
+
+            _SceneGraph.AddObject(new MeshRenderer(mesh, "dalyarak") { Position = new Vector3(0, 0, 0.4f), Color = volRenderer.Color });
+
+            sceneGraphTree.SelectedNode = null;
+
+            var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+            _sphereRenderer = new MeshRenderer(sphere, "Sphere");
+            _sphereRenderer.Scale = new Vector3(0.01f, 0.01f, 0.01f);
+            _SceneGraph.AddObject(_sphereRenderer);
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -749,6 +761,16 @@ namespace VertexBenderCS.Forms
                     _gizmo.Position = new Vector2( 2 * (-0.5f + _mouseX / GLControl.Width) , -2 * (-0.5f + _mouseY / GLControl.Height));
                     _gizmo.Aspect = GLControl.AspectRatio;
                     _gizmo.Radius = 1.5f;
+                }
+
+                var volRend = (_selectedTransform as VolumeRenderer);
+                if (volRend != null)
+                {
+
+                    //_sphereRenderer.Position = pos.Xyz + 0.1f * dir.Xyz;
+
+                    _sphereRenderer.Position = volRend.ComputeIntersection(_camera.Position, _camera.Front);
+
                 }
             }
         }
