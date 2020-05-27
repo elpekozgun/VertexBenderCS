@@ -73,7 +73,7 @@ namespace Engine.GLApi
             Setup();
             _initialized = true;
             Mesh = mesh;
-            Shader = Shader.DefaultPointCloud;
+            Shader = Shader.PointCloud;
         }
 
         public PointCloudRenderer(Mesh mesh, List<int> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)
@@ -123,10 +123,10 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
-            var pointCloudShader = Shader.DefaultCuberille;
+            var pointCloudShader = Shader.CuberilleGeometry;
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
             {
-                pointCloudShader = Shader.DefaultPointCloud;
+                pointCloudShader = Shader.PointCloud;
             }
 
             pointCloudShader.Use();

@@ -142,19 +142,19 @@
     <None Include="Resources\Shader\GizmoFragment.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\IntersectionCompute.glsl">
+    <None Include="Resources\Compute\IntersectionCompute.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\Shader\GizmoVertex.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\MarchingCubesVertexBased.glsl">
+    <None Include="Resources\Compute\MarchingCubesVertexBased.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\MarchingCubesIndexingTest.glsl">
+    <None Include="Resources\Compute\MarchingCubesIndexingTest.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\MarchingCubesTriBased.glsl">
+    <None Include="Resources\Compute\MarchingCubesTriBased.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\Shader\MarchingCubeTable.glsl">
@@ -187,7 +187,7 @@
     <None Include="Resources\Shader\CuberilleFragment.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\TestCompute.glsl">
+    <None Include="Resources\Compute\TestCompute.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\Shader\UnlitFragment.glsl">
@@ -199,7 +199,7 @@
     <None Include="Resources\Shader\UnlitVertex.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Shader\VolEditorCompute.glsl">
+    <None Include="Resources\Compute\VolEditorCompute.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -11,10 +11,11 @@ layout(std430, binding = 5) buffer intersect_buffer
 };
 
 
-layout(local_size_x = 1) in;
+layout(local_size_x = 512) in;
 
 uniform vec3 origin;
 uniform vec3 direction;
+uniform mat4 Model;
 
 float IntersectPoint(vec3 a, vec3 b, vec3 c,  vec3 o, vec3 d)
 {
@@ -76,9 +77,9 @@ void main()
 {
 	uint a = gl_GlobalInvocationID.x;
 	{
-		vec4 v0 = vertices[a * 6 ];
-		vec4 v1 = vertices[a * 6 + 2];
-		vec4 v2 = vertices[a * 6 + 4];
+		vec4 v0 =  vertices[a * 6 ];
+		vec4 v1 =  vertices[a * 6 + 2];
+		vec4 v2 =  vertices[a * 6 + 4];
 
 		float temp = IntersectPoint(v0.xyz, v1.xyz, v2.xyz, origin, direction);
 		if(length(temp) != 0.0 && temp != -1)

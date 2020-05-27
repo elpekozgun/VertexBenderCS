@@ -84,7 +84,7 @@ namespace Engine.GLApi
             Setup();
             _initialized = true;
             Mesh = mesh;
-            Shader = Shader.DefaultShader;
+            Shader = Shader.Standard;
             EnableCull = true;
         }
 
@@ -204,9 +204,9 @@ namespace Engine.GLApi
             }
             if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
-                var unlit = Shader.DefaultUnlitShader;
+                var unlit = Shader.Unlit;
 
-                unlit = Shader.DefaultUnlitShader;
+                unlit = Shader.Unlit;
                 unlit.Use();
                 unlit.SetMat4("Model", ModelMatrix);
                 unlit.SetMat4("View", cam.View);
@@ -224,7 +224,7 @@ namespace Engine.GLApi
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
             {
-                var unlit = Shader.DefaultUnlitShader;
+                var unlit = Shader.Unlit;
 
                 unlit.Use();
                 unlit.SetMat4("Model", ModelMatrix);

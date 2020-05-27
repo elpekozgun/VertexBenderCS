@@ -15,12 +15,15 @@ uniform float spacing;
 uniform float pressure;
 uniform int direction;
 
+uniform mat4 Model;
 
 void main()
 {
 	uint a = gl_GlobalInvocationID.x;
 
-	float dif = length(pointCloud[a].xyz * -spacing - point );
+	vec4 pos = pointCloud[a] * -spacing;
+
+	float dif = length(pos.xyz - point );
 
 	if(dif < radius)
 	{

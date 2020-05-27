@@ -314,24 +314,6 @@ namespace Engine.Core
             }
         }
 
-        public static Mesh MakeMeshFromVol(VolOutput output)
-        {
-            var mesh = new Mesh();
-
-            for (int i = 0; i < output.Intensities.Count; i++)
-            {
-                mesh.AddVertex(new Vertex(i, output.IntensityMap[i].Key * -output.Spacing));
-            }
-
-            return mesh;
-
-        }
-
-        public static Mesh LoadDicom(string path)
-        {
-            return null;
-        }
-
         public static VolOutput LoadVol(string path)
         {
             string expectedHeader = "KRETZFILE 1.0";
@@ -533,23 +515,24 @@ namespace Engine.Core
             }
         }
 
-        public static Mesh MakeMeshUnindexed(ComputeTriangle[] tris, float spacing, string name = "")
+        public static Mesh LoadDicom(string path)
+        {
+            return null;
+        }
+
+
+
+        public static Mesh MakeMeshFromVol(VolOutput output)
         {
             var mesh = new Mesh();
 
-            //Parallel.For(0, tris.Count, (i) => 
-            for (int i = 0; i < tris.Length; i++)
+            for (int i = 0; i < output.Intensities.Count; i++)
             {
-                //recall that triangle normal was encoded in 4. element in vector4 for 16 byte alignment.
-                Vector3 normal = new Vector3(tris[i].v0.W, tris[i].v1.W, tris[i].v2.W).Normalized();
-
-                mesh.AddVertex(tris[i].v0.Xyz * -spacing, normal);
-                mesh.AddVertex(tris[i].v1.Xyz * -spacing, normal);
-                mesh.AddVertex(tris[i].v2.Xyz * -spacing, normal);
+                mesh.AddVertex(new Vertex(i, output.IntensityMap[i].Key * -output.Spacing));
             }
-            //mesh.CalculateVertexNormals();
 
             return mesh;
+
         }
 
         public static Mesh MakeMeshUnindexed(Vector4[] tris, float spacing, string name = "")
@@ -569,7 +552,6 @@ namespace Engine.Core
 
             return mesh;
         }
-
 
         public static Mesh MakeMeshUnindexed(List<Vector3[]> tris, float spacing, string name = "")
         {

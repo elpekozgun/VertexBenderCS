@@ -1,7 +1,7 @@
 ﻿#version 430 core
 //#extension GL_ARB_compute_shader: enable
 //#extension GL_ARB_shader_storage_buffer_object: enable
-//#extension ARB_arrays_of_arrays: enable
+#extension GL_NV_shader_atomic_float: enable
 
 // align 16bytes
 struct Triangle
@@ -20,6 +20,7 @@ uniform int xCount;
 uniform int yCount;
 uniform int zCount;
 uniform int intensity;
+uniform float spacing;
 
 // Layouts
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
@@ -36,20 +37,10 @@ layout(std430, binding = 2) buffer pointBuffer_in
 
 layout(std430, binding = 3) buffer triangleBuffer_out
 {
-	Triangle triangles[];
+	vec4[] vertices;
 };
 
-//layout(std430, binding = 4) buffer indexBuffer_out
-//{
-//	vec4[] indices;
-//};
-
-
-layout(binding = 5) uniform atomic_uint counter;
-//layout(binding = 5, offset = 4) uniform atomic_uint aa;
-//layout(binding = 5, offset = 8) uniform atomic_uint bb;
-//layout(binding = 5, offset = 12) uniform atomic_uint cc;
-//
+layout(binding = 4) uniform atomic_uint counter;
 
 int indexFromCoord(int x, int y, int z)
 {
@@ -67,31 +58,29 @@ vec3 calculateNormal(vec3 v0, vec3 v1, vec3 v2)
     return normalize(cross(v0 - v2, v0 - v1));
 };
 
-bool areVec3Equal(vec3 a, vec3 b)
+bool IsSame(vec4 v1, vec4 v2)
 {
-    return a.x == b.x && a.y == b.y && a.z == b.z; 
-};
+    return abs(v1.x - v2.x) <= EPSILON && abs(v1.y - v2.y) <= EPSILON && abs(v1.z - v2.z) <= EPSILON && abs(v1.w - v2.w) <= EPSILON;
+}
 
-uint UpdateIndex(vec4 vec, uint id, uint next)
+bool IsSame(vec3 v1, vec3 v2)
 {
+    return abs(v1.x - v2.x) <= EPSILON && abs(v1.y - v2.y) <= EPSILON && abs(v1.z - v2.z) <= EPSILON;
+}
 
-//    for(uint i = 0; i < id ; i++)
+//uint UpdateIndex(vec4 vec, uint id, uint count, uint next)
+//{
+//    for(uint i =id; i < count ; i++)
 //    {
-//        if(abs(triangles[i].a.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].a.y) - abs(vec.y) < 0.0001f && abs(triangles[i].a.z) - abs(vec.z) < 0.0001f  )
+//        if(IsSame(vertices[i], vec))
 //        {
 //            return uint(indices[i].x);
 //        }
-//        else if(abs(triangles[i].b.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].b.y) - abs(vec.y) < 0.0001f && abs(triangles[i].b.z) - abs(vec.z) < 0.0001f )
-//        {
-//            return uint(indices[i].y);
-//        }
-//        else if(abs(triangles[i].c.x) - abs(vec.x) < 0.0001f &&  abs(triangles[i].c.y) - abs(vec.y) < 0.0001f && abs(triangles[i].c.z) - abs(vec.z) < 0.0001f )
-//        {
-//            return uint(indices[i].z);
-//        }
 //    }
-    return next;
-}
+//    return next;
+//}
+//
+
 
 void main()
 {
@@ -141,20 +130,23 @@ void main()
             int a2 = cornerIndexEdgeV0[triangulations[cubeIndex * 16 + i + 2]];
             int b2 = cornerIndexEdgeV1[triangulations[cubeIndex * 16 + i + 2]];
 
-            Triangle tri;
             vec3 v0 = interpolate(corners[a0], corners[b0]);
             vec3 v1 = interpolate(corners[a1], corners[b1]);
             vec3 v2 = interpolate(corners[a2], corners[b2]);
             vec3 n = calculateNormal(v0,v1,v2);
 
-            if( !areVec3Equal(v0,v1) && !areVec3Equal(v0,v2) && !areVec3Equal(v2,v0) )
+            if( !IsSame(v0,v1) && !IsSame(v0,v2) && !IsSame(v2,v1) )
             {
-                tri.a= vec4(v0, n.x);
-                tri.b= vec4(v1, n.y);
-                tri.c= vec4(v2, n.z);
-
                 uint a = atomicCounterIncrement(counter);
-                triangles[a] = tri;
+                
+                vertices[6 * a ] = vec4(v0 * -spacing, 6 * a );
+                vertices[6 * a + 1 ] = vec4(n,0);
+
+                vertices[6 * a + 2 ] = vec4(v1 * -spacing, 6 * a + 1);
+                vertices[6 * a + 3 ] = vec4(n,0);
+                
+                vertices[6 * a + 4 ] = vec4(v2 * -spacing, 6 * a + 2);
+                vertices[6 * a + 5 ] = vec4(n,0);
 
             }
         };

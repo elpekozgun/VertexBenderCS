@@ -218,6 +218,39 @@ namespace Engine.Processing
                 //writer.Write(Environment.NewLine);
             }
         }
+
+        public static void SaveSTLFile(Mesh mesh, string file)
+        {
+            using (StreamWriter writer = new StreamWriter(file))
+            {
+                writer.WriteLine("solid");
+                writer.WriteLine("\tVertex Bender Framework");
+                writer.WriteLine("\tÖzgün Elpek");
+
+                foreach (var tri in mesh.Triangles)
+                {
+                    var normal = mesh.CalculateTriangleNormals(tri.Value);
+                    var v1 = mesh.Vertices[tri.Value.V1];
+                    var v2 = mesh.Vertices[tri.Value.V2];
+                    var v3 = mesh.Vertices[tri.Value.V3];
+                    
+                    writer.WriteLine($"\tfacet normal {normal.X} {normal.Y} {normal.Z}");
+                    writer.WriteLine("\touter loop");
+                    writer.WriteLine($"\t\tvertex {v1.Coord.X} {v1.Coord.Y} {v1.Coord.Z}");
+                    writer.WriteLine($"\t\tvertex {v2.Coord.X} {v2.Coord.Y} {v2.Coord.Z}");
+                    writer.WriteLine($"\t\tvertex {v3.Coord.X} {v3.Coord.Y} {v3.Coord.Z}");
+                    writer.WriteLine("\tendloop");
+                    writer.WriteLine("\tendfacet");
+                }
+                writer.WriteLine("endsolid");
+
+            }
+        }
+
+        public static void SaveSTLBinaryFile(Mesh mesh, string file)
+        { 
+        
+        }
     }
 
 }

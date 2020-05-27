@@ -33,7 +33,7 @@ namespace Engine.GLApi
         
         public GizmoRenderer()
         {
-            Shader = Shader.DefaultGizmo;
+            Shader = Shader.Gizmo;
 
             GL.GenVertexArrays(1, out _VAO);
             GL.GenBuffers(1, out _VBO);

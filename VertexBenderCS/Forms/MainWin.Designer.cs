@@ -28,12 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
-
+            this.GLControl = new OpenTK.GLControl();
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -93,7 +92,7 @@
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.statusBar = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.Status = new System.Windows.Forms.ToolStripStatusLabel();
             this.transformPanel = new System.Windows.Forms.Panel();
             this.numericScaleZ = new System.Windows.Forms.NumericUpDown();
             this.numericScaleY = new System.Windows.Forms.NumericUpDown();
@@ -127,6 +126,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.numericMarch = new System.Windows.Forms.NumericUpDown();
             this.volumeRendererPanel = new System.Windows.Forms.Panel();
+            this.label12 = new System.Windows.Forms.Label();
+            this.numericPressure = new System.Windows.Forms.NumericUpDown();
             this.btnFinalize = new System.Windows.Forms.Button();
             this.btnEdit = new System.Windows.Forms.Button();
             this.cmbVolMethod = new System.Windows.Forms.ComboBox();
@@ -137,8 +138,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.numericPressure = new System.Windows.Forms.NumericUpDown();
-            this.label12 = new System.Windows.Forms.Label();
+            this.menuSTlBinExport = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStlExport = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -161,9 +162,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.sliderMax)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).BeginInit();
             this.volumeRendererPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).BeginInit();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -221,48 +222,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea4.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea4.AxisX.LabelStyle.Interval = 0D;
-            chartArea4.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea4.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea4.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea4.AxisY.LabelStyle.Interval = 0D;
-            chartArea4.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea4.BackColor = System.Drawing.Color.White;
-            chartArea4.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea4);
-            legend4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend4.ForeColor = System.Drawing.Color.Gainsboro;
-            legend4.InterlacedRowsColor = System.Drawing.Color.White;
-            legend4.Name = "Legend1";
-            legend4.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend4);
+            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisX.LabelStyle.Interval = 0D;
+            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisY.LabelStyle.Interval = 0D;
+            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea1.BackColor = System.Drawing.Color.White;
+            chartArea1.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea1);
+            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend1.ForeColor = System.Drawing.Color.Gainsboro;
+            legend1.InterlacedRowsColor = System.Drawing.Color.White;
+            legend1.Name = "Legend1";
+            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend1);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series4.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series4.BackSecondaryColor = System.Drawing.Color.White;
-            series4.ChartArea = "isoCurve-Distances";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series4.Color = System.Drawing.Color.DodgerBlue;
-            series4.CustomProperties = "PointWidth=0.3";
-            series4.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series4.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series4.IsVisibleInLegend = false;
-            series4.LabelBackColor = System.Drawing.Color.White;
-            series4.LabelBorderColor = System.Drawing.Color.White;
-            series4.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series4.Legend = "Legend1";
-            series4.MarkerBorderColor = System.Drawing.Color.White;
-            series4.MarkerColor = System.Drawing.Color.White;
-            series4.MarkerSize = 3;
-            series4.Name = "IsoCurve";
-            series4.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series4.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series4.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series4);
+            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series1.BackSecondaryColor = System.Drawing.Color.White;
+            series1.ChartArea = "isoCurve-Distances";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.Color = System.Drawing.Color.DodgerBlue;
+            series1.CustomProperties = "PointWidth=0.3";
+            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series1.IsVisibleInLegend = false;
+            series1.LabelBackColor = System.Drawing.Color.White;
+            series1.LabelBorderColor = System.Drawing.Color.White;
+            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series1.Legend = "Legend1";
+            series1.MarkerBorderColor = System.Drawing.Color.White;
+            series1.MarkerColor = System.Drawing.Color.White;
+            series1.MarkerSize = 3;
+            series1.Name = "IsoCurve";
+            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series1);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -458,7 +459,7 @@
             this.menuImport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuImport.Name = "menuImport";
             this.menuImport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.menuImport.Size = new System.Drawing.Size(149, 22);
+            this.menuImport.Size = new System.Drawing.Size(180, 22);
             this.menuImport.Text = "&Import";
             // 
             // menuImportOff
@@ -503,27 +504,29 @@
             // 
             this.menuExport.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuIsoCurveExport,
-            this.menuOffExport});
+            this.menuOffExport,
+            this.menuStlExport,
+            this.menuSTlBinExport});
             this.menuExport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExport.Image = ((System.Drawing.Image)(resources.GetObject("menuExport.Image")));
             this.menuExport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuExport.Name = "menuExport";
             this.menuExport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuExport.Size = new System.Drawing.Size(149, 22);
+            this.menuExport.Size = new System.Drawing.Size(180, 22);
             this.menuExport.Text = "&Export";
             // 
             // menuIsoCurveExport
             // 
             this.menuIsoCurveExport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuIsoCurveExport.Name = "menuIsoCurveExport";
-            this.menuIsoCurveExport.Size = new System.Drawing.Size(165, 22);
+            this.menuIsoCurveExport.Size = new System.Drawing.Size(180, 22);
             this.menuIsoCurveExport.Text = "Iso-Curve Output";
             // 
             // menuOffExport
             // 
             this.menuOffExport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuOffExport.Name = "menuOffExport";
-            this.menuOffExport.Size = new System.Drawing.Size(165, 22);
+            this.menuOffExport.Size = new System.Drawing.Size(180, 22);
             this.menuOffExport.Text = "Off file";
             // 
             // toolStripSeparator
@@ -531,7 +534,7 @@
             this.toolStripSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator.ForeColor = System.Drawing.SystemColors.Desktop;
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(177, 6);
             // 
             // menuSave
             // 
@@ -541,7 +544,7 @@
             this.menuSave.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(149, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save";
             // 
             // menuSaveAs
@@ -549,7 +552,7 @@
             this.menuSaveAs.Enabled = false;
             this.menuSaveAs.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuSaveAs.Name = "menuSaveAs";
-            this.menuSaveAs.Size = new System.Drawing.Size(149, 22);
+            this.menuSaveAs.Size = new System.Drawing.Size(180, 22);
             this.menuSaveAs.Text = "Save &As";
             // 
             // toolStripSeparator2
@@ -557,13 +560,13 @@
             this.toolStripSeparator2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator2.ForeColor = System.Drawing.SystemColors.Highlight;
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // menuExit
             // 
             this.menuExit.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(149, 22);
+            this.menuExit.Size = new System.Drawing.Size(180, 22);
             this.menuExit.Text = "E&xit";
             // 
             // processMenu
@@ -770,7 +773,7 @@
             // 
             this.statusBar.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.statusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
+            this.Status});
             this.statusBar.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.statusBar.Location = new System.Drawing.Point(0, 880);
             this.statusBar.MaximumSize = new System.Drawing.Size(0, 25);
@@ -782,11 +785,11 @@
             this.statusBar.TabIndex = 20;
             this.statusBar.Text = "statusStrip1";
             // 
-            // toolStripStatusLabel1
+            // Status
             // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 20);
-            this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
+            this.Status.Name = "Status";
+            this.Status.Size = new System.Drawing.Size(118, 20);
+            this.Status.Text = "toolStripStatusLabel1";
             // 
             // transformPanel
             // 
@@ -1274,6 +1277,38 @@
             this.volumeRendererPanel.TabIndex = 27;
             this.volumeRendererPanel.Visible = false;
             // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(16, 152);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(51, 15);
+            this.label12.TabIndex = 35;
+            this.label12.Text = "Pressure";
+            // 
+            // numericPressure
+            // 
+            this.numericPressure.Location = new System.Drawing.Point(71, 150);
+            this.numericPressure.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericPressure.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericPressure.Name = "numericPressure";
+            this.numericPressure.ReadOnly = true;
+            this.numericPressure.Size = new System.Drawing.Size(37, 24);
+            this.numericPressure.TabIndex = 33;
+            this.numericPressure.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
             // btnFinalize
             // 
             this.btnFinalize.ForeColor = System.Drawing.Color.MediumAquamarine;
@@ -1373,37 +1408,19 @@
             this.panel1.Size = new System.Drawing.Size(250, 299);
             this.panel1.TabIndex = 28;
             // 
-            // numericPressure
+            // menuSTlBinExport
             // 
-            this.numericPressure.Location = new System.Drawing.Point(71, 150);
-            this.numericPressure.Maximum = new decimal(new int[] {
-            15,
-            0,
-            0,
-            0});
-            this.numericPressure.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericPressure.Name = "numericPressure";
-            this.numericPressure.ReadOnly = true;
-            this.numericPressure.Size = new System.Drawing.Size(37, 24);
-            this.numericPressure.TabIndex = 33;
-            this.numericPressure.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.menuSTlBinExport.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuSTlBinExport.Name = "menuSTlBinExport";
+            this.menuSTlBinExport.Size = new System.Drawing.Size(180, 22);
+            this.menuSTlBinExport.Text = "STL(Binary)";
             // 
-            // label12
+            // menuStlExport
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(16, 152);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(51, 15);
-            this.label12.TabIndex = 35;
-            this.label12.Text = "Pressure";
+            this.menuStlExport.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuStlExport.Name = "menuStlExport";
+            this.menuStlExport.Size = new System.Drawing.Size(180, 22);
+            this.menuStlExport.Text = "STL";
             // 
             // MainWin
             // 
@@ -1456,9 +1473,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).EndInit();
             this.volumeRendererPanel.ResumeLayout(false);
             this.volumeRendererPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).EndInit();
             this.panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1510,7 +1527,7 @@
         private System.Windows.Forms.ToolStripMenuItem menuImportDcm;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.StatusStrip statusBar;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripStatusLabel Status;
         private System.Windows.Forms.TextBox Log;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
@@ -1572,6 +1589,8 @@
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.NumericUpDown numericPressure;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ToolStripMenuItem menuStlExport;
+        private System.Windows.Forms.ToolStripMenuItem menuSTlBinExport;
     }
 }
 

@@ -52,18 +52,6 @@ namespace Engine.GLApi
             return new Shader(name, id);
 
         }
-
-        public static ComputeShader CreateComputeShader(string name, int shader)
-        {
-            int id = GL.CreateProgram();
-            GL.AttachShader(id, shader);
-            GL.LinkProgram(id);
-            GL.DeleteShader(shader);
-
-            return new ComputeShader(name, id);
-
-        }
-
         private static void CheckCompileError(int id, string type)
         {
             int success;

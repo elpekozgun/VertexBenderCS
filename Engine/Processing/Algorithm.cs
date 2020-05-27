@@ -38,7 +38,7 @@ namespace Engine.Processing
     {
         private static readonly Stopwatch _watch = new Stopwatch();
 
-        #region Public Methods
+        #region Shortest Path, Sampling, Descriptors
 
         public static ShortestPathOutput ShortestPath(Mesh mesh, int src, int target, eShortestPathMethod type, bool earlyTerminate = false)
         {
@@ -598,11 +598,6 @@ namespace Engine.Processing
             return new GeodesicMatrixOutput(matrix, _watch.ElapsedMilliseconds);
         }
 
-
-        #endregion
-
-        #region Private Methods
-
         private static List<List<KeyValuePair<int, float>>> ConstructGraphFromMesh(Mesh mesh)
         {
             var graph = new Graph(mesh);
@@ -696,6 +691,10 @@ namespace Engine.Processing
             return retVal;
         }
 
+        #endregion
+
+        #region Parameterization
+
         private static void RecursivelyAddNeighbor(Vertex source, ref Dictionary<int, Vertex> candidates, ref Dictionary<int, Vertex> boundary)
         {
             foreach (var neighbor in source.Verts)
@@ -713,8 +712,6 @@ namespace Engine.Processing
                 }
             }
         }
-
-
 
         private static void FillVectors(ref Vector<float> vectorX, ref Vector<float> vectorY, List<Dictionary<int, Vertex>> allBoundaries, bool fixInternals = false, bool uniformBoundary = true)
         {
@@ -887,8 +884,6 @@ namespace Engine.Processing
             }
         }
 
-        #endregion
- 
         private static void RecursivelyAddEdge(Edge source, ref Dictionary<int, Edge> candidates, ref Dictionary<int, Edge> boundary)
         {
 
@@ -1126,7 +1121,6 @@ namespace Engine.Processing
             return new SphereParameterizeOutput(spherePoints, normals, centerList);
         }
 
-        // This function needs a redo in terms of indexing of triangles, after switching to dictionary.
         private static CutMeshOutput CutMesh(Mesh mesh)
         {
             Graph g = new Graph(mesh);
@@ -1268,52 +1262,11 @@ namespace Engine.Processing
             return new CutMeshOutput(cutMesh, sp, allBoundaries);
         }
 
+        #endregion
 
-        // Marching Cubes and Ultrasound
-        
-        public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
-        {
-            if (sampleSize <= 1)
-            {
-                return volumeInfo;
-            }
+        #region Volume Processing, Marching Cubes, Smoothing, Remeshing, Repairing
 
-            var intensities = new List<int>();
-            var intensityMap = new List<KeyValuePair<Vector3, int>>();
-
-            var dimX = volumeInfo.XCount;
-            var dimY = volumeInfo.YCount;
-            var dimZ = volumeInfo.ZCount;
-
-            // This is utter crap for now..
-            // needs a huge todo for this shit...
-            //sampleSize = Math.Max(2, sampleSize);
-            for (int z = 0; z < dimZ; z += sampleSize)
-            {
-                for (int y = 0; y < dimY; y += sampleSize)
-                {
-                    for (int x = 0; x < dimX; x += sampleSize)
-                    {
-                        var intensity = 0;
-                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        //intensity /= 6;
-
-
-                        intensities.Add(intensity);
-                        intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x, y, z) / sampleSize, intensity));
-                    }
-                }
-            }
-
-            return new VolOutput(dimX / sampleSize + 1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
-        }
-        
-        public static List<CubicCell> MakeGrid(VolOutput output)
+        private static List<CubicCell> MakeGrid(VolOutput output)
         {
             var x = output.XCount;
             var y = output.YCount;
@@ -1471,82 +1424,47 @@ namespace Engine.Processing
             );
 
         }
-
-        public static Mesh MarchCubes(VolOutput output, float intensity, bool interpolate, bool isIndexed)
+        
+        public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
         {
-            var grid = MakeGrid(output);
-
-            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
-            HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
-            var triangles = new List<Vector3[]>();
-
-            var vertices = output.IntensityMap.Select(x => x.Key).ToList();
-
-            int id = 0;
-            int triId = 0;
-
-
-            for (int i = 0; i < grid.Count; i++)
+            if (sampleSize <= 1)
             {
-                var tris = Polygonize(grid[i], intensity, interpolate);
+                return volumeInfo;
+            }
 
-                for (int j = 0; j < tris.Count; j++)
+            var intensities = new List<int>();
+            var intensityMap = new List<KeyValuePair<Vector3, int>>();
+
+            var dimX = volumeInfo.XCount;
+            var dimY = volumeInfo.YCount;
+            var dimZ = volumeInfo.ZCount;
+
+            // This is utter crap for now..
+            // needs a huge todo for this shit...
+            //sampleSize = Math.Max(2, sampleSize);
+            for (int z = 0; z < dimZ; z += sampleSize)
+            {
+                for (int y = 0; y < dimY; y += sampleSize)
                 {
-                    int a, b, c = -1;
+                    for (int x = 0; x < dimX; x += sampleSize)
+                    {
+                        var intensity = 0;
+                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        //intensity /= 6;
 
-                    var dec = new Vector3d(Math.Round(tris[j][0].X, 2), Math.Round(tris[j][0].Y, 2), Math.Round(tris[j][0].Z, 2));
 
-                    if (!vertexDict.ContainsKey(dec))
-                    {
-                        a = id;
-                        vertexDict.Add(dec, id++);
-                    }
-                    else
-                    {
-                        a = vertexDict[dec];
-                    }
-
-                    dec = new Vector3d(Math.Round(tris[j][1].X, 2), Math.Round(tris[j][1].Y, 2), Math.Round(tris[j][1].Z, 2));
-                    if (!vertexDict.ContainsKey(dec))
-                    {
-                        b = id;
-                        vertexDict.Add(dec, id++);
-                    }
-                    else
-                    {
-                        b = vertexDict[dec];
-                    }
-
-                    dec = new Vector3d(Math.Round(tris[j][2].X, 2), Math.Round(tris[j][2].Y, 2), Math.Round(tris[j][2].Z, 2));
-                    if (!vertexDict.ContainsKey(dec))
-                    {
-                        c = id;
-                        vertexDict.Add(dec, id++);
-                    }
-                    else
-                    {
-                        c = vertexDict[dec];
-                    }
-
-                    if (a != b && a != c && b != c)
-                    {
-                        triangleIDs.Add(new Triangle(triId++, a, b, c));
+                        intensities.Add(intensity);
+                        intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x, y, z) / sampleSize, intensity));
                     }
                 }
-
-                triangles.AddRange(tris);
             }
 
-            var verts = vertexDict.Select(x => new Vector3((float)x.Key.X, (float)x.Key.Y, (float)x.Key.Z)).ToList();
-
-            if (isIndexed)
-            {
-                return ObjectLoader.MakeMeshIndexed(verts, triangleIDs.ToList(), output.Spacing, "test"); ;
-            }
-            else
-            {
-                return ObjectLoader.MakeMeshUnindexed(triangles, output.Spacing, "test");
-            }
+            return new VolOutput(dimX / sampleSize + 1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
         }
 
         public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)
@@ -1820,7 +1738,8 @@ namespace Engine.Processing
             // Step-5: Update the front, go 2. repeat etc.
 
         }
-        
+
+        #endregion
     }
 
 

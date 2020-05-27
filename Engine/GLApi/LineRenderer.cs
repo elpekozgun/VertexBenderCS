@@ -29,7 +29,7 @@ namespace Engine.GLApi
         {
             _vertices = vertices.ToArray();
             Setup();
-            Shader = Shader.DefaultUnlitShader;
+            Shader = Shader.Unlit;
             Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
         }
 

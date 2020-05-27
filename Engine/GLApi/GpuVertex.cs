@@ -2,6 +2,13 @@
 
 namespace Engine.GLApi
 {
+    public struct ComputeTriangle
+    {
+        public Vector4 v0;
+        public Vector4 v1;
+        public Vector4 v2;
+    };
+
     public struct GpuVertex
     {
         public Vector3 Coord;
