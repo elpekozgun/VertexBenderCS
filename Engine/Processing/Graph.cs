@@ -37,19 +37,34 @@ namespace Engine.Processing
         {
 
             Nodes = new List<GraphNode>();
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+
+            foreach (var vertex in mesh.Vertices)
             {
                 Nodes.Add
                 (
                     new GraphNode
                     (
-                        i,
-                        mesh.Vertices[i].Coord,
-                        ExtractNeighbors(mesh, mesh.Vertices[i])
-                        //mesh.Vertices[i].Verts
+                        vertex.Key,
+                        vertex.Value.Coord,
+                        ExtractNeighbors(mesh, vertex.Value)
+                    //mesh.Vertices[i].Verts
                     )
-                );    
+                );
             }
+
+            //for (int i = 0; i < mesh.Vertices.Count; i++)
+            //{
+            //    Nodes.Add
+            //    (
+            //        new GraphNode
+            //        (
+            //            i,
+            //            mesh.Vertices[i].Coord,
+            //            ExtractNeighbors(mesh, mesh.Vertices[i])
+            //            //mesh.Vertices[i].Verts
+            //        )
+            //    );    
+            //}
         }
     }
 

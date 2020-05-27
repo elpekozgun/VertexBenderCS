@@ -14,6 +14,8 @@ using System.Threading;
 using System.Runtime.InteropServices;
 using VertexBenderCS.Forms;
 using System.IO;
+using Microsoft.VisualBasic.Devices;
+using System.Drawing.Drawing2D;
 
 namespace VertexBenderCS.Forms
 {
@@ -45,22 +47,32 @@ namespace VertexBenderCS.Forms
         //    }
         //}
 
-        private Camera              _camera;
-        private CameraController    _cameraController;
-        private SceneGraph          _SceneGraph;
+        private Camera _camera;
+        private CameraController _cameraController;
+        private SceneGraph _SceneGraph;
 
-        private FrmProcess          _frmProcess;
+        private FrmProcess _frmProcess;
+        private FrmFinalize _frmFinalize;
 
-        private bool                _isFirstMouse;
-        private float               _mouseX;
-        private float               _mouseY;
+        private bool _isFirstMouse;
+        private float _mouseX;
+        private float _mouseY;
         private System.Timers.Timer _timer;
-        private eRenderMode         _renderMode;
-        private bool                _isPerspective;
+        private eRenderMode _renderMode;
+        private bool _isPerspective;
 
-        private Transform           _selectedTransform;
-        private Dictionary<Transform ,IsoCurveOutput>    _IsoCurveOutputs;
-        
+        private eMarchMethod _MarchMethod;
+        private bool _editMode;
+        private bool _mouseOnGL;
+        private GizmoRenderer _gizmo;
+        private MeshRenderer _sphereRenderer;
+        private int _direction = -1;
+
+        private Transform _selectedTransform;
+        private Dictionary<Transform, IsoCurveOutput> _IsoCurveOutputs;
+
+        private Stopwatch _watch = new Stopwatch();
+
         private OpenTK.Input.KeyboardState KeyState { get; set; }
         private OpenTK.Input.MouseState MouseState { get; set; }
 
@@ -76,16 +88,16 @@ namespace VertexBenderCS.Forms
 
             PrepareUI();
             SubscribeEvents();
-#if DEBUG
+            //#if DEBUG
             SetupTestScene();
-#endif
+            //#endif
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);
         }
-        
+
         public void PrepareUI()
         {
             statusBar.BackColor = Color.FromArgb(50, 50, 50);
@@ -95,7 +107,7 @@ namespace VertexBenderCS.Forms
             toolBar.Renderer = new CustomToolStripRenderer();
 
 
-            GL.ClearColor(Color.FromArgb(66,167,250));
+            GL.ClearColor(Color.FromArgb(66, 167, 250));
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.CullFace);
 
@@ -110,12 +122,12 @@ namespace VertexBenderCS.Forms
             _mouseY = (int)(Height * 0.5);
             _isFirstMouse = true;
 
-            _timer = new System.Timers.Timer(16);
+            _timer = new System.Timers.Timer(1000.0 / 144);
             _timer.Elapsed += Update;
             _timer.Start();
 
             _frmProcess = null;
-            //_Logger = new Logger();
+            _frmFinalize = null;
             _SceneGraph = new SceneGraph();
             _camera = new Camera(GLControl.Width, GLControl.Height);
             _cameraController = new CameraController(_camera);
@@ -126,6 +138,7 @@ namespace VertexBenderCS.Forms
 
             InitTransformPanel();
             InitSpherePanel();
+            InitVolumeRendererPanel();
         }
 
         public void SubscribeEvents()
@@ -138,7 +151,9 @@ namespace VertexBenderCS.Forms
             GLControl.MouseDown += GLControl_MouseDown;
             GLControl.MouseMove += GLControl_MouseMove;
             GLControl.MouseWheel += GLControl_MouseWheel;
-            
+            GLControl.MouseEnter += GLControl_MouseEnter;
+            GLControl.MouseLeave += GLControl_MouseLeave;
+
             menuImportOff.Click += MenuImport_Click;
             menuImportVol.Click += MenuImportVol_Click;
 
@@ -163,6 +178,7 @@ namespace VertexBenderCS.Forms
             toolbarWireframe.Click += ToolbarWireframe_Click;
             toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
             toolbarIsBlinn.Click += ToolbarIsBlinn_Click;
+            toolStripButton2.Click += ToolStripButton2_Click;
 
             Logger.OnItemLogged += Logger_OnItemLogged;
             Logger.OnLogCleaned += Logger_OnLogCleaned;
@@ -173,11 +189,20 @@ namespace VertexBenderCS.Forms
             sceneGraphTree.Leave += SceneGraphTree_LostFocus;
 
             _SceneGraph.OnItemAdded += SceneGraph_OnItemAdded;
-            _SceneGraph.OnItemDeleted+= SceneGraph_OnItemDeleted;
+            _SceneGraph.OnItemDeleted += SceneGraph_OnItemDeleted;
             _SceneGraph.OnSceneCleared += SceneGraph_OnSceneCleared;
+
+            // temp
+
         }
 
 
+        private void SetupTestScene()
+        {
+            //GeometryShaderTest();
+            //UltrasonLoadTest();
+            ComputeTest();
+        }
 
         private void StarTest()
         {
@@ -201,8 +226,8 @@ namespace VertexBenderCS.Forms
 
             for (int i = 0; i < m2.PointsOnSphere.Count; i++)
             {
-                sphere2.Vertices.Add(new Vertex(i, m2.PointsOnSphere[i], m2.Normals[i]));
-                sphere3.Vertices.Add(new Vertex(i, m3.PointsOnSphere[i], m3.Normals[i]));
+                sphere2.Vertices.Add(i, new Vertex(i, m2.PointsOnSphere[i], m2.Normals[i]));
+                sphere3.Vertices.Add(i, new Vertex(i, m3.PointsOnSphere[i], m3.Normals[i]));
             }
             sphere2.Triangles = mesh.Mesh.Triangles;
             sphere3.Triangles = mesh.Mesh.Triangles;
@@ -227,7 +252,7 @@ namespace VertexBenderCS.Forms
             {
                 var c2 = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.001f), "c2");
                 c2.Position = m2.Center[i];
-                c2.Color = new Vector4(0, (i /(float)(m2.Center.Count - 1)), 0, 1);
+                c2.Color = new Vector4(0, (i / (float)(m2.Center.Count - 1)), 0, 1);
                 _SceneGraph.AddObject(c2);
             }
 
@@ -251,7 +276,7 @@ namespace VertexBenderCS.Forms
         private void GeometryShaderTest()
         {
             var mesh = new Mesh();
-            mesh.Vertices.Add(new Vertex(0, Vector3.Zero));
+            mesh.Vertices.Add(0, new Vertex(0, Vector3.Zero));
             var pointCloud = new PointCloudRenderer(mesh, new List<int>() { 255 }, 1);
             _SceneGraph.AddObject(pointCloud);
         }
@@ -267,50 +292,69 @@ namespace VertexBenderCS.Forms
 
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
 
-            var output2 = Algorithm.Downsample(output, 5);
+            var output2 = Algorithm.Downsample(output, 2);
             var mesh2 = ObjectLoader.MakeMeshFromVol(output2);
-            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2");
-            pointCloudRenderer2.Position = new Vector3(0,0,-0.4f);
+            var pointCloudRenderer2 = new PointCloudRenderer(mesh2, output2.Intensities, output2.Spacing, 64, 255, "pointcloud2")
+            {
+                Position = new Vector3(0, 0, -0.4f)
+            };
             _SceneGraph.AddObject(pointCloudRenderer2);
 
             //sceneGraphTree.SelectedNode = null;
 
-            //var testCube = Algorithm.MarchCubes(output2, 65, true, false, false);
-            //var meshrenderer = new PrimitiveRenderer(testCube, "testmarchingCubeIndexedMedian");
-            //meshrenderer.Position = new Vector3(0, 0, 0.4f);
-            //_SceneGraph.AddObject(meshrenderer);
 
-
-            sceneGraphTree.SelectedNode = null;
+            _SceneGraph.SelectedItem = null;
 
             var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
-            //Algorithm.Smoothen(ref testCube2, 5);
-            Algorithm.RemoveIslands(ref testCube2);
+            Algorithm.Smoothen(ref testCube2, 5);
             var meshrenderer2 = new MeshRenderer(testCube2, "smooth");
             _SceneGraph.AddObject(meshrenderer2);
 
-
-            //sceneGraphTree.SelectedNode = null;
-
-            //var testCube3 = Algorithm.MarchCubes(output2, 90, true, true, false);
-            ////Algorithm.Smoothen(ref testCube2, 5);
-            //var meshrenderer3 = new MeshRenderer(testCube3, "no smooth");
-            //meshrenderer3.Position = new Vector3(0, 0, 0.4f);
-            //_SceneGraph.AddObject(meshrenderer3);
-
-            //sceneGraphTree.SelectedNode = null;
-
-            //var testCube4 = Algorithm.MarchCubes(output2, 90, true, false,false);
-            //var meshrenderer4 = new PrimitiveRenderer(testCube4, "testmarchingCubeUnindexed");
-            //meshrenderer4.Position = new Vector3(0, 0, 0.8f);
-            //_SceneGraph.AddObject(meshrenderer4);
-
         }
 
-        private void SetupTestScene()
+        private void ComputeTest()
         {
-            UltrasonLoadTest();
-            //GeometryShaderTest();
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_2.vol");
+
+
+            //var output2 = Algorithm.Downsample(output, 2);
+            //var testCube2 = Algorithm.MarchCubes(output2, 60, true, true);
+            //Algorithm.Smoothen(ref testCube2, 4);
+            //var meshrenderer2 = new MeshRenderer(testCube2, "smooth")
+            //{
+            //    Color = new Vector4(0.1f, 0.1f, 0.3f, 1.0f),
+            //    Position = new Vector3(0.0f, 0.0f, 0.4f)
+            //};
+            //_SceneGraph.AddObject(meshrenderer2);
+
+
+            _MarchMethod = eMarchMethod.GpuBoost;
+
+            sceneGraphTree.SelectedNode = null;
+
+            var volRenderer = new VolumeRenderer(output, "Compute")
+            {
+                Intensity = 60,
+                DownSample = 6,
+                Method = eMarchMethod.GpuBoost
+            };
+            volRenderer.Compute();
+            _SceneGraph.AddObject(volRenderer);
+
+            sceneGraphTree.SelectedNode = null;
+
+            //var mesh = volRenderer.FinalizeMesh(false, true);
+
+            //Algorithm.FillHoles(ref mesh);
+
+            //_SceneGraph.AddObject(new MeshRenderer(mesh, "Test") { Position = new Vector3(0, 0, 0.4f), Color = volRenderer.Color });
+
+            //sceneGraphTree.SelectedNode = null;
+
+            //var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+            //_sphereRenderer = new MeshRenderer(sphere, "Sphere");
+            //_sphereRenderer.Scale = new Vector3(0.01f, 0.01f, 0.01f);
+            //_SceneGraph.AddObject(_sphereRenderer);
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -327,21 +371,9 @@ namespace VertexBenderCS.Forms
                     KeyState = OpenTK.Input.Keyboard.GetState();
                     MouseState = OpenTK.Input.Mouse.GetCursorState();
                     MouseState = OpenTK.Input.Mouse.GetState();
+                    ApplyEdit();
                 }
             });
-            //GLControl.Invoke((MethodInvoker)delegate ()
-            //{
-            //    GLControl.Invalidate();
-            //    GLControl.Update();
-
-            //    if (GLControl.Focused)
-            //    {
-            //        _cameraController.Navigate(KeyState);
-            //        KeyState = OpenTK.Input.Keyboard.GetState();
-            //        MouseState = OpenTK.Input.Mouse.GetCursorState();
-            //        MouseState = OpenTK.Input.Mouse.GetState();
-            //    }
-            //});
         }
 
         private void InvokeIfRequired(Control control, MethodInvoker action)
@@ -555,7 +587,7 @@ namespace VertexBenderCS.Forms
                 for (int i = 0; i < output.Output.Count; i++)
                 {
                     var v = new Vertex(i, new Vector3(output.Output[i].X, 0, output.Output[i].Y), Vector3.UnitY);
-                    outputmesh.Vertices.Add(v);
+                    outputmesh.Vertices.Add(v.Id, v);
                 }
                 outputmesh.Triangles = mesh.Mesh.Triangles;
 
@@ -568,7 +600,7 @@ namespace VertexBenderCS.Forms
                     EnableCull = false
                 };
                 renderer.Parent = _selectedTransform;
-                
+
                 renderer.DiffuseTexture = tex;
                 mesh.DiffuseTexture = tex;
 
@@ -576,7 +608,7 @@ namespace VertexBenderCS.Forms
                 renderer.SetTextureBuffer(output.NormalizedUVCoords());
 
                 _SceneGraph.AddObject(renderer);
-                
+
 
                 DrawPath(mesh, output.BoundaryPath, new Vector4(1, 0, 0, 0), $"path-{_selectedTransform.Name}");
 
@@ -598,7 +630,7 @@ namespace VertexBenderCS.Forms
 
                 for (int i = 0; i < output.PointsOnSphere.Count; i++)
                 {
-                    sphere.Vertices.Add(new Vertex(i, output.PointsOnSphere[i], output.Normals[i]));
+                    sphere.Vertices.Add(i, new Vertex(i, output.PointsOnSphere[i], output.Normals[i]));
                 }
 
                 sphere.Triangles = mesh.Mesh.Triangles;
@@ -613,7 +645,7 @@ namespace VertexBenderCS.Forms
                 renderer.Rotation = _selectedTransform.Rotation;
 
 
-                var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f * size),"center");
+                var cube = new PrimitiveRenderer(PrimitiveObjectFactory.Cube(0.01f * size), "center");
                 cube.Position = output.Center[0];
                 cube.Color = new Vector4(1, 0, 0, 1);
 
@@ -680,14 +712,21 @@ namespace VertexBenderCS.Forms
 
         #region GlControl Events
 
-        private void GLControl_MouseWheel(object sender,  System.Windows.Forms.MouseEventArgs e)
+        private void GLControl_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             _cameraController.Zoom(e.Delta, KeyState.IsKeyDown(OpenTK.Input.Key.ShiftLeft));
+
+            if (KeyState.IsKeyDown(OpenTK.Input.Key.LControl))
+            {
+                if (_sphereRenderer != null)
+                {
+                    _sphereRenderer.Scale += (Vector3.One * 0.001f * e.Delta / Math.Abs(e.Delta));
+                }
+            }
         }
 
         private void GLControl_MouseMove(object sender, MouseEventArgs e)
         {
-
             if (_isFirstMouse)
             {
                 _mouseX = (float)e.X;
@@ -713,6 +752,30 @@ namespace VertexBenderCS.Forms
             _mouseX = e.X;
             _mouseY = e.Y;
 
+            toolStripStatusLabel1.Text = $"{_camera.Position.X}, {_camera.Position.Y}, {_camera.Position.Z}";
+
+            if (_editMode && _mouseOnGL)
+            {
+                if (_gizmo != null)
+                {
+                    _gizmo.Position = new Vector2( 2 * (-0.5f + _mouseX / GLControl.Width) , -2 * (-0.5f + _mouseY / GLControl.Height));
+                    _gizmo.Aspect = GLControl.AspectRatio;
+                    _gizmo.Radius = 0.2f;
+                }
+
+                var volRend = (_selectedTransform as VolumeRenderer);
+                if (volRend != null)
+                {
+                    volRend.editMode = true;
+                    Vector3 pos = _camera.ScreenToWorld(_mouseX, _mouseY, GLControl.Width, GLControl.Height);
+
+                    volRend.ComputeIntersection(pos, (pos - _camera.Position).Normalized(), out Vector3 result);
+                    _sphereRenderer.Position = result;
+                    _sphereRenderer.EnableBlend = true;
+                    _sphereRenderer.Color = new Vector4(0.3f, 0.4f, 0.3f, 0.5f);
+                    Logger.Log($"camera:{result.X},{result.Y},{result.Z} ");
+                }
+            }
         }
 
         private void GLControl_MouseClick(object sender, MouseEventArgs e)
@@ -724,17 +787,6 @@ namespace VertexBenderCS.Forms
 
         private void GLControl_MouseDown(object sender, MouseEventArgs e)
         {
-            //if (e.Button == MouseButtons.Left)
-            //{
-            //    HalfWidth = this.ClientRectangle.Width / 2.0f;
-            //    HalfHeight = this.ClientRectangle.Height / 2.0f;
-
-            //    _mouseX = (e.X - HalfWidth) / HalfWidth;
-            //    _mouseY = (HalfHeight - e.Y) / HalfHeight;
-
-            //    mouseroll = true;
-            //}
-
             if (e.Button == MouseButtons.Middle && e.Clicks > 1)
             {
                 _cameraController.Reset();
@@ -781,7 +833,27 @@ namespace VertexBenderCS.Forms
             Render();
         }
 
-#endregion
+        private void GLControl_MouseLeave(object sender, EventArgs e)
+        {
+            if (_editMode)
+            {
+                Cursor.Show();
+                _mouseOnGL = false;
+            }
+
+        }
+
+        private void GLControl_MouseEnter(object sender, EventArgs e)
+        {
+            if (_editMode)
+            {
+                _mouseOnGL = true;
+                Cursor.Hide();
+            }
+        }
+
+
+        #endregion
 
         #region Scene Graph
 
@@ -836,6 +908,7 @@ namespace VertexBenderCS.Forms
         private void SceneGraphTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var item = (e.Node as SceneNode).Transform;
+            HideAllPanels();
 
             if (item != null)
             {
@@ -890,8 +963,6 @@ namespace VertexBenderCS.Forms
                 {
                     var mesh = _selectedTransform as MeshRenderer;
 
-
-
                     if (mesh.Mesh is Sphere)
                     {
                         var sphere = (mesh.Mesh as Sphere);
@@ -924,6 +995,25 @@ namespace VertexBenderCS.Forms
                     sliderMin.ValueChanged += SliderMin_ValueChanged;
 
                 }
+                else if (_selectedTransform is VolumeRenderer)
+                {
+                    var volumeRenderer = _selectedTransform as VolumeRenderer;
+
+                    volumeRendererPanel.Visible = true;
+
+                    numericMarch.ValueChanged -= NumericMarch_ValueChanged;
+                    intensityMarch.ValueChanged -= IntensityMarch_ValueChanged;
+                    cmbVolMethod.SelectedValueChanged -= CmbVolMethod_SelectedValueChanged;
+
+                    cmbVolMethod.SelectedIndex = (int)_MarchMethod;
+                    intensityMarch.Value = volumeRenderer.Intensity;
+                    numericMarch.Value = volumeRenderer.DownSample;
+
+                    numericMarch.ValueChanged += NumericMarch_ValueChanged;
+                    intensityMarch.ValueChanged += IntensityMarch_ValueChanged;
+                    cmbVolMethod.SelectedValueChanged += CmbVolMethod_SelectedValueChanged; ;
+
+                }
             }
         }
 
@@ -950,10 +1040,7 @@ namespace VertexBenderCS.Forms
             {
                 sceneGraphTree.HideSelection = true;
                 sceneGraphTree.SelectedNode = null;
-                chartIsoCurve.Hide();
-                transformPanel.Visible = false;
-                spherePanel.Visible = false;
-                pointCloudPanel.Visible = false;
+                HideAllPanels();
             }
         }
 
@@ -962,6 +1049,15 @@ namespace VertexBenderCS.Forms
             sceneGraphTree.HideSelection = false;
         }
 
+        private void HideAllPanels()
+        {
+
+            chartIsoCurve.Hide();
+            transformPanel.Visible = false;
+            spherePanel.Visible = false;
+            pointCloudPanel.Visible = false;
+            volumeRendererPanel.Visible = false;
+        }
 
         #endregion
 
@@ -1010,8 +1106,8 @@ namespace VertexBenderCS.Forms
             {
                 _selectedTransform.Position = new Vector3
                 (
-                    (float)numericPosX.Value, 
-                    (float)numericPosY.Value, 
+                    (float)numericPosX.Value,
+                    (float)numericPosY.Value,
                     (float)numericPosZ.Value
                 );
 
@@ -1022,14 +1118,14 @@ namespace VertexBenderCS.Forms
             }
         }
 
-        private void NumericScale_ValueChanged(object sender, EventArgs e) 
+        private void NumericScale_ValueChanged(object sender, EventArgs e)
         {
             if (_selectedTransform != null)
             {
                 _selectedTransform.Scale = new Vector3
                 (
-                    (float)numericScaleX.Value, 
-                    (float)numericScaleY.Value, 
+                    (float)numericScaleX.Value,
+                    (float)numericScaleY.Value,
                     (float)numericScaleZ.Value
                 );
                 foreach (var child in _selectedTransform.Children)
@@ -1108,6 +1204,111 @@ namespace VertexBenderCS.Forms
             }
         }
 
+        private void InitVolumeRendererPanel()
+        {
+            volumeRendererPanel.Visible = false;
+
+            numericMarch.ValueChanged += NumericMarch_ValueChanged;
+            intensityMarch.ValueChanged += IntensityMarch_ValueChanged;
+            cmbVolMethod.SelectedValueChanged += CmbVolMethod_SelectedValueChanged;
+
+            btnEdit.Click += BtnEdit_Click;
+            btnFinalize.Click += BtnFinalize_Click;
+
+        }
+
+        private void BtnFinalize_Click(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var volRenderer = (_selectedTransform as VolumeRenderer);
+
+                _frmFinalize = new FrmFinalize(volRenderer);
+                _frmFinalize.BtnProcedeClicked += frmFinalize_BtnProcedeClicked;
+                _frmFinalize.ShowDialog();
+            }
+        }
+
+        private void frmFinalize_BtnProcedeClicked(Mesh mesh, Vector4 color)
+        {
+            MeshRenderer renderer = new MeshRenderer(mesh, mesh.Name);
+            renderer.Color = color;
+            renderer.Position += new Vector3(0.0f, 0.0f, 0.4f);
+            sceneGraphTree.SelectedNode = null;
+            _SceneGraph.AddObject(renderer);
+        }
+
+        private void BtnEdit_Click(object sender, EventArgs e)
+        {
+            _editMode = !_editMode;
+
+            if (_editMode)
+            {
+                _gizmo = new GizmoRenderer();
+                if (_sphereRenderer == null)
+                {
+                    var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+                    _sphereRenderer = new MeshRenderer(sphere, "Sphere");
+                    _sphereRenderer.Scale = new Vector3(0.01f, 0.01f, 0.01f);
+                    _SceneGraph.AddObject(_sphereRenderer);
+                }
+                Logger.Log("edit mode");
+            }
+            else 
+            {
+                _gizmo = null;
+                _sphereRenderer = null;
+                //Cursor.Current = Cursors.Default;
+                Logger.Log("not edit mode");   
+            }
+        }
+
+        private void NumericMarch_ValueChanged(object sender, EventArgs e)
+        {
+            var volRend = (_selectedTransform as VolumeRenderer);
+
+            if (volRend != null)
+            {
+                volRend.DownSample = (int)numericMarch.Value;
+                volRend.Compute();
+            }
+
+        }
+
+        private void IntensityMarch_ValueChanged(object sender, EventArgs e)
+        {
+            var volRend = (_selectedTransform as VolumeRenderer);
+
+            if (volRend != null)
+            {
+                volRend.Intensity = intensityMarch.Value;
+                labelIntensityMarch.Text = intensityMarch.Value.ToString();
+                volRend.Compute();
+            }
+        }
+
+        private void CmbVolMethod_SelectedValueChanged(object sender, EventArgs e)
+        {
+            var volRend = (_selectedTransform as VolumeRenderer);
+
+            if (volRend != null)
+            {
+                switch (cmbVolMethod.SelectedIndex)
+                {
+                    case 0:
+                        volRend.Method = eMarchMethod.GpuBoost;
+                        break;
+                    case 1:
+                        volRend.Method = eMarchMethod.GPU;
+                        break;
+                    case 2:
+                        volRend.Method = eMarchMethod.CPU;
+                        break;
+                }
+                volRend.Compute();
+            }
+        }
+
 
         #endregion
 
@@ -1121,6 +1322,10 @@ namespace VertexBenderCS.Forms
             _camera.IsOrtho = !_isPerspective;
 
             _SceneGraph.RenderAll(_camera, _renderMode);
+            if (_gizmo !=null)
+            {
+                _gizmo.Render();
+            }
 
             GL.Flush();
             GLControl.SwapBuffers();
@@ -1149,14 +1354,33 @@ namespace VertexBenderCS.Forms
             chartIsoCurve.Show();
         }
 
+        private void ApplyEdit()
+        {
+            if (_editMode && _mouseOnGL)
+            {
+                var volRend = (_selectedTransform as VolumeRenderer);
+                if (volRend != null)
+                {
+                    if (MouseState.IsButtonDown(OpenTK.Input.MouseButton.Left))
+                    {
+                        if (KeyState.IsKeyDown(OpenTK.Input.Key.LShift))
+                        {
+                            _direction = 1;
+                        }
+                        volRend.ComputeVolEditor(_sphereRenderer.Position, _sphereRenderer.Scale.X, (float)numericPressure.Value, _direction);
+                    }
+                }
+            }
+        }
+
+
         #endregion
 
         #region Menu Items
 
         private void menuProcessSP_Click(object sender, EventArgs e)
         {
-
-            if (_selectedTransform != null)
+            if (_selectedTransform is MeshRenderer)
             {
                 var mesh = (_selectedTransform as MeshRenderer).Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.ShortestPath);
@@ -1171,9 +1395,10 @@ namespace VertexBenderCS.Forms
 
         private void menuProcessGC_Click(object sender, EventArgs e)
         {
-            if (_selectedTransform != null)
+            if (_selectedTransform is MeshRenderer)
             {
                 var mesh = _selectedTransform as MeshRenderer;
+
                 var a = Algorithm.GaussianCurvature(mesh.Mesh);
                 var max = a.Max();
                 var min = a.Min();
@@ -1193,28 +1418,41 @@ namespace VertexBenderCS.Forms
                 }
 
                 mesh.SetColorBuffer(color);
+
+            }
+            else
+            {
+                MessageBox.Show("Please Select a model to process", "No models selected", MessageBoxButtons.OK);
             }
         }
 
         private void menuProcessDescriptor_Click(object sender, EventArgs e)
         {
-            if (_selectedTransform != null)
+            if (_selectedTransform is MeshRenderer)
             {
                 var mesh = (_selectedTransform as MeshRenderer).Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.Descriptor);
                 _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
             }
+            else
+            {
+                MessageBox.Show("Please Select a model to process", "No models selected", MessageBoxButtons.OK);
+            }
         }
 
         private void MenuProcessParametrization_Click(object sender, EventArgs e)
         {
-            if (_selectedTransform != null)
+            if (_selectedTransform is MeshRenderer)
             {
                 var mesh = (_selectedTransform as MeshRenderer).Mesh;
                 _frmProcess = new FrmProcess(mesh, eProcessCoreType.Parametrization);
                 _frmProcess.OnResultReturned += ProcessResultReturned;
                 _frmProcess.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Please Select a model to process", "No models selected", MessageBoxButtons.OK);
             }
         }
 
@@ -1288,11 +1526,16 @@ namespace VertexBenderCS.Forms
                     var split = d.FileName.Split(new char[] { '\\' });
                     var name = split[split.Length - 1];
 
-                    //_SceneGraph.Clean();
-                    //var pointCloud = ObjectLoader.LoadVol(d.FileName, out List<int> intensities, out float spacing);
-                    var pointCloud = ObjectLoader.LoadVol(d.FileName, out VolOutput output);
-                    var pointCloudRenderer = new PointCloudRenderer(pointCloud, output.Intensities, output.Spacing, 0, 255, name);
-                    _SceneGraph.AddObject(pointCloudRenderer);
+                    var raw = ObjectLoader.LoadVol(d.FileName);
+                    var output = Algorithm.Downsample(raw, 2);
+                    var mesh = ObjectLoader.MakeMeshFromVol(output);
+
+                    var pcRenderer= new PointCloudRenderer(mesh, output.Intensities, output.Spacing, 64, 255, name)
+                    {
+                        Position = new Vector3(0, 0, -0.4f)
+                    };
+                    _SceneGraph.AddObject(pcRenderer);
+                    
                 }
             }
         }
@@ -1399,7 +1642,25 @@ namespace VertexBenderCS.Forms
             }
         }
 
+        private void ToolStripButton2_Click(object sender, EventArgs e)
+        {
+            if (_SceneGraph != null)
+            {
+                if (_selectedTransform != null)
+                {
+                    var mesh = (_selectedTransform as MeshRenderer).Mesh;
+                    Algorithm.RemoveIslands(ref mesh);
+                    var meshRenderer = new MeshRenderer(mesh, "smoothen");
+                    _SceneGraph.DeleteObject(_selectedTransform);
+                    _SceneGraph.AddObject(meshRenderer);
+                }
+
+                _SceneGraph.IsBlinnPhong = !_SceneGraph.IsBlinnPhong;
+            }
+        }
+
         #endregion
+
 
 
     }

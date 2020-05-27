@@ -1,4 +1,6 @@
-﻿using OpenTK;
+﻿using Engine.GLApi;
+using MathNet.Numerics.Providers.LinearAlgebra;
+using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -530,6 +532,44 @@ namespace Engine.Core
                                
             }
         }
+
+        public static Mesh MakeMeshUnindexed(ComputeTriangle[] tris, float spacing, string name = "")
+        {
+            var mesh = new Mesh();
+
+            //Parallel.For(0, tris.Count, (i) => 
+            for (int i = 0; i < tris.Length; i++)
+            {
+                //recall that triangle normal was encoded in 4. element in vector4 for 16 byte alignment.
+                Vector3 normal = new Vector3(tris[i].v0.W, tris[i].v1.W, tris[i].v2.W).Normalized();
+
+                mesh.AddVertex(tris[i].v0.Xyz * -spacing, normal);
+                mesh.AddVertex(tris[i].v1.Xyz * -spacing, normal);
+                mesh.AddVertex(tris[i].v2.Xyz * -spacing, normal);
+            }
+            //mesh.CalculateVertexNormals();
+
+            return mesh;
+        }
+
+        public static Mesh MakeMeshUnindexed(Vector4[] tris, float spacing, string name = "")
+        {
+            var mesh = new Mesh();
+
+            //Parallel.For(0, tris.Count, (i) => 
+            for (int i = 0; i < tris.Length; i+=3)
+            {
+                Vector3 normal = new Vector3(tris[i].W, tris[i+1].W, tris[i+2].W).Normalized();
+
+                mesh.AddVertex(tris[i].Xyz * -spacing, normal);
+                mesh.AddVertex(tris[i+1].Xyz * -spacing, normal);
+                mesh.AddVertex(tris[i+2].Xyz * -spacing, normal);
+            }
+            //mesh.CalculateVertexNormals();
+
+            return mesh;
+        }
+
 
         public static Mesh MakeMeshUnindexed(List<Vector3[]> tris, float spacing, string name = "")
         {

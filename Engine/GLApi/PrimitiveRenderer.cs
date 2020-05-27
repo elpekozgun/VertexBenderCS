@@ -32,14 +32,16 @@ namespace Engine.GLApi
         private void ExtractVertices(Mesh mesh)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
-            for (int i = 0; i < mesh.Vertices.Count; i++)
+            int i = 0;
+            foreach(var vertex in mesh.Vertices)
             {
                 vertices[i] = new GpuVertex()
                 {
-                    Coord = mesh.Vertices[i].Coord,
-                    Normal = mesh.Vertices[i].Normal,
+                    Coord = vertex.Value.Coord,
+                    Normal = vertex.Value.Normal,
                     Color = new Vector3(0.0f, 0.0f, 0.0f)
                 };
+                i++;
             }
         }
 
@@ -102,6 +104,7 @@ namespace Engine.GLApi
             GL.BindVertexArray(_VAO);
 
             GL.Disable(EnableCap.CullFace);
+
 
             if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {

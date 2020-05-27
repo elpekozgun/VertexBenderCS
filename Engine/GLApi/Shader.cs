@@ -42,17 +42,59 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\PointCloudFragment.glsl", ShaderType.FragmentShader)
         );
 
-        //private static Shader _defaultIndicator = ShaderBuilder.CreateShader
-        //(
-        //    "Indicator",
-        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorVertex.glsl", ShaderType.VertexShader),
-        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\LitIndicatorFragment.glsl", ShaderType.FragmentShader)
-        //);
+        private static Shader _marchingCubesComputeTribased = ShaderBuilder.CreateShader
+        (
+            "marchingCubesTri",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubesTriBased.glsl", ShaderType.ComputeShader)
+            //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
+        private static Shader _marchingCubesComputeVertexBased = ShaderBuilder.CreateShader
+        (
+            "marchingCubesVertex",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\MarchingCubesVertexBased.glsl", ShaderType.ComputeShader)
+        //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
+        private static Shader _intersectionCompute = ShaderBuilder.CreateShader
+        (
+            "intersection Compute",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\IntersectionCompute.glsl", ShaderType.ComputeShader)
+        //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
+        private static Shader _volEditorCompute= ShaderBuilder.CreateShader
+        (
+            "vol editor Compute",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\VolEditorCompute.glsl", ShaderType.ComputeShader)
+        //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
+
+        private static Shader _computePaint = ShaderBuilder.CreateShader
+        (
+            "ComputePaint",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeFragment.glsl", ShaderType.FragmentShader)
+        );
+
+        private static Shader _gizmoShader = ShaderBuilder.CreateShader
+        (
+            "gizmo",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoFragment.glsl", ShaderType.FragmentShader)
+        );
+
 
         public static Shader DefaultShader => _defaultShader;
         public static Shader DefaultUnlitShader=> _defaultUnlit;
         public static Shader DefaultPointCloud => _defaultPointCloud;
         public static Shader DefaultCuberille => _defaultCuberille;
+        public static Shader MarchingComputeTriBased => _marchingCubesComputeTribased;
+        public static Shader MarchingComputeVertexBased => _marchingCubesComputeVertexBased;
+        public static Shader IntersectionCompute => _intersectionCompute;
+        public static Shader VolEditorCompute => _volEditorCompute;
+        public static Shader DefaultComputePaint => _computePaint;
+        public static Shader DefaultGizmo => _gizmoShader;
         //public static Shader DefaultIndicator => _defaultIndicator;
 
         #endregion

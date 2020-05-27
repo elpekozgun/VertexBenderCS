@@ -74,12 +74,15 @@
     <Compile Include="Core\KretzTag.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\Mesh.cs" />
+    <Compile Include="Core\MeshOld.cs" />
     <Compile Include="Core\ObjectLoader.cs" />
     <Compile Include="Core\PrimitiveObjectFactory.cs" />
     <Compile Include="Core\MathExtensions.cs" />
     <Compile Include="Core\RayCaster.cs" />
     <Compile Include="Core\SceneGraph.cs" />
     <Compile Include="Core\Transform.cs" />
+    <Compile Include="GLApi\ComputeShader.cs" />
+    <Compile Include="GLApi\GizmoRenderer.cs" />
     <Compile Include="GLApi\GpuVertex.cs" />
     <Compile Include="GLApi\IndexlessMeshRenderer.cs" />
     <Compile Include="GLApi\InstancedRenderer.cs" />
@@ -93,6 +96,7 @@
     <Compile Include="GLApi\Shader.cs" />
     <Compile Include="GLApi\ShaderBuilder.cs" />
     <Compile Include="GLApi\Texture.cs" />
+    <Compile Include="GLApi\VolumeRenderer.cs" />
     <Compile Include="Processing\Algorithm.cs" />
     <Compile Include="Processing\Graph.cs" />
     <Compile Include="Processing\HeapNode.cs" />

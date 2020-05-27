@@ -40,57 +40,48 @@ namespace Engine.Core
             Edges = new List<int>();
         }
 
-        public Vertex CopyToPlaneXY()
-        {
-            Vertex v = new Vertex(this.Id, new Vector3(this.Coord.X, this.Coord.Y, 0), Vector3.UnitZ);
-            v.Verts = this.Verts;
-            v.Tris = this.Tris;
-            v.Edges = this.Edges;
-            return v;
-        }
-
         public Vector3 Coord;
         public Vector3 Normal;
         public int Id;
 
         public List<int> Tris { get; set; }
-        //public List<KeyValuePair<int, float>> Verts { get; set; }
         public List<int> Verts { get; set; }
         public List<int> Edges { get; set; }
+
+        public void UpdateVertex(Vector3 coord, Vector3 normal)
+        {
+            this.Normal = normal;
+            this.Coord = coord;
+        }
 
     }
 
     public struct Edge
     {
-        public Edge(int id, int v1, int v2, float length)
+        public Edge(int id, int v1, int v2, float length, bool isBoundary)
         {
             Id = id;
             Start = v1;
             End = v2;
             Length = length;
+            IsBoundary = isBoundary;
         }
 
         public int Id;
         public int Start;
         public int End;
         public float Length { get; set; }
+        public bool IsBoundary;
 
-        public int OtherEnd(int id)
+        public int GetOppositeEnd(int id)
         {
             var ret = id == Start ? End : Start;
             return ret;
         }
 
-        public void UpdateIndex(int id, int val)
+        public void SetBoundary()
         {
-            if (Start == id)
-            {
-                Start = val;
-            }
-            else if(End == id)
-            {
-                End = val;
-            }
+            IsBoundary = true;
         }
     }
 
@@ -122,13 +113,6 @@ namespace Engine.Core
             return V1 == id || V2 == id || V3 == id;
         }
 
-        public bool ContainsEdge(Edge e)
-        {
-            return (e.Start == V1 && e.End == V2 || e.Start == V2 && e.End == V1) ||
-                   (e.Start == V2 && e.End == V3 || e.Start == V3 && e.End == V2) ||
-                   (e.Start == V3 && e.End == V1 || e.Start == V1 && e.End == V3);
-        }
-
         public void UpdateIndex(int id, int value)
         {
             if (V1 == id)
@@ -144,7 +128,6 @@ namespace Engine.Core
                 V3 = value;
             }
         }
-
         
     }
 
@@ -155,120 +138,142 @@ namespace Engine.Core
         public Mesh(string name = "")
         {
             Name = name;
-            Vertices = new List<Vertex>();
-            Triangles = new List<Triangle>();
-            Edges = new List<Edge>();
+            Vertices = new Dictionary<int, Vertex>();
+            Triangles = new Dictionary<int, Triangle>();
+            Edges = new Dictionary<int, Edge>();
 
             _lastV = 0;
             _lastT = 0;
             _lastE = 0;
         }
 
-        public List<Vertex> Vertices;
-        public List<Triangle> Triangles;
-        public List<Edge> Edges;
-
-        public bool hasDirtyTriangles { get; protected set; }
+        public Dictionary<int, Vertex> Vertices;
+        public Dictionary<int, Triangle> Triangles;
+        public Dictionary<int, Edge> Edges;
 
         private int _lastV;
         private int _lastE;
         private int _lastT;
 
+        internal void AddVertex(Vertex v)
+        {
+            Vertices.Add(v.Id, v);
+        }
+        
+        internal Vertex AddVertex(Vector3 coord, Vector3 normal)
+        {
+            int id = _lastV++;
+            var v = new Vertex(id, coord, normal);
+            Vertices.Add(id, v);
+            return v;
+        }
+        
+        internal Vertex AddVertex(float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
+        {
+            int id = _lastV++;
+            var v = new Vertex(id, x, y, z, nx, ny, nz);
+            Vertices.Add(id, v);
+            return v;
+        }
+        
         internal void AddTriangle(int v1, int v2, int v3)
         {
             int id = _lastT++;
-            //int id = Triangles.Count;
-
-            Triangles.Add(new Triangle(id, v1, v2, v3));
+            
+            Triangles.Add(id, new Triangle(id, v1, v2, v3));
             Vertices[v1].Tris.Add(id);
             Vertices[v2].Tris.Add(id);
             Vertices[v3].Tris.Add(id);
 
             if (!AreNeighbors(v1,v2))
             {
-                AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length);
+                AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length, false);
             }
             if (!AreNeighbors(v2, v3))
             {
-                AddEdge(v2, v3, (Vertices[v2].Coord - Vertices[v3].Coord).Length);
+                AddEdge(v2, v3, (Vertices[v2].Coord - Vertices[v3].Coord).Length, false);
             }
             if (!AreNeighbors(v3, v1))
             {
-                AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length);
+                AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length, false);
             }
 
         }
-        internal void AddEdge(int v1, int v2, float length)
+        
+        internal void AddEdge(int v1, int v2, float length, bool isBoundary)
         {
             int id = _lastE++;
-            //int id = Edges.Count;
-            Edges.Add(new Edge(id, v1, v2, length));
+            Edges.Add(id, new Edge(id, v1, v2, length, isBoundary));
 
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);
         }
-        internal Vertex AddVertex(float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
-        {
-            //int id = Vertices.Count;
-            int id = _lastV++;
-            var v = new Vertex(id, x, y, z, nx, ny, nz);
-            Vertices.Add(v);
-            return v;
-        }
-        internal Vertex AddVertex(Vector3 coord, Vector3 normal)
-        {
-            //int id = Vertices.Count;
-            int id = _lastV++;
-            var v = new Vertex(id, coord, normal);
-            Vertices.Add(v);
-            return v;
-        }
-        internal void AddVertex(Vertex v)
-        {
-            Vertices.Add(v);
-        }
 
         internal void RemoveVertex(int id)
         {
-            Vertices[id].Verts.Remove(id);
-            for (int i = 0; i < Vertices[id].Verts.Count; i++)
+            var v = Vertices[id];
+
+            var temp = new List<int>(v.Edges);
+            for (int j = 0; j < temp.Count; j++)
             {
-                Vertices[Vertices[id].Verts[i]].Verts.Remove(id);
+                if (Edges.ContainsKey(temp[j]))
+                {
+                    RemoveEdge(temp[j]);
+                }
             }
-            for (int i = 0; i < Vertices[id].Edges.Count; i++)
+
+            temp = new List<int>(v.Tris);
+            for (int j = 0; j < temp.Count; j++)
             {
-                Edges.Remove(Edges[Vertices[id].Edges[i]]);
+                if (Triangles.ContainsKey(temp[j]))
+                {
+                    RemoveTriangle(temp[j]);
+                }
             }
-            for (int i = 0; i < Vertices[id].Tris.Count; i++)
+
+            for (int i = 0; i < v.Verts.Count; i++)
             {
-                Triangles.Remove(Triangles[Vertices[id].Tris[i]]);
+                if (Vertices.ContainsKey(v.Verts[i]))
+                {
+                    Vertices[v.Verts[i]].Verts.Remove(id);
+                }
             }
-            Vertices.Remove(Vertices[id]);
+
+            Vertices.Remove(id);
         }
 
-        internal void RemoveTriangle(Triangle tri)
+        internal void RemoveTriangle(int id)
         {
-            
-            var v1 = Vertices[tri.V1];
-            var v2 = Vertices[tri.V2];
-            var v3 = Vertices[tri.V3];
+            if (Triangles.ContainsKey(id))
+            {
+                var tri = Triangles[id];
 
-            v1.Tris.Remove(tri.Id);
-            v2.Tris.Remove(tri.Id);
-            v3.Tris.Remove(tri.Id);
+                if(Vertices.TryGetValue(tri.V1, out Vertex v1))
+                    v1.Tris.Remove(tri.Id);
 
-            Triangles.Remove(tri);
-            hasDirtyTriangles = true;
+                if (Vertices.TryGetValue(tri.V2, out Vertex v2))
+                    v2.Tris.Remove(tri.Id);
+                
+                if(Vertices.TryGetValue(tri.V3, out Vertex v3))
+                    v3.Tris.Remove(tri.Id);
+
+                Triangles.Remove(id);
+            }
         }
 
-        public int GetTriangleIndex(int t)
+        internal void RemoveEdge(int id)
         {
-            if (hasDirtyTriangles)
+            if (Edges.ContainsKey(id))
             {
-                var tri = Triangles.First(x => x.Id == t);
-                return Triangles.IndexOf(tri);
+                var edge = Edges[id];
+
+                if(Vertices.TryGetValue(edge.Start, out Vertex v1))
+                    v1.Edges.Remove(id);
+                if(Vertices.TryGetValue(edge.End, out Vertex v2))
+                    v2.Edges.Remove(id);
+
+                Edges.Remove(id);
             }
-            return Triangles[t].Id;
         }
 
         internal void DivideEdge(Edge e, int id)
@@ -277,12 +282,12 @@ namespace Engine.Core
             var vert2 = Vertices[e.End];
 
             
-            AddEdge(e.Start, id, (vert1.Coord - Vertices[id].Coord).Length);
-            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length);
+            AddEdge(e.Start, id, (vert1.Coord - Vertices[id].Coord).Length, false);
+            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length,false);
 
             var commonTris = vert1.Tris.Intersect(vert2.Tris).ToList();
             
-            Edges.Remove(e);
+            Edges.Remove(e.Id);
             for (int i = 0; i < commonTris.Count; i++)
             {
                 var tri = Triangles[commonTris[i]];
@@ -294,7 +299,7 @@ namespace Engine.Core
                     AddTriangle(id3, e.Start, id);
                 }
 
-                Triangles.Remove(tri);
+                Triangles.Remove(tri.Id);
             }
 
         }
@@ -315,21 +320,23 @@ namespace Engine.Core
 
         internal void CalculateVertexNormals()
         {
-            for (int i = 0; i < Vertices.Count; i++)
+            var keys = Vertices.Select(x => x.Key).ToList();
+
+            for (int i = 0; i < keys.Count; i++)
             {
-                var v = Vertices[i];
+                var vertex = Vertices[keys[i]];
 
                 Vector3 normal = Vector3.Zero;
-                for (int j = 0; j < Vertices[i].Tris.Count; j++)
+                for (int j = 0; j < vertex.Tris.Count; j++)
                 {
                     //normal += CalculateTriangleNormals(Triangles[v.Tris[j]]) * TriangleArea(Triangles[v.Tris[j]]);
-                    normal += CalculateTriangleNormals(Triangles[v.Tris[j]]) * GetTriangleAngle(v.Tris[j], v.Id);
+                    normal += CalculateTriangleNormals(Triangles[vertex.Tris[j]]) * GetTriangleAngle(vertex.Tris[j], keys[i]);
                 }
 
-                v.Normal = normal.Normalized();
-
-                Vertices[i] = v;
+                vertex.UpdateVertex(vertex.Coord, normal.Normalized());
+                Vertices[keys[i]] = vertex;
             }
+            
         }
 
         internal float TriangleArea(Vector3 v1, Vector3 v2, Vector3 v3)
@@ -346,6 +353,29 @@ namespace Engine.Core
         internal float TriangleArea(Triangle tri)
         {
             return TriangleArea(Vertices[tri.V1].Coord, Vertices[tri.V2].Coord, Vertices[tri.V3].Coord);
+        }
+
+        internal float GetTriangleAngle(int triID, int vertexId)
+        {
+            Triangle tri = Triangles[triID];
+
+            var v1 = Vertices[tri.V1].Coord;
+            var v2 = Vertices[tri.V2].Coord;
+            var v3 = Vertices[tri.V3].Coord;
+            
+            if (vertexId == tri.V1)
+            {
+                return TriangleAngle(v1, v2, v3);
+            }
+            if (vertexId == tri.V2)
+            {
+                return TriangleAngle(v2, v3, v1);
+            }
+            if (vertexId == tri.V3)
+            {
+                return TriangleAngle(v3, v1, v2);
+            }
+            return 0;
         }
 
         private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
@@ -378,41 +408,15 @@ namespace Engine.Core
 
         }
 
-        internal float GetTriangleAngle(int triID, int vertexId)
-        {
-            Triangle tri = Triangles[GetTriangleIndex(triID)];
-            //Triangle tri = Triangles[triID];
-
-            var v1 = Vertices[tri.V1].Coord;
-            var v2 = Vertices[tri.V2].Coord;
-            var v3 = Vertices[tri.V3].Coord;
-            
-            if (vertexId == tri.V1)
-            {
-                return TriangleAngle(v1, v2, v3);
-            }
-            if (vertexId == tri.V2)
-            {
-                return TriangleAngle(v2, v3, v1);
-            }
-            if (vertexId == tri.V3)
-            {
-                return TriangleAngle(v3, v1, v2);
-            }
-            return 0;
-        }
-
         public Vector3 Center()
         {
             Vector3 center = Vector3.Zero;
-            for (int i = 0; i < Vertices.Count; i++)
+
+            foreach (var vertex in Vertices)
             {
-                center += Vertices[i].Coord;
+                center += vertex.Value.Coord;
             }
-            if (Vertices.Count == 0)
-            {
-                return center;
-            }
+
 
             return center / Vertices.Count;
         }
@@ -434,15 +438,14 @@ namespace Engine.Core
             return false;
         }
 
-
         public List<Vertex> GetBoundaryVertices()
         {
             var boundaries = new HashSet<Vertex>();
 
-            for (int i = 0; i < Edges.Count; i++)
+            foreach (var edge in Edges)
             {
-                var e1 = Edges[i].Start;
-                var e2 = Edges[i].End;
+                var e1 = edge.Value.Start;
+                var e2 = edge.Value.End;
 
                 var commonTris = Vertices[e1].Tris.Intersect(Vertices[e2].Tris).ToList().Count;
 
@@ -451,8 +454,8 @@ namespace Engine.Core
                     boundaries.Add(Vertices[e1]);
                     boundaries.Add(Vertices[e2]);
                 }
-               
             }
+
             return boundaries.ToList();
         }
 
@@ -460,34 +463,72 @@ namespace Engine.Core
         {
             var boundaries = new HashSet<Edge>();
 
-            for (int i = 0; i < Edges.Count; i++)
+            foreach(var edge in Edges)
             {
-                var e1 = Edges[i].Start;
-                var e2 = Edges[i].End;
+                var e1 = edge.Value.Start;
+                var e2 = edge.Value.End;
 
                 var commonTris = Vertices[e1].Tris.Intersect(Vertices[e2].Tris).ToList().Count;
 
                 if (commonTris == 1)
                 {
-                    boundaries.Add(Edges[i]);
+                    var e = Edges[edge.Key];
+                    e.IsBoundary = true;
+                    boundaries.Add(e);
                 }
             }
+
             return boundaries.ToList();
         }
 
         public Mesh Copy()
         {
-            Mesh mesh = new Mesh(this.Name + "-copy");
-            mesh.Vertices = new List<Vertex>(this.Vertices);
-            mesh.Edges = new List<Edge>(this.Edges);
-            mesh.Triangles = new List<Triangle>(this.Triangles);
+            Mesh mesh = new Mesh(this.Name + "-copy")
+            {
+                Vertices = new Dictionary<int, Vertex>(this.Vertices),
+                Edges = new Dictionary<int, Edge>(this.Edges),
+                Triangles = new Dictionary<int, Triangle>(this.Triangles),
 
-            mesh._lastE = this._lastE;
-            mesh._lastV = this._lastV;
-            mesh._lastT = this._lastT;
-            mesh.hasDirtyTriangles = this.hasDirtyTriangles;
+                _lastE = this._lastE,
+                _lastV = this._lastV,
+                _lastT = this._lastT
+            };
 
             return mesh;
+        }
+
+        public void RefreshMesh()
+        {
+            var tempV = new Dictionary<int,Vertex>(Vertices);
+            var tempT = new Dictionary<int,Triangle>(Triangles);
+
+            _lastT = 0;
+            _lastV = 0;
+            _lastE = 0;
+
+            Vertices.Clear();
+            Triangles.Clear();
+            Edges.Clear();// = newMesh.Edges;
+
+            Dictionary<int, int> vertexMap = new Dictionary<int, int>();
+
+            int id = 0;
+            foreach (var vertex in tempV)
+            {
+                //newMesh.AddVertex(vertex.Value.Coord, vertex.Value.Normal);
+                vertexMap.Add(vertex.Key, id++);
+                AddVertex(vertex.Value.Coord, vertex.Value.Normal);
+            }
+
+            foreach (var tri in tempT)
+            {
+                AddTriangle(vertexMap[tri.Value.V1], vertexMap[tri.Value.V2], vertexMap[tri.Value.V3]);
+            }
+
+            //Vertices = newMesh.Vertices;
+            //Triangles = newMesh.Triangles;
+            //Edges = newMesh.Edges;
+
         }
 
     }

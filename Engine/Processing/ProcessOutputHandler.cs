@@ -197,15 +197,24 @@ namespace Engine.Processing
                 writer.WriteLine("OFF");
                 writer.WriteLine($"{mesh.Vertices.Count} {mesh.Triangles.Count} 0");
 
-                for (int i = 0; i < mesh.Vertices.Count; i++)
+                foreach (var vertex in mesh.Vertices)
                 {
-                    writer.WriteLine($"{mesh.Vertices[i].Coord.X} {mesh.Vertices[i].Coord.Y} {mesh.Vertices[i].Coord.Z}");
+                    writer.WriteLine($"{vertex.Value.Coord.X} {vertex.Value.Coord.Y} {vertex.Value.Coord.Z}");
                 }
 
-                for (int i = 0; i < mesh.Triangles.Count; i++)
+                foreach (var tri in mesh.Triangles)
                 {
-                    writer.WriteLine($"3 {mesh.Triangles[i].V1} {mesh.Triangles[i].V2}  {mesh.Triangles[i].V3}");
+                    writer.WriteLine($"3 {tri.Value.V1} {tri.Value.V2}  {tri.Value.V3}");
                 }
+
+                //for (int i = 0; i < mesh.Vertices.Count; i++)
+                //{
+                //    writer.WriteLine($"{mesh.Vertices[i].Coord.X} {mesh.Vertices[i].Coord.Y} {mesh.Vertices[i].Coord.Z}");
+                //}
+                //for (int i = 0; i < mesh.Triangles.Count; i++)
+                //{
+                //    writer.WriteLine($"3 {mesh.Triangles[i].V1} {mesh.Triangles[i].V2}  {mesh.Triangles[i].V3}");
+                //}
                 //writer.Write(Environment.NewLine);
             }
         }

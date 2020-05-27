@@ -20,7 +20,7 @@ namespace Engine.GLApi
         private int _VAO;
         private int _VBO;
 
-        private Vector3[] _vertices;
+        public Vector3[] _vertices;
 
         public Vector4 Color { get; set; }
 
