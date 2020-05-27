@@ -165,9 +165,9 @@ namespace Engine.GLApi
 
         public Vector3 ComputeIntersection(Vector3 origin, Vector3 direction)
         {
-            Vector4 intersection = Vector4.Zero;
+            float t = 0;
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_Intersect);
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, sizeof(float) * 4, ref intersection, BufferUsageHint.DynamicCopy);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, sizeof(float), ref t, BufferUsageHint.DynamicCopy);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_Intersect);
 
             uint counter = 0;
@@ -187,27 +187,24 @@ namespace Engine.GLApi
             GL.DispatchCompute(amount / 128, 1, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
 
-            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
-            GL.GetBufferSubData
-            (
-                BufferTarget.AtomicCounterBuffer,
-                IntPtr.Zero,
-                sizeof(uint),
-                ref counter
-            );
 
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_Intersect);
             GL.GetBufferSubData
             (
                 BufferTarget.ShaderStorageBuffer,
                 IntPtr.Zero,
-                sizeof(float) * 4,
-                ref intersection
+                sizeof(float),
+                ref t
             );
 
-            Logger.Log($"{intersection.X}, {intersection.Y}, {intersection.Z}, {intersection.W}");
+            //Logger.Log(hitCounter.ToString());
 
-            return intersection.Xyz;
+            Vector3 intersection = origin + direction * t;
+
+            Logger.Log($"{intersection.X}, {intersection.Y}, {intersection.Z}");
+
+
+            return intersection;
         }
 
         private void ComputeEfficient(int intensity, int downSample)

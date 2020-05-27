@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using VertexBenderCS.Forms;
 using System.IO;
 using Microsoft.VisualBasic.Devices;
+using System.Drawing.Drawing2D;
 
 namespace VertexBenderCS.Forms
 {
@@ -767,10 +768,13 @@ namespace VertexBenderCS.Forms
                 if (volRend != null)
                 {
 
-                    //_sphereRenderer.Position = pos.Xyz + 0.1f * dir.Xyz;
+                    float x = (2.0f * _mouseX) / GLControl.Width - 1.0f;
+                    float y = 1.0f - (2.0f * _mouseY) / GLControl.Height;
 
+                    // TODO: fix sending rays from screen to mouse location
                     _sphereRenderer.Position = volRend.ComputeIntersection(_camera.Position, _camera.Front);
-
+                    _sphereRenderer.EnableBlend = true;
+                    _sphereRenderer.Color = new Vector4(0, 1, 0.2f, 0.2f);
                 }
             }
         }

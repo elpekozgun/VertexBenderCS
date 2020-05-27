@@ -27,6 +27,7 @@ namespace Engine.GLApi
         private int[] indices;
 
         public bool EnableCull;
+        public bool EnableBlend;
 
         private bool _initialized;
 
@@ -173,6 +174,11 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(_VAO);
 
+            if (EnableBlend)
+            {
+                GL.Enable(EnableCap.Blend);
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); 
+            }
 
             //if (!EnableCull)
             {
@@ -181,7 +187,6 @@ namespace Engine.GLApi
 
             if ((mode & eRenderMode.shaded) == eRenderMode.shaded)
             {
-
 
                 Shader.Use();
                 Shader.SetInt("material.diffuse", (int)TextureUnit.Texture0);
@@ -243,7 +248,7 @@ namespace Engine.GLApi
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
 
-
+            GL.Disable(EnableCap.Blend);
         }
 
         protected virtual void Dispose(bool disposing)
