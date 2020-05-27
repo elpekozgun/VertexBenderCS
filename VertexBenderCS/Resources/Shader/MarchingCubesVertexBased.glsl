@@ -40,13 +40,7 @@ layout(std430, binding = 3) buffer triangleBuffer_out
 	vec4[] vertices;
 };
 
-//
-//layout(std430, binding = 4) buffer indexBuffer_out
-//{
-//	vec4[] indices;
-//};
-
-layout(binding = 5) uniform atomic_uint counter;
+layout(binding = 4) uniform atomic_uint counter;
 
 int indexFromCoord(int x, int y, int z)
 {

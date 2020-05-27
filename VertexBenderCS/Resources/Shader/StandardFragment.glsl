@@ -42,7 +42,7 @@ void main()
 	
 	result += CalculateSpotLight(spotlight, norm, FragmentPosition, viewdir);
 
-	FragColor = vec4(result, 1.0f);
+	FragColor = vec4(result, Color.w);
 }
 
 vec3 CalculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir)

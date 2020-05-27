@@ -63,6 +63,12 @@ namespace Engine.GLApi
         //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
         );
 
+        private static Shader _volEditorCompute= ShaderBuilder.CreateShader
+        (
+            "vol editor Compute",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\VolEditorCompute.glsl", ShaderType.ComputeShader)
+        //ShaderBuilder.CreateShaderSource(@"Resources\Shader\TestCompute.glsl", ShaderType.ComputeShader)
+        );
 
         private static Shader _computePaint = ShaderBuilder.CreateShader
         (
@@ -86,6 +92,7 @@ namespace Engine.GLApi
         public static Shader MarchingComputeTriBased => _marchingCubesComputeTribased;
         public static Shader MarchingComputeVertexBased => _marchingCubesComputeVertexBased;
         public static Shader IntersectionCompute => _intersectionCompute;
+        public static Shader VolEditorCompute => _volEditorCompute;
         public static Shader DefaultComputePaint => _computePaint;
         public static Shader DefaultGizmo => _gizmoShader;
         //public static Shader DefaultIndicator => _defaultIndicator;

@@ -32,7 +32,8 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl();
+            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
+
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -126,6 +127,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.numericMarch = new System.Windows.Forms.NumericUpDown();
             this.volumeRendererPanel = new System.Windows.Forms.Panel();
+            this.btnFinalize = new System.Windows.Forms.Button();
+            this.btnEdit = new System.Windows.Forms.Button();
             this.cmbVolMethod = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -133,8 +136,9 @@
             this.intensityMarch = new System.Windows.Forms.TrackBar();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.btnEdit = new System.Windows.Forms.Button();
-            this.btnFinalize = new System.Windows.Forms.Button();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.numericPressure = new System.Windows.Forms.NumericUpDown();
+            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -158,6 +162,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).BeginInit();
             this.volumeRendererPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).BeginInit();
+            this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -802,7 +808,7 @@
             this.transformPanel.Controls.Add(this.labelPosition);
             this.transformPanel.Controls.Add(this.numericPosX);
             this.transformPanel.Controls.Add(this.labelTransform);
-            this.transformPanel.Location = new System.Drawing.Point(15, 444);
+            this.transformPanel.Location = new System.Drawing.Point(0, 1);
             this.transformPanel.Name = "transformPanel";
             this.transformPanel.Size = new System.Drawing.Size(226, 142);
             this.transformPanel.TabIndex = 21;
@@ -1069,7 +1075,7 @@
             this.spherePanel.Controls.Add(this.label6);
             this.spherePanel.Controls.Add(this.numericSize);
             this.spherePanel.Controls.Add(this.label7);
-            this.spherePanel.Location = new System.Drawing.Point(15, 591);
+            this.spherePanel.Location = new System.Drawing.Point(0, 149);
             this.spherePanel.Name = "spherePanel";
             this.spherePanel.Size = new System.Drawing.Size(226, 93);
             this.spherePanel.TabIndex = 22;
@@ -1162,7 +1168,7 @@
             this.pointCloudPanel.Controls.Add(this.sliderMin);
             this.pointCloudPanel.Controls.Add(this.label2);
             this.pointCloudPanel.Controls.Add(this.label3);
-            this.pointCloudPanel.Location = new System.Drawing.Point(15, 591);
+            this.pointCloudPanel.Location = new System.Drawing.Point(0, -2);
             this.pointCloudPanel.Name = "pointCloudPanel";
             this.pointCloudPanel.Size = new System.Drawing.Size(226, 93);
             this.pointCloudPanel.TabIndex = 24;
@@ -1249,6 +1255,9 @@
             // 
             this.volumeRendererPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
             this.volumeRendererPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.volumeRendererPanel.Controls.Add(this.label12);
+            this.volumeRendererPanel.Controls.Add(this.numericPressure);
+            this.volumeRendererPanel.Controls.Add(this.pointCloudPanel);
             this.volumeRendererPanel.Controls.Add(this.btnFinalize);
             this.volumeRendererPanel.Controls.Add(this.btnEdit);
             this.volumeRendererPanel.Controls.Add(this.cmbVolMethod);
@@ -1259,11 +1268,31 @@
             this.volumeRendererPanel.Controls.Add(this.intensityMarch);
             this.volumeRendererPanel.Controls.Add(this.label10);
             this.volumeRendererPanel.Controls.Add(this.label11);
-            this.volumeRendererPanel.Location = new System.Drawing.Point(15, 591);
+            this.volumeRendererPanel.Location = new System.Drawing.Point(0, 148);
             this.volumeRendererPanel.Name = "volumeRendererPanel";
-            this.volumeRendererPanel.Size = new System.Drawing.Size(226, 147);
+            this.volumeRendererPanel.Size = new System.Drawing.Size(226, 187);
             this.volumeRendererPanel.TabIndex = 27;
             this.volumeRendererPanel.Visible = false;
+            // 
+            // btnFinalize
+            // 
+            this.btnFinalize.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.btnFinalize.Location = new System.Drawing.Point(115, 116);
+            this.btnFinalize.Name = "btnFinalize";
+            this.btnFinalize.Size = new System.Drawing.Size(102, 23);
+            this.btnFinalize.TabIndex = 31;
+            this.btnFinalize.Text = "Finalize";
+            this.btnFinalize.UseVisualStyleBackColor = true;
+            // 
+            // btnEdit
+            // 
+            this.btnEdit.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.btnEdit.Location = new System.Drawing.Point(8, 116);
+            this.btnEdit.Name = "btnEdit";
+            this.btnEdit.Size = new System.Drawing.Size(102, 23);
+            this.btnEdit.TabIndex = 30;
+            this.btnEdit.Text = "Edit";
+            this.btnEdit.UseVisualStyleBackColor = true;
             // 
             // cmbVolMethod
             // 
@@ -1331,25 +1360,50 @@
             this.label11.TabIndex = 0;
             this.label11.Text = "Volume Renderer";
             // 
-            // btnEdit
+            // panel1
             // 
-            this.btnEdit.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.btnEdit.Location = new System.Drawing.Point(8, 116);
-            this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(102, 23);
-            this.btnEdit.TabIndex = 30;
-            this.btnEdit.Text = "Edit";
-            this.btnEdit.UseVisualStyleBackColor = true;
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel1.AutoScroll = true;
+            this.panel1.Controls.Add(this.transformPanel);
+            this.panel1.Controls.Add(this.volumeRendererPanel);
+            this.panel1.Controls.Add(this.spherePanel);
+            this.panel1.Location = new System.Drawing.Point(3, 439);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(250, 299);
+            this.panel1.TabIndex = 28;
             // 
-            // btnFinalize
+            // numericPressure
             // 
-            this.btnFinalize.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.btnFinalize.Location = new System.Drawing.Point(115, 116);
-            this.btnFinalize.Name = "btnFinalize";
-            this.btnFinalize.Size = new System.Drawing.Size(102, 23);
-            this.btnFinalize.TabIndex = 31;
-            this.btnFinalize.Text = "Finalize";
-            this.btnFinalize.UseVisualStyleBackColor = true;
+            this.numericPressure.Location = new System.Drawing.Point(71, 150);
+            this.numericPressure.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericPressure.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericPressure.Name = "numericPressure";
+            this.numericPressure.ReadOnly = true;
+            this.numericPressure.Size = new System.Drawing.Size(37, 24);
+            this.numericPressure.TabIndex = 33;
+            this.numericPressure.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(16, 152);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(51, 15);
+            this.label12.TabIndex = 35;
+            this.label12.Text = "Pressure";
             // 
             // MainWin
             // 
@@ -1358,10 +1412,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1298, 905);
-            this.Controls.Add(this.volumeRendererPanel);
-            this.Controls.Add(this.pointCloudPanel);
-            this.Controls.Add(this.spherePanel);
-            this.Controls.Add(this.transformPanel);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.statusBar);
             this.Controls.Add(this.toolBar);
             this.Controls.Add(this.mainMenu);
@@ -1406,6 +1457,8 @@
             this.volumeRendererPanel.ResumeLayout(false);
             this.volumeRendererPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).EndInit();
+            this.panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1516,6 +1569,9 @@
         private System.Windows.Forms.ComboBox cmbVolMethod;
         private System.Windows.Forms.Button btnFinalize;
         private System.Windows.Forms.Button btnEdit;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.NumericUpDown numericPressure;
+        private System.Windows.Forms.Panel panel1;
     }
 }
 

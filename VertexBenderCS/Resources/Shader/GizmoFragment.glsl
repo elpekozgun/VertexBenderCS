@@ -14,7 +14,7 @@ void main()
 	if( diff > outRadius || diff < (1 - border) * outRadius)
 		discard;
 
-	gl_FragColor = vec4(color.xyz, 0.2f);
+	gl_FragColor = vec4(color.xyz, 1f);
 
 }
 

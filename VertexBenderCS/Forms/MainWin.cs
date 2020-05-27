@@ -65,11 +65,13 @@ namespace VertexBenderCS.Forms
         private bool _editMode;
         private bool _mouseOnGL;
         private GizmoRenderer _gizmo;
-
         private MeshRenderer _sphereRenderer;
+        private int _direction = -1;
 
         private Transform _selectedTransform;
         private Dictionary<Transform, IsoCurveOutput> _IsoCurveOutputs;
+
+        private Stopwatch _watch = new Stopwatch();
 
         private OpenTK.Input.KeyboardState KeyState { get; set; }
         private OpenTK.Input.MouseState MouseState { get; set; }
@@ -194,7 +196,6 @@ namespace VertexBenderCS.Forms
 
         }
 
-        private Stopwatch _watch = new Stopwatch();
 
         private void SetupTestScene()
         {
@@ -342,18 +343,18 @@ namespace VertexBenderCS.Forms
 
             sceneGraphTree.SelectedNode = null;
 
-            var mesh = volRenderer.FinalizeMesh(false, true);
+            //var mesh = volRenderer.FinalizeMesh(false, true);
 
-            Algorithm.FillHoles(ref mesh);
+            //Algorithm.FillHoles(ref mesh);
 
-            _SceneGraph.AddObject(new MeshRenderer(mesh, "dalyarak") { Position = new Vector3(0, 0, 0.4f), Color = volRenderer.Color });
+            //_SceneGraph.AddObject(new MeshRenderer(mesh, "Test") { Position = new Vector3(0, 0, 0.4f), Color = volRenderer.Color });
 
-            sceneGraphTree.SelectedNode = null;
+            //sceneGraphTree.SelectedNode = null;
 
-            var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
-            _sphereRenderer = new MeshRenderer(sphere, "Sphere");
-            _sphereRenderer.Scale = new Vector3(0.01f, 0.01f, 0.01f);
-            _SceneGraph.AddObject(_sphereRenderer);
+            //var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+            //_sphereRenderer = new MeshRenderer(sphere, "Sphere");
+            //_sphereRenderer.Scale = new Vector3(0.01f, 0.01f, 0.01f);
+            //_SceneGraph.AddObject(_sphereRenderer);
         }
 
         private void Update(object sender, System.Timers.ElapsedEventArgs e)
@@ -370,21 +371,9 @@ namespace VertexBenderCS.Forms
                     KeyState = OpenTK.Input.Keyboard.GetState();
                     MouseState = OpenTK.Input.Mouse.GetCursorState();
                     MouseState = OpenTK.Input.Mouse.GetState();
+                    ApplyEdit();
                 }
             });
-            //GLControl.Invoke((MethodInvoker)delegate ()
-            //{
-            //    GLControl.Invalidate();
-            //    GLControl.Update();
-
-            //    if (GLControl.Focused)
-            //    {
-            //        _cameraController.Navigate(KeyState);
-            //        KeyState = OpenTK.Input.Keyboard.GetState();
-            //        MouseState = OpenTK.Input.Mouse.GetCursorState();
-            //        MouseState = OpenTK.Input.Mouse.GetState();
-            //    }
-            //});
         }
 
         private void InvokeIfRequired(Control control, MethodInvoker action)
@@ -726,6 +715,14 @@ namespace VertexBenderCS.Forms
         private void GLControl_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             _cameraController.Zoom(e.Delta, KeyState.IsKeyDown(OpenTK.Input.Key.ShiftLeft));
+
+            if (KeyState.IsKeyDown(OpenTK.Input.Key.LControl))
+            {
+                if (_sphereRenderer != null)
+                {
+                    _sphereRenderer.Scale += (Vector3.One * 0.001f * e.Delta / Math.Abs(e.Delta));
+                }
+            }
         }
 
         private void GLControl_MouseMove(object sender, MouseEventArgs e)
@@ -755,26 +752,28 @@ namespace VertexBenderCS.Forms
             _mouseX = e.X;
             _mouseY = e.Y;
 
+            toolStripStatusLabel1.Text = $"{_camera.Position.X}, {_camera.Position.Y}, {_camera.Position.Z}";
+
             if (_editMode && _mouseOnGL)
             {
                 if (_gizmo != null)
                 {
                     _gizmo.Position = new Vector2( 2 * (-0.5f + _mouseX / GLControl.Width) , -2 * (-0.5f + _mouseY / GLControl.Height));
                     _gizmo.Aspect = GLControl.AspectRatio;
-                    _gizmo.Radius = 1.5f;
+                    _gizmo.Radius = 0.2f;
                 }
 
                 var volRend = (_selectedTransform as VolumeRenderer);
                 if (volRend != null)
                 {
+                    volRend.editMode = true;
+                    Vector3 pos = _camera.ScreenToWorld(_mouseX, _mouseY, GLControl.Width, GLControl.Height);
 
-                    float x = (2.0f * _mouseX) / GLControl.Width - 1.0f;
-                    float y = 1.0f - (2.0f * _mouseY) / GLControl.Height;
-
-                    // TODO: fix sending rays from screen to mouse location
-                    _sphereRenderer.Position = volRend.ComputeIntersection(_camera.Position, _camera.Front);
+                    volRend.ComputeIntersection(pos, (pos - _camera.Position).Normalized(), out Vector3 result);
+                    _sphereRenderer.Position = result;
                     _sphereRenderer.EnableBlend = true;
-                    _sphereRenderer.Color = new Vector4(0, 1, 0.2f, 0.2f);
+                    _sphereRenderer.Color = new Vector4(0.3f, 0.4f, 0.3f, 0.5f);
+                    Logger.Log($"camera:{result.X},{result.Y},{result.Z} ");
                 }
             }
         }
@@ -788,17 +787,6 @@ namespace VertexBenderCS.Forms
 
         private void GLControl_MouseDown(object sender, MouseEventArgs e)
         {
-            //if (e.Button == MouseButtons.Left)
-            //{
-            //    HalfWidth = this.ClientRectangle.Width / 2.0f;
-            //    HalfHeight = this.ClientRectangle.Height / 2.0f;
-
-            //    _mouseX = (e.X - HalfWidth) / HalfWidth;
-            //    _mouseY = (HalfHeight - e.Y) / HalfHeight;
-
-            //    mouseroll = true;
-            //}
-
             if (e.Button == MouseButtons.Middle && e.Clicks > 1)
             {
                 _cameraController.Reset();
@@ -1257,11 +1245,19 @@ namespace VertexBenderCS.Forms
             if (_editMode)
             {
                 _gizmo = new GizmoRenderer();
+                if (_sphereRenderer == null)
+                {
+                    var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+                    _sphereRenderer = new MeshRenderer(sphere, "Sphere");
+                    _sphereRenderer.Scale = new Vector3(0.01f, 0.01f, 0.01f);
+                    _SceneGraph.AddObject(_sphereRenderer);
+                }
                 Logger.Log("edit mode");
             }
             else 
             {
                 _gizmo = null;
+                _sphereRenderer = null;
                 //Cursor.Current = Cursors.Default;
                 Logger.Log("not edit mode");   
             }
@@ -1357,6 +1353,26 @@ namespace VertexBenderCS.Forms
             }
             chartIsoCurve.Show();
         }
+
+        private void ApplyEdit()
+        {
+            if (_editMode && _mouseOnGL)
+            {
+                var volRend = (_selectedTransform as VolumeRenderer);
+                if (volRend != null)
+                {
+                    if (MouseState.IsButtonDown(OpenTK.Input.MouseButton.Left))
+                    {
+                        if (KeyState.IsKeyDown(OpenTK.Input.Key.LShift))
+                        {
+                            _direction = 1;
+                        }
+                        volRend.ComputeVolEditor(_sphereRenderer.Position, _sphereRenderer.Scale.X, (float)numericPressure.Value, _direction);
+                    }
+                }
+            }
+        }
+
 
         #endregion
 
@@ -1644,6 +1660,7 @@ namespace VertexBenderCS.Forms
         }
 
         #endregion
+
 
 
     }

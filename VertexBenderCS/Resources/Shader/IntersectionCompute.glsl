@@ -1,18 +1,17 @@
 ﻿#version 430
 
-layout(std430, binding = 2) buffer intersect_buffer
-{
-	float t;
-};
-
 layout(std430, binding = 3) buffer triangleBuffer_out
 {
 	vec4[] vertices;
 };
 
-layout(binding = 5) uniform atomic_uint counter;
+layout(std430, binding = 5) buffer intersect_buffer
+{
+	float t;
+};
 
-layout(local_size_x = 512) in;
+
+layout(local_size_x = 1) in;
 
 uniform vec3 origin;
 uniform vec3 direction;
@@ -20,7 +19,6 @@ uniform vec3 direction;
 float IntersectPoint(vec3 a, vec3 b, vec3 c,  vec3 o, vec3 d)
 {
 	// OpenGL matrices are column major, if this fails test on another one. 
-
 	d = normalize(d);
 
 	mat3 A;
@@ -40,11 +38,10 @@ float IntersectPoint(vec3 a, vec3 b, vec3 c,  vec3 o, vec3 d)
 
 	float beta = determinant(Beta) * invDet;
 
-	if( beta < -0.00001f || beta > 0.9999999f)
+	if(beta < 0.001f || beta > 0.999f)
 	{
 		return -1;
 	}
-		//return vec3(0,0,0);
 
 	mat3 Gamma;
 	
@@ -54,11 +51,10 @@ float IntersectPoint(vec3 a, vec3 b, vec3 c,  vec3 o, vec3 d)
 
 	float gamma = determinant(Gamma) * invDet;
 	
-	if( gamma < -0.00001f || gamma > 0.9999999f)
+	if( gamma < 0.001f || gamma > 0.999f)
 	{
 		return -1;
 	}
-		//return vec3(0,0,0);
 
 	mat3 TMat;
 
@@ -72,16 +68,14 @@ float IntersectPoint(vec3 a, vec3 b, vec3 c,  vec3 o, vec3 d)
 	{
 		return t;
 	}
-		//return o + t * d;
 	return -1;
 }
 
 
 void main()
 {
-	uint a = atomicCounterIncrement(counter);
+	uint a = gl_GlobalInvocationID.x;
 	{
-
 		vec4 v0 = vertices[a * 6 ];
 		vec4 v1 = vertices[a * 6 + 2];
 		vec4 v2 = vertices[a * 6 + 4];

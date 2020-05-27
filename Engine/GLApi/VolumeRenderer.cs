@@ -26,7 +26,7 @@ namespace Engine.GLApi
         public Shader Shader { get; set; }
         public Shader ComputeShader { get; set; }
         public Shader IntersectionComputeShader { get; set; }
-        public Shader EditVolComputeShader { get; set; }
+        public Shader VolEditorComputeShader { get; set; }
 
         public Vector3 Center { get; private set; }
         public Texture DiffuseTexture { get; set; }
@@ -44,6 +44,8 @@ namespace Engine.GLApi
 
         private bool _initialized;
         private int _currentDownSample;
+
+        public bool editMode;
 
         private int _VAO;
         private int _VBO;
@@ -73,6 +75,7 @@ namespace Engine.GLApi
             Shader = Shader.DefaultComputePaint;
             ComputeShader = Shader.MarchingComputeVertexBased;
             IntersectionComputeShader = Shader.IntersectionCompute;
+            VolEditorComputeShader = Shader.VolEditorCompute;
 
             Init();
             UpdateInputFromVol(rawVolData);
@@ -163,28 +166,48 @@ namespace Engine.GLApi
             return mesh;
         }
 
-        public Vector3 ComputeIntersection(Vector3 origin, Vector3 direction)
+        public void ComputeVolEditor(Vector3 point, float radius, float pressure, int direction)
         {
+            VolEditorComputeShader.Use();
+            VolEditorComputeShader.SetFloat("radius", radius);
+            VolEditorComputeShader.SetFloat("spacing", subVolData.Spacing);
+            VolEditorComputeShader.SetFloat("pressure", pressure);
+            VolEditorComputeShader.SetInt("direction", direction);
+            VolEditorComputeShader.SetVec3("point", point);
+            //VolEditorComputeShader.SetInt("counter", 0);
+
+            GL.DispatchCompute(input.Length / 512, 1, 1);
+            GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+
+            //GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_in);
+            //GL.GetBufferSubData
+            //(
+            //    BufferTarget.ShaderStorageBuffer,
+            //    IntPtr.Zero,
+            //    sizeof(float) * 4 * input.Length,
+            //    input
+            //);
+
+            ComputeEfficient(Intensity, DownSample);
+        }
+
+        public bool ComputeIntersection(Vector3 origin, Vector3 direction, out Vector3 hit)
+        {
+            //if (editMode)
+            //{
+            //    hit = Vector3.Zero;
+            //    return false;
+            //}
             float t = 0;
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_Intersect);
             GL.BufferData(BufferTarget.ShaderStorageBuffer, sizeof(float), ref t, BufferUsageHint.DynamicCopy);
-            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_Intersect);
-
-            uint counter = 0;
-            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
-            GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
-            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 5, _ACBO);
-
-            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
+            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 5, _SSBO_Intersect);
 
             IntersectionComputeShader.Use();
             IntersectionComputeShader.SetVec3("origin", origin);
             IntersectionComputeShader.SetVec3("direction", direction);
-            IntersectionComputeShader.SetInt("counter", 0);
 
-            int amount = _vertexCount / 3; //(_vertexCount / 3 + 512 - (_vertexCount / 3) % 512);
-
-            GL.DispatchCompute(amount / 128, 1, 1);
+            GL.DispatchCompute(_vertexCount / 3, 1, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
 
 
@@ -197,14 +220,14 @@ namespace Engine.GLApi
                 ref t
             );
 
-            //Logger.Log(hitCounter.ToString());
+            if (t == -1 || t == 0)
+            {
+                hit = Vector3.Zero;
+                return false;
+            }
 
-            Vector3 intersection = origin + direction * t;
-
-            Logger.Log($"{intersection.X}, {intersection.Y}, {intersection.Z}");
-
-
-            return intersection;
+            hit = origin + direction * t;
+            return true;
         }
 
         private void ComputeEfficient(int intensity, int downSample)
@@ -215,24 +238,30 @@ namespace Engine.GLApi
                 UpdateInputFromVol(subVolData);
                 _currentDownSample = downSample;
 
-                GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_in);
-                GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), input, BufferUsageHint.DynamicCopy);
-                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_in);
+                //GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
+                //GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 6 * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+                //GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 3, _SSBO_out);
+
+                //GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_in);
+                //GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), input, BufferUsageHint.DynamicDraw);
+                //GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_in);
 
                 GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
                 GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 6 * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
                 GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 3, _SSBO_out);
 
+                GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_in);
+                GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), input, BufferUsageHint.DynamicDraw);
+                GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 2, _SSBO_in);
             }
+
+
 
             uint counter = 0;
             GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
             GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
-            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 5, _ACBO);
+            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 4, _ACBO);
 
-            GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _EBO);
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 4, _EBO);
 
             int dimx = subVolData.XCount;
             int dimy = subVolData.YCount;
@@ -298,7 +327,7 @@ namespace Engine.GLApi
             uint counter = 0;
             GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
             GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
-            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 5, _ACBO);
+            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 4, _ACBO);
 
 
             int dimx = subVolData.XCount;
