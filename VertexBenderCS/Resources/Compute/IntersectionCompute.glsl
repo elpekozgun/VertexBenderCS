@@ -77,9 +77,9 @@ void main()
 {
 	uint a = gl_GlobalInvocationID.x;
 	{
-		vec4 v0 =  vertices[a * 6 ];
-		vec4 v1 =  vertices[a * 6 + 2];
-		vec4 v2 =  vertices[a * 6 + 4];
+		vec4 v0 =  Model * vec4(vertices[a * 6 ].xyz,1);
+		vec4 v1 =  Model * vec4(vertices[a * 6 + 2].xyz,1);
+		vec4 v2 =  Model * vec4(vertices[a * 6 + 4].xyz,1);
 
 		float temp = IntersectPoint(v0.xyz, v1.xyz, v2.xyz, origin, direction);
 		if(length(temp) != 0.0 && temp != -1)

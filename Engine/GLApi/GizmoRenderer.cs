@@ -16,6 +16,7 @@ namespace Engine.GLApi
         public Vector2 Position;
         public float Aspect;
         public float Radius;
+        public float Border;
 
         public Shader Shader;
 
@@ -61,10 +62,10 @@ namespace Engine.GLApi
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             Shader.Use();
-            Shader.SetFloat("border", 0.1f);
+            Shader.SetFloat("border", Border);
             Shader.SetVec2("center", Position);
             Shader.SetFloat("aspect", Aspect);
-            Shader.SetVec4("color", new Vector4(1,0.2f,0.2f,0));
+            Shader.SetVec4("color", new Vector4(1.0f,0.2f,0.2f,0.5f));
             Shader.SetFloat("radius", Radius);
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);

@@ -11,5 +11,6 @@ namespace Engine.GLApi
     {
         void Render(Camera cam, eRenderMode mode = eRenderMode.shaded);
         Shader Shader { get; set; }
+
     }
 }

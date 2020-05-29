@@ -26,6 +26,8 @@ namespace Engine.Core
         public Vector3 Scale { get; set; }
         public Quaternion Rotation { get; set; }
 
+        public bool IsEnabled { get; set; }
+
         public Transform(string name = "entity")
         {
             Position = Vector3.Zero;

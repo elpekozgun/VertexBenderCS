@@ -31,6 +31,7 @@ namespace Engine.GLApi
             Setup();
             Shader = Shader.Unlit;
             Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+            IsEnabled = true;   
         }
 
         public LineRenderer(List<Vector3> vertices, Shader shader, string name = "") 

@@ -20,6 +20,13 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\StandardFragment.glsl", ShaderType.FragmentShader)
         );
 
+        private static readonly Shader _gouraud = ShaderBuilder.CreateShader
+        (
+            "gouraud",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GouraudVertex.glsl", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GouraudFragment.glsl", ShaderType.FragmentShader)
+        );
+    
         private static readonly Shader _unlit = ShaderBuilder.CreateShader
         (
             "unlit",
@@ -66,6 +73,12 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Compute\VolEditorCompute.glsl", ShaderType.ComputeShader)
         );
 
+        private static readonly Shader _smoothenCompute = ShaderBuilder.CreateShader
+        (
+            "Smoothen Compute",
+            ShaderBuilder.CreateShaderSource(@"Resources\Compute\SmoothenCompute.glsl", ShaderType.ComputeShader)
+        );
+
         private static readonly Shader _directComputePaint = ShaderBuilder.CreateShader
         (
             "ComputePaint",
@@ -81,6 +94,7 @@ namespace Engine.GLApi
         );
 
         public static Shader Standard => _standard;
+        public static Shader Gouraud => _gouraud;
         public static Shader Unlit => _unlit;
         public static Shader PointCloud => _pointCloud;
         public static Shader CuberilleGeometry => _cuberilleGeometry;
@@ -88,6 +102,7 @@ namespace Engine.GLApi
         public static Shader MarchingComputeVertexCompute => _marchingCubesVertexCompute;
         public static Shader IntersectionCompute => _intersectionCompute;
         public static Shader VolEditorCompute => _volEditorCompute;
+        public static Shader SmoothenCompute => _smoothenCompute;
         public static Shader DirectComputePaint => _directComputePaint;
         public static Shader Gizmo => _gizmoShader;
 

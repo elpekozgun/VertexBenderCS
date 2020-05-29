@@ -86,6 +86,7 @@ namespace Engine.GLApi
             Mesh = mesh;
             Shader = Shader.Standard;
             EnableCull = true;
+            IsEnabled = true;
         }
 
         public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
@@ -125,28 +126,9 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(0);
 
-            //GL.GenVertexArrays(1, out _VAO);
-            //GL.GenBuffers(1, out _VBO);
-
-            //GL.BindVertexArray(_VAO);
-
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, _VBO);
-            //GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * GpuVertex.Size, vertices, BufferUsageHint.StaticDraw);
-
-            ////coord
-            //GL.EnableVertexAttribArray(0);
-            //GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 0);
-
-            ////normal
-            //GL.EnableVertexAttribArray(1);
-            //GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 12);
-
-            ////normal
-            //GL.EnableVertexAttribArray(2);
-            //GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
-
-            //GL.BindVertexArray(0);
-
+            GL.LineWidth(1.5f);
+            GL.PointSize(5);
+            GL.PolygonOffset(1.0f, 2);
         }
 
         public void SetColorBuffer(Vector3[] color)
@@ -180,7 +162,7 @@ namespace Engine.GLApi
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); 
             }
 
-            //if (!EnableCull)
+            if (!EnableCull)
             {
                 GL.Disable(EnableCap.CullFace);
             }
@@ -194,6 +176,7 @@ namespace Engine.GLApi
                 Shader.SetMat4("View", cam.View);
                 Shader.SetMat4("Projection", cam.Projection);
                 Shader.SetVec4("Color", Color);
+                Shader.SetFloat("Alpha", Color.W);
 
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -216,10 +199,11 @@ namespace Engine.GLApi
                 Shader = unlit;
 
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-                GL.LineWidth(2.0f);
-                //GL.Enable(EnableCap.LineSmooth);
 
+                GL.Enable(EnableCap.PolygonOffsetFill);
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                GL.Disable(EnableCap.PolygonOffsetLine);
+
                 Shader = temp;
             }
             if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
@@ -236,12 +220,15 @@ namespace Engine.GLApi
                 Shader = unlit;
 
                 GL.PolygonMode(MaterialFace.Front, PolygonMode.Point);
-                GL.PointSize(5);
 
+
+                GL.Enable(EnableCap.PolygonOffsetFill);
                 GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                GL.Disable(EnableCap.PolygonOffsetLine);
+
                 Shader = temp;
             }
-            //if (!EnableCull)
+            if (!EnableCull)
             {
                 GL.Enable(EnableCap.CullFace);
             }

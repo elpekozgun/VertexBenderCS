@@ -8,6 +8,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Diagnostics.SymbolStore;
 
 namespace Engine.GLApi
 {
@@ -74,6 +75,7 @@ namespace Engine.GLApi
             _initialized = true;
             Mesh = mesh;
             Shader = Shader.PointCloud;
+            IsEnabled = true;
         }
 
         public PointCloudRenderer(Mesh mesh, List<int> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)

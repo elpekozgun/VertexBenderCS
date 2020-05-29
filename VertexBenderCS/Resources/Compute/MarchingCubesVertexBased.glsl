@@ -68,19 +68,6 @@ bool IsSame(vec3 v1, vec3 v2)
     return abs(v1.x - v2.x) <= EPSILON && abs(v1.y - v2.y) <= EPSILON && abs(v1.z - v2.z) <= EPSILON;
 }
 
-//uint UpdateIndex(vec4 vec, uint id, uint count, uint next)
-//{
-//    for(uint i =id; i < count ; i++)
-//    {
-//        if(IsSame(vertices[i], vec))
-//        {
-//            return uint(indices[i].x);
-//        }
-//    }
-//    return next;
-//}
-//
-
 
 void main()
 {

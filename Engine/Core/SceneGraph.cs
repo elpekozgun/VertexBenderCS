@@ -56,12 +56,15 @@ namespace Engine.Core
         {
             foreach (var item in SceneItems)
             {
-                if (item is IRenderable)
+                if (item.IsEnabled)
                 {
-                    var renderable = item as IRenderable;
+                    if (item is IRenderable)
+                    {
+                        var renderable = item as IRenderable;
 
-                    SetDirectLight(renderable, cam);
-                    renderable.Render(cam, renderMode);
+                        SetDirectLight(renderable, cam);
+                        renderable.Render(cam, renderMode);
+                    }
                 }
             }
         }

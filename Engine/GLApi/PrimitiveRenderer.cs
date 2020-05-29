@@ -54,6 +54,7 @@ namespace Engine.GLApi
             _initialized = true;
             Mesh = mesh;
             Shader = Shader.Standard;
+            IsEnabled = true;
         }
 
         public PrimitiveRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)

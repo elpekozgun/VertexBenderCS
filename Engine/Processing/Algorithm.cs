@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using OpenTK.Graphics.ES10;
 using System.Runtime.Remoting.Messaging;
 using System.Windows.Forms.VisualStyles;
+using OpenTK.Input;
 
 namespace Engine.Processing
 {
@@ -1121,6 +1122,8 @@ namespace Engine.Processing
             return new SphereParameterizeOutput(spherePoints, normals, centerList);
         }
 
+
+        // Revisit this..
         private static CutMeshOutput CutMesh(Mesh mesh)
         {
             Graph g = new Graph(mesh);
@@ -1258,6 +1261,7 @@ namespace Engine.Processing
                 boundaryVertices.ToDictionary(x => x.Id)
             };
 
+            cutMesh.RefreshMesh();
 
             return new CutMeshOutput(cutMesh, sp, allBoundaries);
         }
@@ -1449,13 +1453,15 @@ namespace Engine.Processing
                     for (int x = 0; x < dimX; x += sampleSize)
                     {
                         var intensity = 0;
+                        //intensity += volumeInfo.IntensityMap[z * (dimX * dimY) + (y * dimX) + x].Value;
+
                         intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        //intensity /= 6;
+                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        intensity /= 6;
 
 
                         intensities.Add(intensity);
@@ -1464,7 +1470,7 @@ namespace Engine.Processing
                 }
             }
 
-            return new VolOutput(dimX / sampleSize + 1, dimY / sampleSize + 1, dimZ / sampleSize + 1, intensities, intensityMap, volumeInfo.Spacing * sampleSize);
+            return new VolOutput((int)Math.Ceiling((double)dimX / sampleSize), (int)Math.Ceiling((double)dimY / sampleSize), (int)Math.Ceiling((double)dimZ / sampleSize), intensities, intensityMap, volumeInfo.Spacing * sampleSize);
         }
 
         public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)
@@ -1692,46 +1698,58 @@ namespace Engine.Processing
 
             // Step-2: calculate angle Theta between 2 adjacent boundary edges.
 
-            List<List<float>> anglesList = new List<List<float>>();
+            List<Dictionary<int,float>> anglesList = new List<Dictionary<int,float>>();
 
             foreach (var boundary in allBoundaries)
             {
-                List<float> angles = new List<float>();
-                foreach (var boundaryVertex in boundary)
+                Dictionary<int,float> angles = new Dictionary<int, float>();
+
+                for (int i = 1; i <= boundary.Count; i++)
                 {
-                    List<int> neighbors = new List<int>();
-                    for (int i = 0; i < boundaryVertex.Value.Verts.Count; i++)
-                    {
-                        var edge = mesh.Edges[boundaryVertex.Value.Verts[i]];
-                        var e1 = edge.Start;
-                        var e2 = edge.End;
+                    var vi = boundary.ElementAt(i % boundary.Count);
+                    var vNext = boundary.ElementAt((i + 1) % boundary.Count).Value;
+                    var vPrev = boundary.ElementAt((i - 1) % boundary.Count).Value;
 
-                        var commonTris = mesh.Vertices[e1].Tris.Intersect(mesh.Vertices[e2].Tris).ToList().Count;
-
-                        if (commonTris == 1)
-                        {
-                            if (e1 != boundaryVertex.Key)
-                            {
-                                neighbors.Add(e2);
-                            }
-                            else if (e2 != boundaryVertex.Key)
-                            {
-                                neighbors.Add(e1);
-                            }
-                        }
-                    }
-                    if (neighbors.Count == 2)
-                    {
-                        float theta = (float)Math.Acos(Vector3.Dot((boundaryVertex.Value.Coord - mesh.Vertices[neighbors[0]].Coord).Normalized(), (boundaryVertex.Value.Coord - mesh.Vertices[neighbors[1]].Coord).Normalized()));
-                        angles.Add(theta);
-                    }
+                    float theta = Vector3.CalculateAngle(vNext.Coord - vi.Value.Coord, vPrev.Coord - vi.Value.Coord);
+                    angles.Add(vi.Key, theta);
                 }
+
+                //var a = new Dictionary<int, float>();
+                //foreach (var pair in angles.OrderBy(x=>x.Value))
+                //{
+                //    a.Add(pair.Key, pair.Value);
+                //}
                 anglesList.Add(angles);
             }
 
-
             // Step-3: Start from vertex with smallest theta angle. Apply rules such that,
             // theta <= 75 => connect, theta > 75 && theta <=135 => add new vertex, theta > 135 => add 2 new vertices
+
+            foreach (var angles in anglesList)
+            {
+                while (angles.Count > 0)
+                {
+                    var angle = angles.Min(x => x.Value);
+                }
+
+                foreach (var angle in angles)
+                {
+                    if (angle.Value <= MathHelper.DegreesToRadians(75))
+                    {
+                        //mesh.AddTriangle()
+                    }
+                    else if (angle.Value > MathHelper.DegreesToRadians(75) && angle.Value <= MathHelper.DegreesToRadians(135))
+                    {
+                    
+                    }
+                    else
+                    { 
+                    
+                    }
+                }
+            }
+
+
 
             // Step-4: Compute distance between newly created vertices with related boundary vertices. if the distance is smaller than a threshhold merge them
 

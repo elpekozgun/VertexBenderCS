@@ -9,6 +9,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Configuration;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Engine.GLApi
@@ -26,6 +27,7 @@ namespace Engine.GLApi
         public Shader ComputeShader { get; set; }
         public Shader IntersectionComputeShader { get; set; }
         public Shader VolEditorComputeShader { get; set; }
+        public Shader SmoothenComputeShader { get; set; }
 
         public Vector3 Center { get; private set; }
         public Texture DiffuseTexture { get; set; }
@@ -33,6 +35,7 @@ namespace Engine.GLApi
         public int Intensity { get; set; }
         public int DownSample { get; set; }
         public eMarchMethod Method { get; set; }
+        public float SmoothenRadius { get; set; }
 
         private GpuVertex[] vertices;
         private VolOutput rawVolData;
@@ -42,6 +45,7 @@ namespace Engine.GLApi
         private int _vertexCount = 0;
         private bool _initialized;
         private int _currentDownSample;
+        private float _previousHitT = 0;
 
         private int _VAO;
         private int _VBO;
@@ -62,15 +66,17 @@ namespace Engine.GLApi
             rawVolData = vol;
             subVolData = vol;
 
+            IsEnabled = true;
             _watch = new Stopwatch();
             DiffuseTexture = Texture.LoadTexture(@"Resources\Image\Blank1024.png", eTextureType.Diffuse);
 
             Color = new Vector4(0.3f, 0.1f, 0.1f, 1.0f);
 
-            Shader = Shader.DirectComputePaint;
+            Shader = Shader.Gouraud;
             ComputeShader = Shader.MarchingComputeVertexCompute;
             IntersectionComputeShader = Shader.IntersectionCompute;
             VolEditorComputeShader = Shader.VolEditorCompute;
+            SmoothenComputeShader = Shader.SmoothenCompute;
 
             Init();
             UpdateInputFromVol(rawVolData);
@@ -92,8 +98,9 @@ namespace Engine.GLApi
             GL.GenBuffers(1, out _ACBO);
             GL.GenVertexArrays(1, out _VAO);
             GL.GenBuffers(1, out _VBO);
-
             GL.GenBuffers(1, out _SSBO_Intersect);
+
+            //GL.GenBuffers(1, out _SSBO_out2);
 
             GL.BindBuffer(BufferTarget.UniformBuffer, _UBO_mc);
             GL.BufferData(BufferTarget.UniformBuffer, (256 * 16) * sizeof(float), MarchingCubesTables.TriangleConnectionTableLinear, BufferUsageHint.StaticRead);
@@ -157,6 +164,27 @@ namespace Engine.GLApi
             return mesh;
         }
 
+        private void Smoothen()
+        {
+            uint counter = 0;
+            GL.BindBuffer(BufferTarget.AtomicCounterBuffer, _ACBO);
+            GL.BufferData(BufferTarget.AtomicCounterBuffer, sizeof(uint), ref counter, BufferUsageHint.DynamicRead);
+            GL.BindBufferBase(BufferRangeTarget.AtomicCounterBuffer, 4, _ACBO);
+
+            //GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out2);
+            //GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 6 * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            //GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 6, _SSBO_out2);
+
+            SmoothenComputeShader.Use();
+            SmoothenComputeShader.SetFloat("radius", SmoothenRadius);
+            SmoothenComputeShader.SetInt("count", _vertexCount);
+            SmoothenComputeShader.SetInt("counter", 0);
+
+            var d = _vertexCount + (1024 - _vertexCount % 1024);
+            GL.DispatchCompute(d / 1024, 1, 1);
+            GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+        }
+
         public void ComputeVolEditor(Vector3 point, float radius, float pressure, int direction)
         {
             VolEditorComputeShader.Use();
@@ -165,6 +193,7 @@ namespace Engine.GLApi
             VolEditorComputeShader.SetFloat("pressure", pressure);
             VolEditorComputeShader.SetInt("direction", direction);
             VolEditorComputeShader.SetVec3("point", point);
+            VolEditorComputeShader.SetMat4("Model", ModelMatrix);
 
             GL.DispatchCompute(input.Length / 512, 1, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
@@ -182,6 +211,7 @@ namespace Engine.GLApi
             IntersectionComputeShader.Use();
             IntersectionComputeShader.SetVec3("origin", origin);
             IntersectionComputeShader.SetVec3("direction", direction);
+            IntersectionComputeShader.SetMat4("Model", ModelMatrix);
 
             GL.DispatchCompute(_vertexCount / (3 * 512), 1, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
@@ -198,11 +228,12 @@ namespace Engine.GLApi
 
             if (t == -1 || t == 0)
             {
-                hit = Vector3.Zero;
+                hit = origin + direction * (_previousHitT - SmoothenRadius * 0.5f);
                 return false;
             }
 
-            hit = origin + direction * t;
+            hit = origin + direction * (t - SmoothenRadius * 0.5f);
+            _previousHitT = t;
             return true;
         }
 
@@ -222,6 +253,7 @@ namespace Engine.GLApi
                 GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
                 GL.BufferData(BufferTarget.ShaderStorageBuffer, input.Length * 6 * 4 * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
                 GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 3, _SSBO_out);
+
             }
 
             uint counter = 0;
@@ -256,7 +288,6 @@ namespace Engine.GLApi
                 sizeof(uint),
                 ref counter
             );
-
 
             _vertexCount = (int)counter * 3;
 
@@ -445,7 +476,7 @@ namespace Engine.GLApi
             }
             else
             {
-                Shader = Shader.Standard;
+                Shader = Shader.DirectComputePaint;
             }
 
             Shader.Use();
