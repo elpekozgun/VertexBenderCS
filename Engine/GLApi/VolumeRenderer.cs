@@ -155,7 +155,10 @@ namespace Engine.GLApi
                 vertices
             );
 
-            var mesh = Algorithm.CreateMeshFromVolRendererOutput(vertices);
+            var clean = vertices.ToList();
+            clean.RemoveAll(x => x.Length <= 0.0001f);
+
+            var mesh = Algorithm.CreateMeshFromVolRendererOutput(clean.ToArray());
 
             if (removeIslands)
                 Algorithm.RemoveIslands(ref mesh);

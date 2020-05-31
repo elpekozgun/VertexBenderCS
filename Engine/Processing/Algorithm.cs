@@ -17,6 +17,12 @@ using OpenTK.Graphics.ES10;
 using System.Runtime.Remoting.Messaging;
 using System.Windows.Forms.VisualStyles;
 using OpenTK.Input;
+using System.Net.Sockets;
+using MathNet.Numerics.LinearAlgebra.Solvers;
+using OpenTK.Graphics.ES11;
+using OpenTK.Graphics.ES20;
+using System.Data.SqlTypes;
+using System.Web;
 
 namespace Engine.Processing
 {
@@ -1524,7 +1530,6 @@ namespace Engine.Processing
                     a = vertexDict[dec];
                 }
 
-
                 dec = new Vector3d(Math.Round(vertices[i + 2].X, 6), Math.Round(vertices[i + 2].Y, 6), Math.Round(vertices[i + 2].Z, 6));
                 if (!vertexDict.ContainsKey(dec))
                 {
@@ -1687,7 +1692,211 @@ namespace Engine.Processing
 
         }
 
-        public static void FillHoles(ref Mesh mesh)
+        public struct HoleFillAngle
+        {
+            public float Angle;
+            public int Next;
+            public int Prev;
+
+            public HoleFillAngle(float angle, int next, int prev)
+            {
+                Angle = angle;
+                Next = next;
+                Prev = prev;
+            }
+        }
+
+        public static void PatchBoundary2(ref Mesh mesh, ref Dictionary<int, Vertex> boundary, ref Dictionary<int, HoleFillAngle> angles)
+        {
+
+            List<Vertex> newVertices = new List<Vertex>();
+            for (int i = 0; i < angles.Count; i++)
+            {
+                var angle = angles.ElementAt(i);
+
+                var theta = MathHelper.RadiansToDegrees(angle.Value.Angle);
+
+                if (theta <= 75)
+                {
+                    mesh.AddTriangle(angle.Key, angle.Value.Next, angle.Value.Prev);
+                    boundary.Remove(angle.Key);
+
+                    var prev = angles[angle.Value.Prev];
+                    var next = angles[angle.Value.Next];
+
+                    angles[angle.Value.Prev] = new HoleFillAngle(prev.Angle, prev.Prev, angle.Value.Next);
+                    angles[angle.Value.Next] = new HoleFillAngle(next.Angle, angle.Value.Prev, next.Next);
+                    //angles.Remove(angle.Key);
+                    //i--;
+                }
+                else
+                {
+                    var prevV = boundary[angle.Value.Prev];
+                    var nextV = boundary[angle.Value.Next];
+                    var start = boundary[angle.Key];
+
+                    var midVector = (prevV.Coord + nextV.Coord) * 0.5f;
+
+                    var length = ((prevV.Coord - start.Coord).Length + (nextV.Coord - start.Coord).Length) * 0.5f;
+
+                    midVector = start.Coord + (midVector - start.Coord).Normalized() * length;
+                    var midNormal = (nextV.Normal + prevV.Normal).Normalized();
+
+                    //if (theta > 75 && theta <= 135)
+                    {
+
+                        Vertex newVertex = new Vertex();
+                        bool found = false;
+                        for (int j = 0; j < newVertices.Count; j++)
+                        {
+                            if ((newVertices[j].Coord - midVector).Length < length)
+                            {
+                                newVertex = new Vertex
+                                (
+                                    newVertices[j].Id,
+                                    (newVertices[j].Coord + midVector) * 0.5f,
+                                    midNormal
+                                );
+                                newVertices[j] = newVertex;
+                                mesh.Vertices[newVertices[j].Id] = newVertex;
+                                found = true;
+                            }
+                        }
+                        if (!found)
+                        {
+                            newVertex = mesh.AddVertex(midVector, midNormal);
+                            newVertices.Add(newVertex);
+                        }
+
+                        mesh.AddTriangle(prevV.Id, start.Id, newVertex.Id);
+                        mesh.AddTriangle(start.Id, nextV.Id, newVertex.Id);
+
+                        boundary.Remove(angle.Key);
+                        boundary.Add(newVertex.Id, newVertex);
+
+                        var prev = angles[angle.Value.Prev];
+                        var next = angles[angle.Value.Next];
+
+                        angles[prevV.Id] = new HoleFillAngle(prev.Angle, prev.Prev, newVertex.Id);
+                        angles[nextV.Id] = new HoleFillAngle(next.Angle, newVertex.Id, next.Next);
+                        //angles.Remove(angle.Key);
+                        //i--;
+
+                    }
+                    //else if (theta > 135 && theta <= 180)
+                    //{
+                    //    continue;
+                    //    var rotatedVec1 = (prevV.Coord + midVector) * 0.5f;
+                    //    var dir1 = (rotatedVec1 - start.Coord).Normalized() * length;
+                    //    rotatedVec1 = start.Coord + dir1;
+                    //    var rotatedNormal1 = (prevV.Normal + midNormal).Normalized();
+
+                    //    var rotatedVec2 = (nextV.Coord + midVector) * 0.5f;
+                    //    var dir2 = (rotatedVec2 - start.Coord).Normalized() * length;
+                    //    rotatedVec2 = start.Coord + dir2;
+                    //    var rotatedNormal2 = (nextV.Normal + midNormal).Normalized();
+
+                    //    Vertex v1 = new Vertex();
+                    //    Vertex v2 = new Vertex();
+
+                    //}
+                }
+            }
+        }
+
+        public static void PatchBoundary(ref Mesh mesh, ref Dictionary<int, Vertex> boundary, ref Dictionary<int, HoleFillAngle> angles)
+        {
+
+            List<int> boundaryDeletion = new List<int>();
+            List<int> boundaryAddition = new List<int>();
+
+            List<Vertex> newVertices = new List<Vertex>();
+            List<Triangle> newTriangles= new List<Triangle>();
+
+            for (int i = 0; i < angles.Count; i++)
+            {
+                var angle = angles.ElementAt(i);
+
+                var theta = MathHelper.RadiansToDegrees(angle.Value.Angle);
+
+                if (theta < 85)
+                {
+                    mesh.AddTriangle(angle.Key, angle.Value.Next, angle.Value.Prev);
+                    //newTriangles.Add(new Triangle(0, angle.Key, angle.Value.Next, angle.Value.Prev));
+                    boundaryDeletion.Add(angle.Key);
+                }
+                else
+                {
+                    var prevV = boundary[angle.Value.Prev];
+                    var nextV = boundary[angle.Value.Next];
+                    var start = boundary[angle.Key];
+
+                    var midVector = (prevV.Coord + nextV.Coord) * 0.5f;
+                    var length = ((prevV.Coord - start.Coord).Length + (nextV.Coord - start.Coord).Length) * 0.5f;
+                    midVector = start.Coord + (midVector - start.Coord).Normalized() * length;
+                    var midNormal = (nextV.Normal + prevV.Normal).Normalized();
+
+                    if (theta > 75 && theta <= 135)
+                    {
+                        var newVertex = mesh.AddVertex(midVector, midNormal);
+                        //var newVertex = new Vertex(mesh.Vertices.Count, midVector, midNormal);
+                        newVertices.Add(newVertex);
+
+                        mesh.AddTriangle(prevV.Id, start.Id, newVertex.Id);
+                        mesh.AddTriangle(start.Id, nextV.Id, newVertex.Id);
+
+                        //newTriangles.Add(new Triangle(mesh.Triangles.Count,prevV.Id, start.Id, newVertex.Id));
+                        //newTriangles.Add(new Triangle(mesh.Triangles.Count,start.Id, nextV.Id, newVertex.Id));
+                        
+                        boundaryDeletion.Add(angle.Key);
+                        boundaryAddition.Add(newVertex.Id);
+
+                    }
+                    else if (theta > 135 && theta <= 180)
+                    {
+                        var midVector1 = (prevV.Coord + midVector) * 0.5f;
+                        var length1 = ((prevV.Coord - start.Coord).Length + (midVector - start.Coord).Length) * 0.5f;
+                        midVector1 = start.Coord + (midVector1 - start.Coord).Normalized() * length1;
+                        var midNormal1 = (midNormal + prevV.Normal).Normalized();
+
+                        var midVector2 = (nextV.Coord + midVector) * 0.5f;
+                        var length2 = ((nextV.Coord - start.Coord).Length + (midVector - start.Coord).Length) * 0.5f;
+                        midVector2 = start.Coord + (midVector2 - start.Coord).Normalized() * length2;
+                        var midNormal2 = (midNormal + nextV.Normal).Normalized();
+
+                        var newV1 = mesh.AddVertex(midVector1, midNormal1);
+                        var newV2 = mesh.AddVertex(midVector2, midNormal2);
+
+                        //var newV1 = new Vertex(mesh.Vertices.Count, midVector1, midNormal1);
+                        //var newV2 = new Vertex(mesh.Vertices.Count, midVector2, midNormal2);
+                        newVertices.Add(newV1);
+                        newVertices.Add(newV2);
+
+                        mesh.AddTriangle(newV1.Id, prevV.Id, start.Id);
+                        mesh.AddTriangle(newV1.Id, start.Id, newV2.Id);
+                        mesh.AddTriangle(newV2.Id, start.Id, nextV.Id);
+
+                        //newTriangles.Add(new Triangle(mesh.Triangles.Count, newV1.Id, prevV.Id, start.Id));
+                        //newTriangles.Add(new Triangle(mesh.Triangles.Count, newV1.Id, start.Id, newV2.Id));
+                        //newTriangles.Add(new Triangle(mesh.Triangles.Count, newV2.Id, start.Id, nextV.Id));
+
+                    }
+                }
+            }
+
+            //for (int i = 0; i < newVertices.Count; i++)
+            //{
+            //    mesh.AddVertex(newVertices[i].Coord, newVertices[i].Normal);
+            //}
+
+            //for (int i = 0; i < newTriangles.Count; i++)
+            //{
+            //    mesh.AddTriangle(newTriangles[i].V1, newTriangles[i].V2, newTriangles[i].V3);
+            //}
+
+        }
+
+        public static void FillHoles2(ref Mesh mesh)
         {
             List<Dictionary<int, Vertex>> allBoundaries = new List<Dictionary<int, Vertex>>();
 
@@ -1698,56 +1907,62 @@ namespace Engine.Processing
 
             // Step-2: calculate angle Theta between 2 adjacent boundary edges.
 
-            List<Dictionary<int,float>> anglesList = new List<Dictionary<int,float>>();
+            List<Dictionary<int, HoleFillAngle>> anglesList = new List<Dictionary<int, HoleFillAngle>>();
 
-            foreach (var boundary in allBoundaries)
+            //foreach (var boundary in allBoundaries)
+
+            for (int i = 0; i < allBoundaries.Count; i++)
             {
-                Dictionary<int,float> angles = new Dictionary<int, float>();
+                var boundary = allBoundaries[i];
 
-                for (int i = 1; i <= boundary.Count; i++)
+                var a = boundary.Select(x => x.Value.Coord).ToList();
+
+                var center = Vector3.Zero;
+                for (int k = 0; k < a.Count; k++)
                 {
-                    var vi = boundary.ElementAt(i % boundary.Count);
-                    var vNext = boundary.ElementAt((i + 1) % boundary.Count).Value;
-                    var vPrev = boundary.ElementAt((i - 1) % boundary.Count).Value;
+                    center += a[k];
+                }
+                center /= a.Count;
 
-                    float theta = Vector3.CalculateAngle(vNext.Coord - vi.Value.Coord, vPrev.Coord - vi.Value.Coord);
-                    angles.Add(vi.Key, theta);
+                Dictionary<int, HoleFillAngle> angles = new Dictionary<int, HoleFillAngle>();
+
+                for (int j = 1; j <= boundary.Count; j++)
+                {
+                    var vi = boundary.ElementAt(j % boundary.Count);
+                    var vNext = boundary.ElementAt((j + 1) % boundary.Count);
+                    var vPrev = boundary.ElementAt((j - 1) % boundary.Count);
+
+                    var d = (vi.Value.Coord - (vNext.Value.Coord + vPrev.Value.Coord) * 0.5f).Normalized();
+                    var c = (vi.Value.Coord - center).Normalized();
+
+                    var dot = Vector3.Dot(d, c);
+
+
+                    float theta = Vector3.CalculateAngle(vPrev.Value.Coord - vi.Value.Coord, vNext.Value.Coord - vi.Value.Coord);
+
+                    if (dot < 0)
+                    {
+                        theta = MathHelper.TwoPi - theta;
+                    }
+
+                    angles.Add(vi.Key, new HoleFillAngle(theta, vNext.Key, vPrev.Key));
                 }
 
-                //var a = new Dictionary<int, float>();
-                //foreach (var pair in angles.OrderBy(x=>x.Value))
-                //{
-                //    a.Add(pair.Key, pair.Value);
-                //}
-                anglesList.Add(angles);
+                anglesList.Add(angles.OrderBy(x => x.Value.Angle).ToDictionary(x => x.Key, x => x.Value));
             }
 
             // Step-3: Start from vertex with smallest theta angle. Apply rules such that,
             // theta <= 75 => connect, theta > 75 && theta <=135 => add new vertex, theta > 135 => add 2 new vertices
 
-            foreach (var angles in anglesList)
+            for (int i = 0; i < allBoundaries.Count; i++)
             {
-                while (angles.Count > 0)
-                {
-                    var angle = angles.Min(x => x.Value);
-                }
+                var boundary = allBoundaries[i];
+                var angles = anglesList[i];
 
-                foreach (var angle in angles)
-                {
-                    if (angle.Value <= MathHelper.DegreesToRadians(75))
-                    {
-                        //mesh.AddTriangle()
-                    }
-                    else if (angle.Value > MathHelper.DegreesToRadians(75) && angle.Value <= MathHelper.DegreesToRadians(135))
-                    {
-                    
-                    }
-                    else
-                    { 
-                    
-                    }
-                }
+                PatchBoundary(ref mesh, ref boundary, ref angles);
             }
+
+            //foreach (var angles in anglesList)
 
 
 
@@ -1756,6 +1971,59 @@ namespace Engine.Processing
             // Step-5: Update the front, go 2. repeat etc.
 
         }
+
+        public static void FillHoles(ref Mesh mesh)
+        {
+            List<Dictionary<int, Vertex>> allBoundaries = new List<Dictionary<int, Vertex>>();
+
+            var boundaryEdges = mesh.GetBoundaryEdges();
+
+            // Step-1: Find All Boundary vertices.
+            RecursivelyFindAllBoundaries(mesh.Vertices, boundaryEdges, ref allBoundaries);
+
+            for (int i = 0; i < allBoundaries.Count; i++)
+            {
+                var boundary = allBoundaries[i];
+
+                CoarseTriangulate(ref mesh, ref boundary);
+            }
+
+
+            //foreach (var angles in anglesList)
+
+
+
+            // Step-4: Compute distance between newly created vertices with related boundary vertices. if the distance is smaller than a threshhold merge them
+
+            // Step-5: Update the front, go 2. repeat etc.
+
+        }
+
+        public static void CoarseTriangulate(ref Mesh mesh, ref Dictionary<int,Vertex> boundary)
+        {
+            var a = boundary.Select(x => x.Value).ToList();
+
+            var center = Vector3.Zero;
+            var normal = Vector3.Zero;
+            for (int k = 0; k < a.Count; k++)
+            {
+                center += a[k].Coord;
+                normal += a[k].Normal;
+            }
+            center /= a.Count;
+
+            var c = mesh.AddVertex(center, normal.Normalized());
+
+            for (int i = 0; i < a.Count; i++)
+            {
+                var vi = a[i];
+                var vj = a[(i + 1) % a.Count];
+
+                mesh.AddTriangle(vi.Id, vj.Id, c.Id);
+            }
+
+        }
+
 
         #endregion
     }

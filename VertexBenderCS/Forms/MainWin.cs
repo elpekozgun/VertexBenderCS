@@ -262,6 +262,11 @@ namespace VertexBenderCS.Forms
             {
                 var mr = (_selectedTransform as MeshRenderer).Mesh;
                 Algorithm.FillHoles(ref mr);
+
+                var mrr = new MeshRenderer(mr);
+                mrr.EnableCull = false;
+                mrr.Position = _selectedTransform.Position + new Vector3(0.15f, 0, 0);
+                _SceneGraph.AddObject(mrr);
             }
         }
 
@@ -286,7 +291,9 @@ namespace VertexBenderCS.Forms
             //GeometryShaderTest();
             //UltrasonLoadTest();
             //ComputeTest();
-            HoleFillTest();
+            //HoleFillTest();
+            //HoleFillTestBasic();
+            CoarseTri();
         }
 
         private void StarTest()
@@ -421,6 +428,53 @@ namespace VertexBenderCS.Forms
             _SceneGraph.AddObject(meshrend);
 
         }
+
+        private void HoleFillTestBasic()
+        {
+            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\boundary.off");
+
+            var meshRenderer = new MeshRenderer(mesh, "face");
+            _SceneGraph.AddObject(meshRenderer);
+
+            Algorithm.FillHoles(ref mesh);
+
+            sceneGraphTree.SelectedNode = null;
+
+            var meshrend = new MeshRenderer(mesh, "final")
+            {
+                Position = new Vector3(0, 0, -0.05f),
+                EnableCull = false
+            };
+            _SceneGraph.AddObject(meshrend);
+
+            _camera.Position = new Vector3(0.02f, 0.251f, 0.012f);
+            _camera.Front = -Vector3.UnitY;
+            _camera.Up = Vector3.UnitZ;
+
+
+        }
+
+        private void CoarseTri()
+        {
+            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\boundary.off");
+
+            var meshRenderer = new MeshRenderer(mesh, "face");
+            _SceneGraph.AddObject(meshRenderer);
+
+            //Mesh mesh = new Mesh();
+            //Dictionary<int, Vertex> b = new Dictionary<int, Vertex>();
+            HoleFiller filler = new HoleFiller(mesh);
+
+            filler.FillHoles();
+
+            var meshrend = new MeshRenderer(mesh, "final")
+            {
+                Position = new Vector3(0, 0, -0.05f),
+                EnableCull = false
+            };
+            _SceneGraph.AddObject(meshrend);
+        }
+
 
         #endregion
 
@@ -1593,6 +1647,18 @@ namespace VertexBenderCS.Forms
                     _SceneGraph.AddObject(volRenderer);
 
                     sceneGraphTree.SelectedNode = null;
+
+                    if (_sphereRenderer == null)
+                    {
+                        var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+                        _sphereRenderer = new MeshRenderer(sphere, Shader.Unlit, "Sphere")
+                        {
+                            Scale = new Vector3(0.01f, 0.01f, 0.01f)
+                        };
+                        _SceneGraph.AddObject(_sphereRenderer);
+                        _sphereRenderer.IsEnabled = false;
+                    }
+
                 }
             }
         }

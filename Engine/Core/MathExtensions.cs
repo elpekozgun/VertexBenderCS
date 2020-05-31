@@ -1,7 +1,10 @@
-﻿using OpenTK;
+﻿using MathNet.Numerics.LinearAlgebra.Complex;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,5 +40,25 @@ namespace Engine.Core
             return closest;
         }
 
+        public static Vector3 RotateAroundArbitraryAxis(this Vector3 source, Vector3 start, Vector3 axis, float angle)
+        {
+            // align on XZ plane
+            var T = Matrix4.CreateTranslation(-start);
+
+            var projectedXZ = new Vector3(axis.X, 0, axis.Z).Normalized();
+
+            var cosx = Math.Acos(Vector3.Dot(axis.Normalized(), projectedXZ));
+            var cosy = Vector3.Dot(projectedXZ, Vector3.UnitZ);
+
+            var RX = Matrix4.CreateRotationX((float)cosx);
+            var RY = Matrix4.CreateRotationY((float)cosy);
+            var RZ = Matrix4.CreateRotationZ((float)angle);
+
+            Vector4 translated = new Vector4(source, 1.0f);
+
+            var result = Matrix4.Invert(T) * Matrix4.Invert(RZ) * Matrix4.Invert(RY) * RZ * RY * RX * T * translated;
+
+            return result.Xyz;
+        }
     }
 }

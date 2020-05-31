@@ -97,6 +97,7 @@
     <Compile Include="Processing\Algorithm.cs" />
     <Compile Include="Processing\Graph.cs" />
     <Compile Include="Processing\HeapNode.cs" />
+    <Compile Include="Processing\HoleFiller.cs" />
     <Compile Include="Processing\MarchingCubesTables.cs" />
     <Compile Include="Processing\ProcessOutputHandler.cs" />
     <Compile Include="Processing\OutputStructures.cs" />
