@@ -256,20 +256,6 @@ namespace VertexBenderCS.Forms
             toolStripButton2.Click += ToolStripButton2_Click;
         }
 
-        private void ToolStripButton2_Click(object sender, EventArgs e)
-        {
-            if (_selectedTransform is MeshRenderer)
-            {
-                var mr = (_selectedTransform as MeshRenderer).Mesh;
-                Algorithm.FillHoles(ref mr);
-
-                var mrr = new MeshRenderer(mr);
-                mrr.EnableCull = false;
-                mrr.Position = _selectedTransform.Position + new Vector3(0.15f, 0, 0);
-                _SceneGraph.AddObject(mrr);
-            }
-        }
-
         private void SceneGraphEvents()
         {
             sceneGraphTree.AfterSelect += SceneGraphTree_AfterSelect;
@@ -285,6 +271,26 @@ namespace VertexBenderCS.Forms
         #endregion
 
         #region Tests
+
+
+        private void ToolStripButton2_Click(object sender, EventArgs e)
+        {
+            if (_selectedTransform is MeshRenderer)
+            {
+                var mr = (_selectedTransform as MeshRenderer).Mesh;
+                
+                HoleFiller filler = new HoleFiller(mr);
+                filler.FillHoles();
+
+                var meshrend = new MeshRenderer(mr, "final")
+                {
+                    Position = new Vector3(0, 0, -0.05f),
+                    EnableCull = false
+                };
+                _SceneGraph.AddObject(meshrend);
+            }
+        }
+
 
         private void SetupTestScene()
         {
@@ -456,10 +462,11 @@ namespace VertexBenderCS.Forms
 
         private void CoarseTri()
         {
-            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\boundary.off");
+            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\pumpkin.off");
 
             var meshRenderer = new MeshRenderer(mesh, "face");
             _SceneGraph.AddObject(meshRenderer);
+            meshRenderer.EnableCull = false;
 
             //Mesh mesh = new Mesh();
             //Dictionary<int, Vertex> b = new Dictionary<int, Vertex>();
@@ -467,12 +474,14 @@ namespace VertexBenderCS.Forms
 
             filler.FillHoles();
 
-            var meshrend = new MeshRenderer(mesh, "final")
-            {
-                Position = new Vector3(0, 0, -0.05f),
-                EnableCull = false
-            };
-            _SceneGraph.AddObject(meshrend);
+            meshRenderer.SetMesh(mesh);
+
+            //var meshrend = new MeshRenderer(mesh, "final")
+            //{
+            //    Position = new Vector3(0, 0, -0.05f),
+            //    EnableCull = false
+            //};
+            //_SceneGraph.AddObject(meshrend);
         }
 
 

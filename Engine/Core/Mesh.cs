@@ -128,7 +128,7 @@ namespace Engine.Core
                 V3 = value;
             }
         }
-        
+
     }
 
     public class Mesh
@@ -159,7 +159,7 @@ namespace Engine.Core
         {
             Vertices.Add(v.Id, v);
         }
-        
+
         internal Vertex AddVertex(Vector3 coord, Vector3 normal)
         {
             int id = _lastV++;
@@ -167,7 +167,7 @@ namespace Engine.Core
             Vertices.Add(id, v);
             return v;
         }
-        
+
         internal Vertex AddVertex(float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
         {
             int id = _lastV++;
@@ -175,17 +175,19 @@ namespace Engine.Core
             Vertices.Add(id, v);
             return v;
         }
-        
-        internal void AddTriangle(int v1, int v2, int v3)
+
+        internal Triangle AddTriangle(int v1, int v2, int v3)
         {
             int id = _lastT++;
-            
-            Triangles.Add(id, new Triangle(id, v1, v2, v3));
+
+            var tri = new Triangle(id, v1, v2, v3);
+
+            Triangles.Add(id, tri);
             Vertices[v1].Tris.Add(id);
             Vertices[v2].Tris.Add(id);
             Vertices[v3].Tris.Add(id);
 
-            if (!AreNeighbors(v1,v2))
+            if (!AreNeighbors(v1, v2))
             {
                 AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length, false);
             }
@@ -198,15 +200,21 @@ namespace Engine.Core
                 AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length, false);
             }
 
+            return tri;
         }
-        
-        internal void AddEdge(int v1, int v2, float length, bool isBoundary)
+
+        internal Edge AddEdge(int v1, int v2, float length, bool isBoundary)
         {
             int id = _lastE++;
-            Edges.Add(id, new Edge(id, v1, v2, length, isBoundary));
+
+            var edge = new Edge(id, v1, v2, length, isBoundary);
+
+            Edges.Add(id, edge);
 
             Vertices[v1].Edges.Add(id);
             Vertices[v2].Edges.Add(id);
+
+            return edge;
         }
 
         internal void RemoveVertex(int id)
@@ -248,13 +256,13 @@ namespace Engine.Core
             {
                 var tri = Triangles[id];
 
-                if(Vertices.TryGetValue(tri.V1, out Vertex v1))
+                if (Vertices.TryGetValue(tri.V1, out Vertex v1))
                     v1.Tris.Remove(tri.Id);
 
                 if (Vertices.TryGetValue(tri.V2, out Vertex v2))
                     v2.Tris.Remove(tri.Id);
-                
-                if(Vertices.TryGetValue(tri.V3, out Vertex v3))
+
+                if (Vertices.TryGetValue(tri.V3, out Vertex v3))
                     v3.Tris.Remove(tri.Id);
 
                 Triangles.Remove(id);
@@ -267,9 +275,9 @@ namespace Engine.Core
             {
                 var edge = Edges[id];
 
-                if(Vertices.TryGetValue(edge.Start, out Vertex v1))
+                if (Vertices.TryGetValue(edge.Start, out Vertex v1))
                     v1.Edges.Remove(id);
-                if(Vertices.TryGetValue(edge.End, out Vertex v2))
+                if (Vertices.TryGetValue(edge.End, out Vertex v2))
                     v2.Edges.Remove(id);
 
                 Edges.Remove(id);
@@ -281,12 +289,12 @@ namespace Engine.Core
             var vert1 = Vertices[e.Start];
             var vert2 = Vertices[e.End];
 
-            
+
             AddEdge(e.Start, id, (vert1.Coord - Vertices[id].Coord).Length, false);
-            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length,false);
+            AddEdge(id, e.End, (vert2.Coord - Vertices[id].Coord).Length, false);
 
             var commonTris = vert1.Tris.Intersect(vert2.Tris).ToList();
-            
+
             Edges.Remove(e.Id);
             for (int i = 0; i < commonTris.Count; i++)
             {
@@ -336,7 +344,7 @@ namespace Engine.Core
                 vertex.UpdateVertex(vertex.Coord, normal.Normalized());
                 Vertices[keys[i]] = vertex;
             }
-            
+
         }
 
         internal float TriangleArea(Vector3 v1, Vector3 v2, Vector3 v3)
@@ -362,7 +370,7 @@ namespace Engine.Core
             var v1 = Vertices[tri.V1].Coord;
             var v2 = Vertices[tri.V2].Coord;
             var v3 = Vertices[tri.V3].Coord;
-            
+
             if (vertexId == tri.V1)
             {
                 return TriangleAngle(v1, v2, v3);
@@ -378,7 +386,7 @@ namespace Engine.Core
             return 0;
         }
 
-        private float TriangleAngle(Vector3 v1,Vector3 v2, Vector3 v3)
+        private float TriangleAngle(Vector3 v1, Vector3 v2, Vector3 v3)
         {
 
             float num = (v2.X - v1.X) * (v3.X - v1.X) +
@@ -393,11 +401,56 @@ namespace Engine.Core
                                    Math.Pow((v3.Z - v1.Z), 2));
 
             double angle = Math.Acos(num / den);
-                           
+
 
             return (float)angle;
         }
-       
+
+        public bool IsInCircumcircle(Vector3 x, Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 ab = b - a;
+            Vector3 ac = c - a;
+
+            Vector3 abxac = Vector3.Cross(ab, ac);
+
+            Vector3 center = (Vector3.Cross(abxac, ab) * ac.Length * ac.Length + Vector3.Cross(ac, abxac) * ab.Length * ab.Length) / (2 * abxac.Length * abxac.Length);
+
+            float radius = center.Length;
+            center += a;
+
+            if (Vector3.DistanceSquared(x, center) <= radius * radius)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool IsInCircumcircle(int nx, int i, int j, int k)
+        {
+            var a = Vertices[i].Coord;
+            var b = Vertices[j].Coord;
+            var c = Vertices[k].Coord;
+            var x = Vertices[nx].Coord;
+
+            Vector3 ab = b - a;
+            Vector3 ac = c - a;
+
+            Vector3 abxac = Vector3.Cross(ab, ac);
+
+            Vector3 center = (Vector3.Cross(abxac, ab) * ac.Length * ac.Length + Vector3.Cross(ac, abxac) * ab.Length * ab.Length) / (2 * abxac.Length * abxac.Length);
+
+            float radius = center.Length;
+            center += a;
+
+            if (Vector3.DistanceSquared(x, center) <= radius * radius)
+            {
+                return true;
+            }
+            return false;
+        }
+
+
+
         private bool IsCCW(Triangle t)
         {
             var v1 = Vertices[t.V1].Coord;
@@ -423,6 +476,10 @@ namespace Engine.Core
 
         private bool AreNeighbors(int v1, int v2)
         {
+            if (v1 == v2)
+            {
+                return false;
+            }
             for (int i = 0; i < Vertices[v1].Verts.Count; i++)
             {
                 if (Vertices[v1].Verts[i] == v2)
