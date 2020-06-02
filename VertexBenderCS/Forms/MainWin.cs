@@ -22,7 +22,7 @@ namespace VertexBenderCS.Forms
 
     public partial class MainWin : Form
     {
-        //this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
+        //this.GLControl = new GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8,8,8,8), 24, 8, 8));
 
         //[DllImport("User32.dll", CharSet = CharSet.Auto)]
         //public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
@@ -225,6 +225,7 @@ namespace VertexBenderCS.Forms
         {
             menuImportOff.Click += MenuImport_Click;
             menuImportVol.Click += MenuImportVol_Click;
+            menuImportNifti.Click += MenuImportNifti_Click;
 
             menuProcessSP.Click += MenuProcessSP_Click;
             menuProcessGC.Click += MenuProcessGC_Click;
@@ -245,6 +246,8 @@ namespace VertexBenderCS.Forms
             menuAddSphereTetra.Click += MenuAddSphereTetra_Click;
             menuAddSphereIcosahedron.Click += MenuAddSphereIcosahedron_Click;
         }
+
+        
 
         private void ToolbarEvents()
         {
@@ -423,7 +426,7 @@ namespace VertexBenderCS.Forms
             volRenderer.Compute();
             _SceneGraph.AddObject(volRenderer);
 
-            var mesh = volRenderer.FinalizeMesh(true, true);
+            var mesh = volRenderer.FinalizeMesh(true, true,false, 4, 4);
             Algorithm.FillHoles(ref mesh);
 
             var meshrend = new MeshRenderer(mesh, "final")
@@ -884,7 +887,7 @@ namespace VertexBenderCS.Forms
 
         private void GLControl_Resize(object sender, EventArgs e)
         {
-            OpenTK.GLControl c = sender as OpenTK.GLControl;
+            GLControl c = sender as GLControl;
 
             if (c.ClientSize.Height == 0)
             {
@@ -1670,6 +1673,32 @@ namespace VertexBenderCS.Forms
 
                 }
             }
+        }
+
+        private void MenuImportNifti_Click(object sender, EventArgs e)
+        {
+            if (_sphereRenderer == null)
+            {
+                var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
+                _sphereRenderer = new MeshRenderer(sphere, Shader.Unlit, "Sphere")
+                {
+                    Scale = new Vector3(0.01f, 0.01f, 0.01f)
+                };
+                _SceneGraph.AddObject(_sphereRenderer);
+                _sphereRenderer.IsEnabled = false;
+            }
+
+            var output = ObjectLoader.LoadNifti("");
+            var volRenderer = new VolumeRenderer(output, "nifti")
+            {
+                Intensity = 60,
+                DownSample = 6,
+                Method = eMarchMethod.GpuBoost,
+                SmoothenRadius = 0.0001f
+            };
+            volRenderer.Compute();
+            _SceneGraph.AddObject(volRenderer);
+
         }
 
         private void MenuAddSphereTetra_Click(object sender, EventArgs e)

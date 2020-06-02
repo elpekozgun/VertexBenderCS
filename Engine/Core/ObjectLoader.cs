@@ -534,7 +534,7 @@ namespace Engine.Core
                     {
                         var intensity = nifti.Data[(z * dimensionX * dimensionY) + (y * dimensionX) + x];
                         {
-                            intensities.Add(new KeyValuePair<OpenTK.Vector3, short>(new OpenTK.Vector3(x, z, -y), intensity));
+                            intensities.Add(new KeyValuePair<OpenTK.Vector3, short>(new OpenTK.Vector3(x, y, z), intensity));
                         }
                     }
                 }

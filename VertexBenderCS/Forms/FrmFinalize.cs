@@ -45,7 +45,7 @@ namespace VertexBenderCS.Forms
 
         private void BtnProcede_Click(object sender, EventArgs e)
         {
-            var mesh = _volRenderer.FinalizeMesh(chkSmoothen.Checked, chkIsland.Checked);
+            var mesh = _volRenderer.FinalizeMesh(chkSmoothen.Checked, chkIsland.Checked, chkFill.Checked, (int)numericSmoothen.Value, (int)numericFill.Value);
             mesh.Name = _volRenderer.Name + "- Finalized";
             BtnProcedeClicked?.Invoke(mesh, _volRenderer.Color);
             this.Close();

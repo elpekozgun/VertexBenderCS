@@ -32,6 +32,11 @@
             this.chkIsland = new System.Windows.Forms.CheckBox();
             this.chkSmoothen = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.chkFill = new System.Windows.Forms.CheckBox();
+            this.numericSmoothen = new System.Windows.Forms.NumericUpDown();
+            this.numericFill = new System.Windows.Forms.NumericUpDown();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSmoothen)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericFill)).BeginInit();
             this.SuspendLayout();
             // 
             // btnProcede
@@ -72,18 +77,79 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // FinalizeForm
+            // chkFill
+            // 
+            this.chkFill.AutoSize = true;
+            this.chkFill.Location = new System.Drawing.Point(12, 58);
+            this.chkFill.Name = "chkFill";
+            this.chkFill.Size = new System.Drawing.Size(103, 17);
+            this.chkFill.TabIndex = 4;
+            this.chkFill.Text = "Smoothen Mesh";
+            this.chkFill.UseVisualStyleBackColor = true;
+            // 
+            // numericSmoothen
+            // 
+            this.numericSmoothen.Location = new System.Drawing.Point(121, 32);
+            this.numericSmoothen.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericSmoothen.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericSmoothen.Name = "numericSmoothen";
+            this.numericSmoothen.ReadOnly = true;
+            this.numericSmoothen.Size = new System.Drawing.Size(37, 20);
+            this.numericSmoothen.TabIndex = 34;
+            this.numericSmoothen.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // numericFill
+            // 
+            this.numericFill.Location = new System.Drawing.Point(121, 58);
+            this.numericFill.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericFill.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericFill.Name = "numericFill";
+            this.numericFill.ReadOnly = true;
+            this.numericFill.Size = new System.Drawing.Size(37, 20);
+            this.numericFill.TabIndex = 35;
+            this.numericFill.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // FrmFinalize
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(255, 132);
+            this.Controls.Add(this.numericFill);
+            this.Controls.Add(this.numericSmoothen);
+            this.Controls.Add(this.chkFill);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.chkSmoothen);
             this.Controls.Add(this.chkIsland);
             this.Controls.Add(this.btnProcede);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "FinalizeForm";
+            this.Name = "FrmFinalize";
             this.Text = "FinalizeForm";
+            ((System.ComponentModel.ISupportInitialize)(this.numericSmoothen)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericFill)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -95,5 +161,8 @@
         private System.Windows.Forms.CheckBox chkIsland;
         private System.Windows.Forms.CheckBox chkSmoothen;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.CheckBox chkFill;
+        private System.Windows.Forms.NumericUpDown numericSmoothen;
+        private System.Windows.Forms.NumericUpDown numericFill;
     }
 }
