@@ -1289,7 +1289,7 @@ namespace Engine.Processing
                     continue;
                 }
 
-                var corners = new KeyValuePair<OpenTK.Vector3, int>[8];
+                var corners = new KeyValuePair<OpenTK.Vector3, short>[8];
 
                 corners[0] = output.IntensityMap[i + x * y];
                 corners[1] = output.IntensityMap[i + x * y + 1];
@@ -1400,7 +1400,7 @@ namespace Engine.Processing
             return triangles;
         }
         
-        private static Vector3 Interpolate(float value, KeyValuePair<Vector3, int> c1, KeyValuePair<Vector3, int> c2, bool interpolate = true)
+        private static Vector3 Interpolate(float value, KeyValuePair<Vector3, short> c1, KeyValuePair<Vector3, short> c2, bool interpolate = true)
         {
             if (!interpolate)
             {
@@ -1438,8 +1438,8 @@ namespace Engine.Processing
                 return volumeInfo;
             }
 
-            var intensities = new List<int>();
-            var intensityMap = new List<KeyValuePair<Vector3, int>>();
+            var intensities = new List<short>();
+            var intensityMap = new List<KeyValuePair<Vector3, short>>();
 
             var dimX = volumeInfo.XCount;
             var dimY = volumeInfo.YCount;
@@ -1454,7 +1454,7 @@ namespace Engine.Processing
                 {
                     for (int x = 0; x < dimX; x += sampleSize)
                     {
-                        var intensity = 0;
+                        short intensity = 0;
                         //intensity += volumeInfo.IntensityMap[z * (dimX * dimY) + (y * dimX) + x].Value;
 
                         intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
@@ -1467,7 +1467,7 @@ namespace Engine.Processing
 
 
                         intensities.Add(intensity);
-                        intensityMap.Add(new KeyValuePair<Vector3, int>(new Vector3(x, y, z) / sampleSize, intensity));
+                        intensityMap.Add(new KeyValuePair<Vector3, short>(new Vector3(x, y, z) / sampleSize, intensity));
                     }
                 }
             }

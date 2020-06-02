@@ -143,7 +143,7 @@ namespace Engine.GLApi
             Logger.Log($"Method: {Enum.GetName(typeof(eMarchMethod), Method)}, elapsed: {_watch.ElapsedMilliseconds} ms");
         }
 
-        public Mesh FinalizeMesh(bool smoothen, bool removeIslands)
+        public Mesh FinalizeMesh(bool smoothen, bool removeIslands, bool fillHoles, int smoothIt, int fillIt)
         {
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _SSBO_out);
             Vector4[] vertices = new Vector4[_vertexCount * 2];
@@ -160,10 +160,17 @@ namespace Engine.GLApi
 
             var mesh = Algorithm.CreateMeshFromVolRendererOutput(clean.ToArray());
 
+            
             if (removeIslands)
                 Algorithm.RemoveIslands(ref mesh);
+            if (fillHoles)
+            {
+                HoleFiller filler = new HoleFiller(mesh);
+                filler.FillHoles(fillIt);
+            }
+
             if (smoothen)
-                Algorithm.Smoothen(ref mesh, 3);
+                Algorithm.Smoothen(ref mesh, smoothIt);
             return mesh;
         }
 

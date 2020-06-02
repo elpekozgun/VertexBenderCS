@@ -126,7 +126,7 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(0);
 
-            GL.LineWidth(1.5f);
+            GL.LineWidth(1.1f);
             GL.PointSize(5);
             GL.PolygonOffset(1.0f, 2);
         }

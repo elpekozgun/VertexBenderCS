@@ -10,6 +10,7 @@ using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
@@ -40,12 +41,12 @@ namespace Engine.Processing
 
             public static Weight operator +(Weight a, Weight b)
             {
-                return new Weight(a.Area + b.Area, Math.Max(a.Angle, b.Angle));
+                return new Weight(a.Area + b.Area, (float)Math.Max(a.Angle, b.Angle));
             }
 
             public static bool operator <(Weight a, Weight b)
             {
-                return a.Angle < b.Angle || (a.Angle == b.Angle && a.Area < b.Area);
+                return (a.Angle < b.Angle) || (a.Angle == b.Angle && a.Area < b.Area);
             }
 
             public static bool operator >(Weight a, Weight b)
@@ -58,8 +59,10 @@ namespace Engine.Processing
         private List<Dictionary<int, int>> _allBoundaries;
         private List<Dictionary<int, int>> _allOpposites;
         private Dictionary<int, Triangle> _allBoundaryTriangles;
-        private HashSet<int> _boundaryEdges;
+        private List<int> _boundaryEdges;
         private Dictionary<int, Vertex> _holeVertices;
+
+        private Stopwatch _watch;
 
         public HoleFiller(Mesh mesh)
         {
@@ -68,16 +71,21 @@ namespace Engine.Processing
             _allOpposites = new List<Dictionary<int, int>>();
             _allBoundaryTriangles = new Dictionary<int, Triangle>();
             _holeVertices = new Dictionary<int, Vertex>();
+
+            _watch = new Stopwatch();
         }
 
-        public void FillHoles(int iter = 10)
+        public void FillHoles(int iter = 10, bool isCourse = false)
         {
+            _watch.Reset();
+            _watch.Start();
+
             var boundaryEdges = Mesh.GetBoundaryEdges();
             if (boundaryEdges.Count == 0)
             {
                 return;
             }
-            _boundaryEdges = boundaryEdges.Select(x => x.Id).ToHashSet();
+            _boundaryEdges = boundaryEdges.Select(x => x.Id).ToList();
 
             List<Dictionary<int, Vertex>> allGlobalBoundaries = new List<Dictionary<int, Vertex>>();
 
@@ -104,12 +112,16 @@ namespace Engine.Processing
                     var v1 = boundary.ElementAt(j % boundary.Count);
                     var v2 = boundary.ElementAt((j + 1) % boundary.Count);
 
-                    var tri = v1.Value.Tris.Intersect(v2.Value.Tris).ToList()[0];
+                    var tris = v1.Value.Tris.Intersect(v2.Value.Tris).ToList();
 
-                    var id3 = Mesh.Triangles[tri].GetThirdVertexId(v1.Key, v2.Key);
-                    opposites.Add(v1.Key, id3);
-                    if (!_allBoundaryTriangles.ContainsKey(tri))
-                        _allBoundaryTriangles.Add(tri, Mesh.Triangles[tri]);
+                    if (tris.Count > 0)
+                    {
+                        var tri = tris[0];
+                        var id3 = Mesh.Triangles[tri].GetThirdVertexId(v1.Key, v2.Key);
+                        opposites.Add(v1.Key, id3);
+                        if (!_allBoundaryTriangles.ContainsKey(tri))
+                            _allBoundaryTriangles.Add(tri, Mesh.Triangles[tri]);
+                    }
                 }
                 _allOpposites.Add(opposites);
             }
@@ -119,6 +131,11 @@ namespace Engine.Processing
             for (int i = 0; i < _allBoundaries.Count; i++)
             {
                 newTrianglesList.Add(CoarseTriangulate(i));
+            }
+
+            if (isCourse)
+            {
+                return;
             }
 
             for (int i = 0; i < newTrianglesList.Count; i++)
@@ -173,9 +190,11 @@ namespace Engine.Processing
                 }
             }
 
+            _watch.Stop();
+            Logger.Log($"{_allBoundaries.Count} Holes filled in {_watch.ElapsedMilliseconds} ms");
+
             //Fair();
         }
-
 
         private List<Triangle> CoarseTriangulate(int boundaryId)
         {
@@ -199,6 +218,7 @@ namespace Engine.Processing
                 weightTable[i, i + 1] = new Weight(0, 0);
             }
 
+
             for (int j = 2; j < nv; j++)
             {
                 for (int i = 0; i + j < nv; i++)
@@ -208,7 +228,7 @@ namespace Engine.Processing
 
                     for (int m = i + 1; m < i + j; m++)
                     {
-                        Weight w = weightTable[i, m] + weightTable[m, i + j] + CalculateTriWeight(i, m, i + j, boundaryId, ref indexTable); ;
+                        Weight w = weightTable[i, m] + weightTable[m, i + j] + CalculateTriWeight(i, m, i + j, boundaryId, indexTable); ;
 
                         if (w < minW)
                         {
@@ -226,7 +246,7 @@ namespace Engine.Processing
             return tris;
         }
 
-        private Weight CalculateTriWeight(int i, int j, int k, int boundaryID, ref int[,] indexTable)
+        private Weight CalculateTriWeight(int i, int j, int k, int boundaryID, int[,] indexTable)
         {
             if (indexTable[i, j] == -1)
             {
@@ -286,12 +306,10 @@ namespace Engine.Processing
             var aa = Mesh.Vertices[a].Coord;
             var bb = Mesh.Vertices[b].Coord;
 
-            //var n0 = Vector3.Cross(aa - uu, aa - vv).Normalized();
-            //var n1 = Vector3.Cross(bb - vv, bb - uu).Normalized();
             var n0 = Vector3.Cross(vv - uu, aa - vv).Normalized();
             var n1 = Vector3.Cross(uu - vv, bb - uu).Normalized();
 
-            return MathHelper.RadiansToDegrees((float)Math.Acos(Vector3.Dot(n0, n1)));
+            return (float)Math.Acos(Vector3.Dot(n0, n1)) * 180.0f / MathHelper.Pi;
         }
 
         private void AddToMesh(ref int[,] indexTable, ref List<Triangle> tris, int start, int end, int boundaryID)
@@ -305,7 +323,7 @@ namespace Engine.Processing
             var gCur = _allBoundaries[boundaryID][cur];
             var gEnd = _allBoundaries[boundaryID][end];
 
-            var tri = Mesh.AddTriangle(gStart, gCur, gEnd);
+            var tri = Mesh.AddTriangle(gStart, gEnd, gCur);
             tris.Add(tri);
 
             AddToMesh(ref indexTable, ref tris, start, cur, boundaryID);
@@ -354,9 +372,9 @@ namespace Engine.Processing
                 var vc = Mesh.AddVertex(c, (vi.Normal + vj.Normal + vk.Normal).Normalized());
                 _holeVertices.Add(vc.Id, vc);
 
-                list.Add(Mesh.AddTriangle(vc.Id, vj.Id, vk.Id));
-                list.Add(Mesh.AddTriangle(vi.Id, vc.Id, vk.Id));
                 list.Add(Mesh.AddTriangle(vi.Id, vj.Id, vc.Id));
+                list.Add(Mesh.AddTriangle(vj.Id, vk.Id, vc.Id));
+                list.Add(Mesh.AddTriangle(vk.Id, vi.Id, vc.Id));
             }
         }
 
@@ -387,8 +405,17 @@ namespace Engine.Processing
                 Mesh.IsInCircumcircle(id23, v1.Id, v2.Id, id13))
             {
 
-                var edge = v1.Edges.Intersect(v2.Edges).FirstOrDefault();
-                Mesh.RemoveEdge(edge);
+                //tris.Remove(tri1);
+                //tris.Remove(tri2);
+
+                //Mesh.Flip(tri1, tri2);
+
+                //tris.Add(Mesh.Triangles[tri1.Id]);
+                //tris.Add(Mesh.Triangles[tri2.Id]);
+
+                //return;
+                //var edge = v1.Edges.Intersect(v2.Edges).FirstOrDefault();
+                //Mesh.RemoveEdge(edge);
 
                 Mesh.RemoveTriangle(tri1.Id);
                 Mesh.RemoveTriangle(tri2.Id);

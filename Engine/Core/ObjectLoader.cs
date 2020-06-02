@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nifti.NET;
 
 namespace Engine.Core
 {
@@ -16,11 +17,11 @@ namespace Engine.Core
         public int YCount;
         public int ZCount;
 
-        public List<int> Intensities;
-        public List<KeyValuePair<OpenTK.Vector3, int>> IntensityMap;
+        public List<short> Intensities;
+        public List<KeyValuePair<OpenTK.Vector3, short>> IntensityMap;
         public float Spacing;
 
-        public VolOutput(int xCount, int yCount, int zCount, List<int> intensities, List<KeyValuePair<OpenTK.Vector3,int>> intensityMap, float spacing)
+        public VolOutput(int xCount, int yCount, int zCount, List<short> intensities, List<KeyValuePair<OpenTK.Vector3,short>> intensityMap, float spacing)
         {
             XCount = xCount;
             YCount = yCount;
@@ -33,9 +34,9 @@ namespace Engine.Core
 
     public struct CubicCell
     {
-        public KeyValuePair<OpenTK.Vector3, int>[] Corners;
+        public KeyValuePair<OpenTK.Vector3, short>[] Corners;
 
-        public CubicCell(KeyValuePair<Vector3, int>[] corners)
+        public CubicCell(KeyValuePair<Vector3, short>[] corners)
         {
             Corners = corners;
         }
@@ -163,7 +164,7 @@ namespace Engine.Core
                 
                 List<double> thetaAngles = new List<double>();
                 List<double> phiAngles = new List<double>();
-                List<KeyValuePair<OpenTK.Vector3, int>> intensities = new List<KeyValuePair<OpenTK.Vector3, int>>();
+                List<KeyValuePair<OpenTK.Vector3, short>> intensities = new List<KeyValuePair<OpenTK.Vector3, short>>();
                 byte[] buffer = new byte[b.BaseStream.Length];
 
                 ushort dimensionX = 0;
@@ -278,7 +279,7 @@ namespace Engine.Core
                                 {
                                     var intensity = buffer[startIndex + (z * dimensionX * dimensionY) + (y * dimensionX) + x];
                                     {
-                                        intensities.Add(new KeyValuePair<OpenTK.Vector3, int>(new OpenTK.Vector3(x, y, z), intensity));
+                                        intensities.Add(new KeyValuePair<OpenTK.Vector3, short>(new OpenTK.Vector3(x, y, z), intensity));
                                     }
                                 }
                             }
@@ -301,7 +302,7 @@ namespace Engine.Core
                 Mesh mesh = new Mesh();
 
                 var spacing = (float)resolution / (float)cartesianSpacing;
-                var colorBuffer = new List<int>();
+                var colorBuffer = new List<short>();
 
                 for (int i = 0; i < intensities.Count; i++)
                 {
@@ -365,7 +366,7 @@ namespace Engine.Core
 
                 List<double> thetaAngles = new List<double>();
                 List<double> phiAngles = new List<double>();
-                List<KeyValuePair<OpenTK.Vector3, int>> intensities = new List<KeyValuePair<OpenTK.Vector3, int>>();
+                List<KeyValuePair<OpenTK.Vector3, short>> intensities = new List<KeyValuePair<OpenTK.Vector3, short>>();
                 byte[] buffer = new byte[b.BaseStream.Length];
 
                 ushort dimensionX = 0;
@@ -480,7 +481,7 @@ namespace Engine.Core
                                 {
                                     var intensity = buffer[startIndex + (z * dimensionX * dimensionY) + (y * dimensionX) + x];
                                     {
-                                        intensities.Add(new KeyValuePair<OpenTK.Vector3, int>(new OpenTK.Vector3(x, y, z), intensity));
+                                        intensities.Add(new KeyValuePair<OpenTK.Vector3, short>(new OpenTK.Vector3(x, y, z), intensity));
                                     }
                                 }
                             }
@@ -503,7 +504,7 @@ namespace Engine.Core
                 
 
                 var spacing = (float)resolution / (float)cartesianSpacing;
-                var colorBuffer = new List<int>();
+                var colorBuffer = new List<short>();
 
                 for (int i = 0; i < intensities.Count; i++)
                 {
@@ -515,9 +516,36 @@ namespace Engine.Core
             }
         }
 
-        public static Mesh LoadDicom(string path)
+        public static VolOutput LoadNifti(string path)
         {
-            return null;
+            var nifti = NiftiFile.Read(@"C:\Users\ozgun\Desktop\CT\4821\4823\20130118_0933183DHEADs002a002.nii");
+
+            var dimensionX = nifti.Dimensions[0];
+            var dimensionY = nifti.Dimensions[1];
+            var dimensionZ = nifti.Dimensions[2];
+
+            List<KeyValuePair<OpenTK.Vector3, short>> intensities = new List<KeyValuePair<OpenTK.Vector3, short>>();
+
+            for (int z = 0; z < dimensionZ; z++)
+            {
+                for (int y = 0; y < dimensionY; y++)
+                {
+                    for (int x = 0; x < dimensionX; x++)
+                    {
+                        var intensity = nifti.Data[(z * dimensionX * dimensionY) + (y * dimensionX) + x];
+                        {
+                            intensities.Add(new KeyValuePair<OpenTK.Vector3, short>(new OpenTK.Vector3(x, z, -y), intensity));
+                        }
+                    }
+                }
+            }
+            var colorBuffer = new List<short>();
+            for (int i = 0; i < intensities.Count; i++)
+            {
+                colorBuffer.Add(intensities[i].Value);
+            }
+
+            return new VolOutput(dimensionX, dimensionY, dimensionZ, colorBuffer, intensities, 0.004f);
         }
 
 
