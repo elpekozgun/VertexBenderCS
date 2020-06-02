@@ -937,10 +937,6 @@ namespace Engine.Processing
                     boundaryVertices.Add(vertices[pair.Value.Start]);
                 }
 
-                //for (int i = 0; i < pairs.Count; i++)
-                //{
-                //    boundaryVertices.Add(vertices[pairs[i].Value.Start]);
-                //}
                 boundaryVertices.Add(vertices[pairs.Last().Value.End]);
 
                 totalBoundaries.Add(boundaryVertices.Select(x => x).ToDictionary(x => x.Id));

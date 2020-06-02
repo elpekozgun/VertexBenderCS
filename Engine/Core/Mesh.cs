@@ -1,7 +1,11 @@
-﻿using OpenTK;
+﻿using MathNet.Numerics;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 
 namespace Engine.Core
 {
@@ -113,6 +117,14 @@ namespace Engine.Core
             return V1 == id || V2 == id || V3 == id;
         }
 
+        public bool ContainsEdge(Edge edge)
+        {
+            return V1 == edge.Start && V2 == edge.End || V1 == edge.End && V2 == edge.Start ||
+                   V2 == edge.Start && V3 == edge.End || V2 == edge.End && V3 == edge.Start ||
+                   V3 == edge.Start && V1 == edge.End || V3 == edge.End && V1 == edge.Start;
+        }
+
+
         public void UpdateIndex(int id, int value)
         {
             if (V1 == id)
@@ -203,6 +215,72 @@ namespace Engine.Core
             return tri;
         }
 
+        internal Triangle AddTriangle(int v1, int v2, int v3, int id)
+        {
+            var tri = new Triangle(id, v1, v2, v3);
+
+            Triangles.Add(id, tri);
+            Vertices[v1].Tris.Add(id);
+            Vertices[v2].Tris.Add(id);
+            Vertices[v3].Tris.Add(id);
+
+            if (!AreNeighbors(v1, v2))
+            {
+                AddEdge(v1, v2, (Vertices[v1].Coord - Vertices[v2].Coord).Length, false);
+            }
+            if (!AreNeighbors(v2, v3))
+            {
+                AddEdge(v2, v3, (Vertices[v2].Coord - Vertices[v3].Coord).Length, false);
+            }
+            if (!AreNeighbors(v3, v1))
+            {
+                AddEdge(v3, v1, (Vertices[v3].Coord - Vertices[v1].Coord).Length, false);
+            }
+
+            return tri;
+        }
+
+        internal void Flip(Triangle ti, Triangle tj)
+        {
+            // 1 initial edge, 2 new edge
+
+            var t1 = new List<int>() { ti.V1, ti.V2, ti.V3 };
+            var t2 = new List<int>() { tj.V1, tj.V2, tj.V3 };
+
+            var commons = t1.Intersect(t2).ToList();
+            if (commons.Count < 2)
+            {
+                return;
+            }
+
+            var v1 = commons[0];
+            var v2 = commons[1];
+
+            var ti3 = ti.GetThirdVertexId(v1, v2);
+            var tj3 = tj.GetThirdVertexId(v1, v2);
+
+            var edge = Vertices[v1].Edges.Intersect(Vertices[v2].Edges).First();
+            RemoveEdge(edge);
+
+            AddEdge(ti3, tj3, (Vertices[ti3].Coord - Vertices[tj3].Coord).Length , false);
+
+            ti.UpdateIndex(v2, tj3);
+            tj.UpdateIndex(v1, ti3);
+
+            Vertices[ti3].Tris.Add(tj.Id);
+            Vertices[tj3].Tris.Add(ti.Id);
+
+            Vertices[v1].Verts.Remove(v2);
+            Vertices[v2].Verts.Remove(v1);
+
+            Vertices[ti3].Verts.Add(tj3);
+            Vertices[tj3].Verts.Add(ti3);
+
+            Triangles[ti.Id] = ti;
+            Triangles[tj.Id] = tj;
+        }
+
+
         internal Edge AddEdge(int v1, int v2, float length, bool isBoundary)
         {
             int id = _lastE++;
@@ -257,13 +335,26 @@ namespace Engine.Core
                 var tri = Triangles[id];
 
                 if (Vertices.TryGetValue(tri.V1, out Vertex v1))
+                {
                     v1.Tris.Remove(tri.Id);
+                }
 
                 if (Vertices.TryGetValue(tri.V2, out Vertex v2))
                     v2.Tris.Remove(tri.Id);
 
                 if (Vertices.TryGetValue(tri.V3, out Vertex v3))
                     v3.Tris.Remove(tri.Id);
+
+                if (v1.Tris.Count == 1)
+                {
+                    if (v1.Edges.Count > 2)
+                    {
+                        for (int i = 0; i < v1.Edges.Count; i++)
+                        {
+                            RemoveEdge(v1.Edges[i]);
+                        }
+                    }
+                }
 
                 Triangles.Remove(id);
             }
@@ -406,50 +497,40 @@ namespace Engine.Core
             return (float)angle;
         }
 
-        public bool IsInCircumcircle(Vector3 x, Vector3 a, Vector3 b, Vector3 c)
+        public bool IsInCircumcircle(int nx, int ia, int ib, int ic)
         {
-            Vector3 ab = b - a;
-            Vector3 ac = c - a;
 
-            Vector3 abxac = Vector3.Cross(ab, ac);
-
-            Vector3 center = (Vector3.Cross(abxac, ab) * ac.Length * ac.Length + Vector3.Cross(ac, abxac) * ab.Length * ab.Length) / (2 * abxac.Length * abxac.Length);
-
-            float radius = center.Length;
-            center += a;
-
-            if (Vector3.DistanceSquared(x, center) <= radius * radius)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public bool IsInCircumcircle(int nx, int i, int j, int k)
-        {
-            var a = Vertices[i].Coord;
-            var b = Vertices[j].Coord;
-            var c = Vertices[k].Coord;
-            var x = Vertices[nx].Coord;
+            var a = Vertices[ia].Coord;
+            var b = Vertices[ib].Coord;
+            var c = Vertices[ic].Coord;
 
             Vector3 ab = b - a;
             Vector3 ac = c - a;
 
-            Vector3 abxac = Vector3.Cross(ab, ac);
 
-            Vector3 center = (Vector3.Cross(abxac, ab) * ac.Length * ac.Length + Vector3.Cross(ac, abxac) * ab.Length * ab.Length) / (2 * abxac.Length * abxac.Length);
+            float a00 = -2.0f * Vector3.Dot(ab, a);
+            float a01 = -2.0f * Vector3.Dot(ab, b);
+            float a02 = -2.0f * Vector3.Dot(ab, c);
 
-            float radius = center.Length;
-            center += a;
+            float b0 = a.LengthSquared - b.LengthSquared;
 
-            if (Vector3.DistanceSquared(x, center) <= radius * radius)
-            {
-                return true;
-            }
-            return false;
+            float a10 = -2.0f * Vector3.Dot(ac, a);
+            float a11 = -2.0f * Vector3.Dot(ac, b);
+            float a12 = -2.0f * Vector3.Dot(ac, c);
+
+            float b1 = a.LengthSquared - c.LengthSquared;
+
+            float alpha = -(-a11 * a02 + a01 * a12 - a12 * b0 + b1 * a02 + a11 * b0 - a01 * b1)
+                    / (-a11 * a00 + a11 * a02 - a10 * a02 + a00 * a12 + a01 * a10 - a01 * a12);
+            float beta = (a10 * b0 - a10 * a02 - a12 * b0 + a00 * a12 + b1 * a02 - a00 * b1)
+                     / (-a11 * a00 + a11 * a02 - a10 * a02 + a00 * a12 + a01 * a10 - a01 * a12);
+            float gamma = (-a11 * a00 - a10 * b0 + a00 * b1 + a11 * b0 + a01 * a10 - a01 * b1)
+                    / (-a11 * a00 + a11 * a02 - a10 * a02 + a00 * a12 + a01 * a10 - a01 * a12);
+
+            Vector3 center = alpha * a + beta * b + gamma * c;
+
+            return (Vertices[nx].Coord - center).LengthSquared < (a - center).LengthSquared;   
         }
-
-
 
         private bool IsCCW(Triangle t)
         {

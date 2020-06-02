@@ -1,5 +1,6 @@
 ﻿using Engine.Core;
 using Engine.GLApi;
+using MathNet.Numerics;
 using MathNet.Numerics.Interpolation;
 using MathNet.Numerics.Optimization.LineSearch;
 using OpenTK;
@@ -8,6 +9,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
@@ -55,27 +57,31 @@ namespace Engine.Processing
         public Mesh Mesh;
         private List<Dictionary<int, int>> _allBoundaries;
         private List<Dictionary<int, int>> _allOpposites;
+        private Dictionary<int, Triangle> _allBoundaryTriangles;
+        private HashSet<int> _boundaryEdges;
+        private Dictionary<int, Vertex> _holeVertices;
 
         public HoleFiller(Mesh mesh)
         {
             Mesh = mesh;
             _allBoundaries = new List<Dictionary<int, int>>();
             _allOpposites = new List<Dictionary<int, int>>();
+            _allBoundaryTriangles = new Dictionary<int, Triangle>();
+            _holeVertices = new Dictionary<int, Vertex>();
         }
 
-        public void FillHoles()
+        public void FillHoles(int iter = 10)
         {
             var boundaryEdges = Mesh.GetBoundaryEdges();
-
             if (boundaryEdges.Count == 0)
             {
                 return;
             }
+            _boundaryEdges = boundaryEdges.Select(x => x.Id).ToHashSet();
 
             List<Dictionary<int, Vertex>> allGlobalBoundaries = new List<Dictionary<int, Vertex>>();
 
             Algorithm.RecursivelyFindAllBoundaries(Mesh.Vertices, boundaryEdges, ref allGlobalBoundaries);
-
 
             for (int i = 0; i < allGlobalBoundaries.Count; i++)
             {
@@ -88,7 +94,6 @@ namespace Engine.Processing
                 _allBoundaries.Add(c);
             }
 
-
             for (int i = 0; i < allGlobalBoundaries.Count; i++)
             {
                 var boundary = allGlobalBoundaries[i];
@@ -100,8 +105,11 @@ namespace Engine.Processing
                     var v2 = boundary.ElementAt((j + 1) % boundary.Count);
 
                     var tri = v1.Value.Tris.Intersect(v2.Value.Tris).ToList()[0];
+
                     var id3 = Mesh.Triangles[tri].GetThirdVertexId(v1.Key, v2.Key);
                     opposites.Add(v1.Key, id3);
+                    if (!_allBoundaryTriangles.ContainsKey(tri))
+                        _allBoundaryTriangles.Add(tri, Mesh.Triangles[tri]);
                 }
                 _allOpposites.Add(opposites);
             }
@@ -118,19 +126,56 @@ namespace Engine.Processing
                 var triangles = newTrianglesList[i];
                 var newTriangles = new List<Triangle>();
 
-                int it = 1;
+                int it = iter;
                 while (it-- > 0)
                 {
                     for (int j = 0; j < triangles.Count; j++)
                     {
-                        newTriangles.AddRange(Refine(triangles[j]));
+                        Refine(triangles[j], i, ref newTriangles);
                     }
+                    if (newTriangles.Count < triangles.Count)
+                    {
+                        break;
+                    }
+
+                    for (int k = 0; k < iter; k++)
+                    {
+                        for (int j = 0; j < newTriangles.Count; j++)
+                        {
+                            var tri = newTriangles[j];
+                            var v1 = Mesh.Vertices[tri.V1];
+                            var v2 = Mesh.Vertices[tri.V2];
+                            var v3 = Mesh.Vertices[tri.V3];
+
+                            Relax(v1, v2, ref newTriangles);
+                            Relax(v2, v3, ref newTriangles);
+                            Relax(v3, v1, ref newTriangles);
+                        }
+                    }
+
                     triangles = new List<Triangle>(newTriangles);
                     newTriangles.Clear();
                 }
+
+                for (int k = 0; k < iter; k++)
+                {
+                    for (int j = 0; j < triangles.Count; j++)
+                    {
+                        var tri = triangles[j];
+                        var v1 = Mesh.Vertices[tri.V1];
+                        var v2 = Mesh.Vertices[tri.V2];
+                        var v3 = Mesh.Vertices[tri.V3];
+
+                        Relax(v1, v2, ref triangles);
+                        Relax(v2, v3, ref triangles);
+                        Relax(v3, v1, ref triangles);
+                    }
+                }
             }
-            
+
+            //Fair();
         }
+
 
         private List<Triangle> CoarseTriangulate(int boundaryId)
         {
@@ -196,6 +241,11 @@ namespace Engine.Processing
             var gj = _allBoundaries[boundaryID][j];
             var gk = _allBoundaries[boundaryID][k];
 
+            if (ExistsEdge(gi, gj) || ExistsEdge(gj, gk) || ExistsEdge(gk, gi))
+            {
+                return new Weight();
+            }
+
             float angle = 0;
 
             if (i + 1 == j)
@@ -236,6 +286,8 @@ namespace Engine.Processing
             var aa = Mesh.Vertices[a].Coord;
             var bb = Mesh.Vertices[b].Coord;
 
+            //var n0 = Vector3.Cross(aa - uu, aa - vv).Normalized();
+            //var n1 = Vector3.Cross(bb - vv, bb - uu).Normalized();
             var n0 = Vector3.Cross(vv - uu, aa - vv).Normalized();
             var n1 = Vector3.Cross(uu - vv, bb - uu).Normalized();
 
@@ -261,15 +313,13 @@ namespace Engine.Processing
 
         }
 
-        private List<Triangle> Refine(Triangle T)
+        private void Refine(Triangle T, int boundaryID, ref List<Triangle> list)
         {
-            var retVal = new List<Triangle>();
-
             var vi = Mesh.Vertices[T.V1];
             var vj = Mesh.Vertices[T.V2];
             var vk = Mesh.Vertices[T.V3];
 
-            var vc = (vi.Coord + vj.Coord + vk.Coord) / 3;
+            var c = (vi.Coord + vj.Coord + vk.Coord) / 3;
 
             float[] sigmaV = new float[3];
             for (int i = 0; i < vi.Verts.Count; i++)
@@ -293,105 +343,124 @@ namespace Engine.Processing
             float sigmaC = sigmaV.Sum() / 3;
             float scale = (float)Math.Sqrt(2);
 
-            var di = scale * Vector3.Distance(vc, vi.Coord);
-            var dj = scale * Vector3.Distance(vc, vj.Coord);
-            var dk = scale * Vector3.Distance(vc, vk.Coord);
+            var di = scale * Vector3.Distance(c, vi.Coord);
+            var dj = scale * Vector3.Distance(c, vj.Coord);
+            var dk = scale * Vector3.Distance(c, vk.Coord);
 
             if (di > sigmaC && di > sigmaV[0] && dj > sigmaC && dj > sigmaV[1] && dk > sigmaC && dk > sigmaV[2])
             {
                 Mesh.RemoveTriangle(T.Id);
-                var vn = Mesh.AddVertex(vc, (vi.Normal + vj.Normal + vk.Normal).Normalized());
+                list.Remove(T);
+                var vc = Mesh.AddVertex(c, (vi.Normal + vj.Normal + vk.Normal).Normalized());
+                _holeVertices.Add(vc.Id, vc);
 
-                var t1 = Mesh.AddTriangle(vn.Id, vj.Id, vk.Id);
-                var otherTriangle = Mesh.Triangles[vj.Tris.Intersect(vk.Tris).ToList()[0]];
-                var other3rd = otherTriangle.GetThirdVertexId(vj.Id, vk.Id);
-
-                if (Mesh.IsInCircumcircle(other3rd, vn.Id, vj.Id, vk.Id) || Mesh.IsInCircumcircle(vn.Id, vj.Id, vk.Id, other3rd))
-                {
-                    Mesh.RemoveTriangle(otherTriangle.Id);
-                    Mesh.RemoveTriangle(t1.Id);
-
-                    retVal.Add(Mesh.AddTriangle(other3rd, vj.Id, vn.Id));
-                    retVal.Add(Mesh.AddTriangle(other3rd, vk.Id, vn.Id));
-                }
-                else
-                {
-                    retVal.Add(t1);
-                }
-
-                var t2 = Mesh.AddTriangle(vn.Id, vi.Id, vk.Id);
-                var otherTriangle2 = Mesh.Triangles[vi.Tris.Intersect(vk.Tris).ToList()[0]];
-                var other3rd2 = otherTriangle2.GetThirdVertexId(vi.Id, vk.Id);
-
-                if (Mesh.IsInCircumcircle(other3rd2, vn.Id, vi.Id, vk.Id) || Mesh.IsInCircumcircle(vn.Id, vi.Id, vk.Id, other3rd2))
-                {
-                    Mesh.RemoveTriangle(otherTriangle2.Id);
-                    Mesh.RemoveTriangle(t2.Id);
-
-                    retVal.Add(Mesh.AddTriangle(other3rd2, vi.Id, vn.Id));
-                    retVal.Add(Mesh.AddTriangle(other3rd2, vk.Id, vn.Id));
-                }
-                else
-                {
-                    retVal.Add(t2);
-                }
-
-                var t3 = Mesh.AddTriangle(vn.Id, vi.Id, vj.Id);
-                var otherTriangle3 = Mesh.Triangles[vi.Tris.Intersect(vj.Tris).ToList()[0]];
-                var other3rd3 = otherTriangle3.GetThirdVertexId(vi.Id, vj.Id);
-
-                if (Mesh.IsInCircumcircle(other3rd3, vn.Id, vi.Id, vj.Id) || Mesh.IsInCircumcircle(vn.Id, vi.Id, vj.Id, other3rd3))
-                {
-                    Mesh.RemoveTriangle(otherTriangle3.Id);
-                    Mesh.RemoveTriangle(t3.Id);
-
-                    retVal.Add(Mesh.AddTriangle(other3rd3, vi.Id, vn.Id));
-                    retVal.Add(Mesh.AddTriangle(other3rd3, vj.Id, vn.Id));
-                }
-                else
-                {
-                    retVal.Add(t3);
-                }
-
-                //retVal.Add(Mesh.AddTriangle(vn.Id, vj.Id, vk.Id));
-                //retVal.Add(Mesh.AddTriangle(vi.Id, vn.Id, vk.Id));
-                //retVal.Add(Mesh.AddTriangle(vi.Id, vj.Id, vn.Id));
-
+                list.Add(Mesh.AddTriangle(vc.Id, vj.Id, vk.Id));
+                list.Add(Mesh.AddTriangle(vi.Id, vc.Id, vk.Id));
+                list.Add(Mesh.AddTriangle(vi.Id, vj.Id, vc.Id));
             }
-
-            return retVal;
         }
 
-        private void Relax(Triangle T , Triangle T2)
+        private void Relax(Vertex v1, Vertex v2, ref List<Triangle> tris)
         {
-            var v1 = Mesh.Vertices[T.V1];
-            var v2 = Mesh.Vertices[T.V2];
-            var v3 = Mesh.Vertices[T.V3];
-
-            var t1 = Mesh.Triangles[v2.Tris.Intersect(v3.Tris).ToList()[0]];
-            var t2 = Mesh.Triangles[v1.Tris.Intersect(v3.Tris).ToList()[0]];
-            var t3 = Mesh.Triangles[v1.Tris.Intersect(v2.Tris).ToList()[0]];
-
-            var t13 = Mesh.Vertices[t1.GetThirdVertexId(T.V2, T.V3)];
-            var t23 = Mesh.Vertices[t2.GetThirdVertexId(T.V1, T.V3)];
-            var t33 = Mesh.Vertices[t3.GetThirdVertexId(T.V1, T.V2)];
-
-            if (Mesh.IsInCircumcircle(t33.Coord, v1.Coord,v2.Coord,v3.Coord) ||
-                Mesh.IsInCircumcircle(v3.Coord, v1.Coord, v2.Coord, t33.Coord))
+            var commonTris = v1.Tris.Intersect(v2.Tris).ToList();
+            if (commonTris.Count < 2)
             {
-                Mesh.RemoveTriangle(t3.Id);
-                Mesh.RemoveTriangle(T.Id);
-
-                Mesh.AddTriangle(t33.Id, v1.Id, v3.Id);
-                Mesh.AddTriangle(t33.Id, v2.Id, v3.Id);
+                return;
             }
 
+            if (_allBoundaryTriangles.ContainsKey(commonTris[0]))
+            {
+                return;
+            }
+            if (_allBoundaryTriangles.ContainsKey(commonTris[1]))
+            {
+                return;
+            }
+
+            var tri1 = Mesh.Triangles[commonTris[0]];
+            var tri2 = Mesh.Triangles[commonTris[1]];
+
+            var id13 = tri1.GetThirdVertexId(v1.Id, v2.Id);
+            var id23 = tri2.GetThirdVertexId(v1.Id, v2.Id);
+
+            if (Mesh.IsInCircumcircle(id13, v1.Id, v2.Id, id23) ||
+                Mesh.IsInCircumcircle(id23, v1.Id, v2.Id, id13))
+            {
+
+                var edge = v1.Edges.Intersect(v2.Edges).FirstOrDefault();
+                Mesh.RemoveEdge(edge);
+
+                Mesh.RemoveTriangle(tri1.Id);
+                Mesh.RemoveTriangle(tri2.Id);
+
+                var T1 = Mesh.AddTriangle(id13, v1.Id, id23, tri1.Id);
+                var T2 = Mesh.AddTriangle(id23, v2.Id, id13, tri2.Id);
+
+                tris.Remove(tri1);
+                tris.Remove(tri2);
+                tris.Add(T1);
+                tris.Add(T2);
+
+                
+
+
+                
+            }
         }
 
+        private void Fair()
+        {
+            var keys = _holeVertices.Select(x => x.Key).ToList();
 
-        // isInCircumcircle(i, j, c ,x) or isInCircumCircle(i, x,j, c)
-        // delete tri1, tri2
-        // addTri(x,j,c)
-        // addTri(x,c,i)
+            int iteration = 4;
+            while (iteration > 0)
+            {
+                for (int j = 0; j < keys.Count; j++)
+                {
+                    var i = keys[j];
+                    var Lu = Vector3.Zero;
+                    var normal = Mesh.Vertices[i].Normal;
+
+                    if (Mesh.Vertices[i].Verts.Count > 0)
+                    {
+                        for (int k = 0; k < Mesh.Vertices[i].Verts.Count; k++)
+                        {
+                            Lu += Mesh.Vertices[Mesh.Vertices[i].Verts[k]].Coord;
+                            normal += Mesh.Vertices[Mesh.Vertices[i].Verts[k]].Normal;
+                        }
+                        Lu /= Mesh.Vertices[i].Verts.Count;
+                        Lu -= Mesh.Vertices[i].Coord;
+
+                        Mesh.Vertices[i] = new Vertex(Mesh.Vertices[i].Id, Mesh.Vertices[i].Coord + Lu * 0.5f, normal.Normalized())
+                        {
+                            Verts = Mesh.Vertices[i].Verts,
+                            Tris = Mesh.Vertices[i].Tris,
+                            Edges = Mesh.Vertices[i].Edges
+                        };
+                        _holeVertices[i] = Mesh.Vertices[i];
+                    }
+                }
+                iteration--;
+            }
+        }
+
+        private bool ExistsEdge(int i, int j)
+        {
+            var v1 = Mesh.Vertices[i];
+            var v2 = Mesh.Vertices[j];
+
+            var a = v1.Edges.Intersect(v2.Edges).ToList();
+
+            if (a.Count > 0)
+            {
+                if (!_boundaryEdges.Contains(a[0]))
+                {
+                    return true;
+                }
+            }
+            return false;
+            
+        }
+
     }
 }
