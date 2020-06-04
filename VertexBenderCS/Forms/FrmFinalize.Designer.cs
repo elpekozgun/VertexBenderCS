@@ -82,9 +82,9 @@
             this.chkFill.AutoSize = true;
             this.chkFill.Location = new System.Drawing.Point(12, 58);
             this.chkFill.Name = "chkFill";
-            this.chkFill.Size = new System.Drawing.Size(103, 17);
+            this.chkFill.Size = new System.Drawing.Size(68, 17);
             this.chkFill.TabIndex = 4;
-            this.chkFill.Text = "Smoothen Mesh";
+            this.chkFill.Text = "Fill Holes";
             this.chkFill.UseVisualStyleBackColor = true;
             // 
             // numericSmoothen

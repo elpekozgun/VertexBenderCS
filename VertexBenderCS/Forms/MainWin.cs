@@ -288,7 +288,8 @@ namespace VertexBenderCS.Forms
                 var meshrend = new MeshRenderer(mr, "final")
                 {
                     Position = new Vector3(0, 0, -0.05f),
-                    EnableCull = false
+                    EnableCull = false,
+                    Color = new Vector4(1,0,0,1)
                 };
                 _SceneGraph.AddObject(meshrend);
             }
@@ -474,7 +475,6 @@ namespace VertexBenderCS.Forms
             //Mesh mesh = new Mesh();
             //Dictionary<int, Vertex> b = new Dictionary<int, Vertex>();
             HoleFiller filler = new HoleFiller(mesh);
-
             filler.FillHoles();
 
             meshRenderer.SetMesh(mesh);
@@ -1100,6 +1100,8 @@ namespace VertexBenderCS.Forms
                     var volumeRenderer = _selectedTransform as VolumeRenderer;
 
                     volumeRendererPanel.Visible = true;
+
+                    intensityMarch.Maximum = volumeRenderer.MaxIntensity;
 
                     numericMarch.ValueChanged -= NumericMarch_ValueChanged;
                     intensityMarch.ValueChanged -= IntensityMarch_ValueChanged;

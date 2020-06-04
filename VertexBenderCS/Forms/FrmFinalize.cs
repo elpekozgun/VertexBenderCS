@@ -26,6 +26,9 @@ namespace VertexBenderCS.Forms
             SubscribeEvents();
 
             _volRenderer = volRenderer;
+
+            numericSmoothen.Value = 3;
+            numericFill.Value = 3;
         }
 
         private void SubscribeEvents()

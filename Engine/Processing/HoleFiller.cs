@@ -30,7 +30,7 @@ namespace Engine.Processing
             public Weight()
             {
                 Area = float.MaxValue;
-                Angle = 180.0f;
+                Angle = MathHelper.Pi;
             }
 
             public Weight(float area, float angle)
@@ -126,12 +126,13 @@ namespace Engine.Processing
                 _allOpposites.Add(opposites);
             }
 
-            List<List<Triangle>> newTrianglesList = new List<List<Triangle>>();
+            List<Dictionary<int, Triangle>> newTrianglesList = new List<Dictionary<int,Triangle>>();
 
             for (int i = 0; i < _allBoundaries.Count; i++)
             {
                 newTrianglesList.Add(CoarseTriangulate(i));
             }
+
 
             if (isCourse)
             {
@@ -141,36 +142,33 @@ namespace Engine.Processing
             for (int i = 0; i < newTrianglesList.Count; i++)
             {
                 var triangles = newTrianglesList[i];
-                var newTriangles = new List<Triangle>();
+                var newTriangles = new Dictionary<int, Triangle>();  
 
                 int it = iter;
                 while (it-- > 0)
                 {
-                    for (int j = 0; j < triangles.Count; j++)
+                    foreach (var tri in triangles)
                     {
-                        Refine(triangles[j], i, ref newTriangles);
+                        Refine(tri.Value, i, ref newTriangles);
                     }
-                    if (newTriangles.Count < triangles.Count)
-                    {
-                        break;
-                    }
+
+                    triangles = new Dictionary<int, Triangle>(newTriangles);
 
                     for (int k = 0; k < iter; k++)
                     {
-                        for (int j = 0; j < newTriangles.Count; j++)
+                        for (int j = 0; j < triangles.Count; j++)
                         {
-                            var tri = newTriangles[j];
+                            var tri = triangles.ElementAt(j).Value;
                             var v1 = Mesh.Vertices[tri.V1];
                             var v2 = Mesh.Vertices[tri.V2];
                             var v3 = Mesh.Vertices[tri.V3];
 
-                            Relax(v1, v2, ref newTriangles);
-                            Relax(v2, v3, ref newTriangles);
-                            Relax(v3, v1, ref newTriangles);
+                            Relax(v1, v2, ref triangles);
+                            Relax(v2, v3, ref triangles);
+                            Relax(v3, v1, ref triangles);
                         }
                     }
 
-                    triangles = new List<Triangle>(newTriangles);
                     newTriangles.Clear();
                 }
 
@@ -178,7 +176,7 @@ namespace Engine.Processing
                 {
                     for (int j = 0; j < triangles.Count; j++)
                     {
-                        var tri = triangles[j];
+                        var tri = triangles.ElementAt(j).Value;
                         var v1 = Mesh.Vertices[tri.V1];
                         var v2 = Mesh.Vertices[tri.V2];
                         var v3 = Mesh.Vertices[tri.V3];
@@ -188,7 +186,9 @@ namespace Engine.Processing
                         Relax(v3, v1, ref triangles);
                     }
                 }
+
             }
+            Mesh.CalculateVertexNormals();
 
             _watch.Stop();
             Logger.Log($"{_allBoundaries.Count} Holes filled in {_watch.ElapsedMilliseconds} ms");
@@ -196,11 +196,11 @@ namespace Engine.Processing
             //Fair();
         }
 
-        private List<Triangle> CoarseTriangulate(int boundaryId)
+        private Dictionary<int, Triangle> CoarseTriangulate(int boundaryId)
         {
             var nv = _allBoundaries[boundaryId].Count;
 
-            List<Triangle> tris = new List<Triangle>();
+            Dictionary<int, Triangle> tris = new Dictionary<int, Triangle>();
 
             Weight[,] weightTable = new Weight[nv, nv];
             int[,] indexTable = new int[nv, nv];
@@ -274,7 +274,7 @@ namespace Engine.Processing
             }
             else
             {
-                angle = Math.Max(angle, DihedralAngle(gi, gj, gk, indexTable[i, j]));
+                angle = Math.Max(angle, DihedralAngle(gi, gj, gk, _allBoundaries[boundaryID][indexTable[i, j]]));
             }
 
             if (j + 1 == k)
@@ -283,7 +283,7 @@ namespace Engine.Processing
             }
             else
             {
-                angle = Math.Max(angle, DihedralAngle(gj, gk, gi, indexTable[j, k]));
+                angle = Math.Max(angle, DihedralAngle(gj, gk, gi, _allBoundaries[boundaryID][indexTable[j, k]]));
             }
 
             if (i == 0 && k == _allBoundaries[boundaryID].Count - 1)
@@ -309,10 +309,12 @@ namespace Engine.Processing
             var n0 = Vector3.Cross(vv - uu, aa - vv).Normalized();
             var n1 = Vector3.Cross(uu - vv, bb - uu).Normalized();
 
-            return (float)Math.Acos(Vector3.Dot(n0, n1)) * 180.0f / MathHelper.Pi;
+            var aaa = (float)Math.Acos(Vector3.Dot(n0, n1));
+
+            return aaa;
         }
 
-        private void AddToMesh(ref int[,] indexTable, ref List<Triangle> tris, int start, int end, int boundaryID)
+        private void AddToMesh(ref int[,] indexTable, ref Dictionary<int, Triangle> tris, int start, int end, int boundaryID)
         {
             if (end == start + 1)
                 return;
@@ -323,15 +325,15 @@ namespace Engine.Processing
             var gCur = _allBoundaries[boundaryID][cur];
             var gEnd = _allBoundaries[boundaryID][end];
 
-            var tri = Mesh.AddTriangle(gStart, gEnd, gCur);
-            tris.Add(tri);
+            var tri = Mesh.AddTriangle(gEnd, gCur, gStart);
+            tris.Add(tri.Id, tri);
 
             AddToMesh(ref indexTable, ref tris, start, cur, boundaryID);
             AddToMesh(ref indexTable, ref tris, cur, end, boundaryID);
 
         }
 
-        private void Refine(Triangle T, int boundaryID, ref List<Triangle> list)
+        private void Refine(Triangle T, int boundaryID, ref Dictionary<int, Triangle> list)
         {
             var vi = Mesh.Vertices[T.V1];
             var vj = Mesh.Vertices[T.V2];
@@ -365,20 +367,26 @@ namespace Engine.Processing
             var dj = scale * Vector3.Distance(c, vj.Coord);
             var dk = scale * Vector3.Distance(c, vk.Coord);
 
+
+
             if (di > sigmaC && di > sigmaV[0] && dj > sigmaC && dj > sigmaV[1] && dk > sigmaC && dk > sigmaV[2])
             {
                 Mesh.RemoveTriangle(T.Id);
-                list.Remove(T);
+                list.Remove(T.Id);
                 var vc = Mesh.AddVertex(c, (vi.Normal + vj.Normal + vk.Normal).Normalized());
                 _holeVertices.Add(vc.Id, vc);
 
-                list.Add(Mesh.AddTriangle(vi.Id, vj.Id, vc.Id));
-                list.Add(Mesh.AddTriangle(vj.Id, vk.Id, vc.Id));
-                list.Add(Mesh.AddTriangle(vk.Id, vi.Id, vc.Id));
+                var t1 = Mesh.AddTriangle(vi.Id, vj.Id, vc.Id);
+                var t2 = Mesh.AddTriangle(vj.Id, vk.Id, vc.Id);
+                var t3 = Mesh.AddTriangle(vk.Id, vi.Id, vc.Id);
+
+                list.Add(t1.Id, t1);
+                list.Add(t2.Id, t2);
+                list.Add(t3.Id, t3);
             }
         }
 
-        private void Relax(Vertex v1, Vertex v2, ref List<Triangle> tris)
+        private void Relax(Vertex v1, Vertex v2, ref Dictionary<int, Triangle> tris)
         {
             var commonTris = v1.Tris.Intersect(v2.Tris).ToList();
             if (commonTris.Count < 2)
@@ -399,39 +407,40 @@ namespace Engine.Processing
             var tri2 = Mesh.Triangles[commonTris[1]];
 
             var id13 = tri1.GetThirdVertexId(v1.Id, v2.Id);
-            var id23 = tri2.GetThirdVertexId(v1.Id, v2.Id);
+            var id23 = tri2.GetThirdVertexId(v2.Id, v1.Id);
+
+            if (id13 == v1.Id || v1.Id == id23 || id13 == id23 || id13 == v2.Id || id23 == v2.Id)
+            {
+                return;
+            }
 
             if (Mesh.IsInCircumcircle(id13, v1.Id, v2.Id, id23) ||
                 Mesh.IsInCircumcircle(id23, v1.Id, v2.Id, id13))
             {
+                Mesh.Flip(tri1, tri2);
 
-                //tris.Remove(tri1);
-                //tris.Remove(tri2);
+                tris[tri1.Id] = Mesh.Triangles[tri1.Id];
+                tris[tri2.Id] = Mesh.Triangles[tri2.Id];
 
-                //Mesh.Flip(tri1, tri2);
+                //var aa = v1.Edges.Intersect(v2.Edges);
 
-                //tris.Add(Mesh.Triangles[tri1.Id]);
-                //tris.Add(Mesh.Triangles[tri2.Id]);
+                //if (aa.Count() > 0)
+                //{
+                //    Mesh.RemoveEdge(aa.First());
+                //}
 
-                //return;
-                //var edge = v1.Edges.Intersect(v2.Edges).FirstOrDefault();
-                //Mesh.RemoveEdge(edge);
+                //Mesh.RemoveTriangle(tri1.Id);
+                //Mesh.RemoveTriangle(tri2.Id);
 
-                Mesh.RemoveTriangle(tri1.Id);
-                Mesh.RemoveTriangle(tri2.Id);
+                //tris.Remove(tri1.Id);
+                //tris.Remove(tri2.Id);
 
-                var T1 = Mesh.AddTriangle(id13, v1.Id, id23, tri1.Id);
-                var T2 = Mesh.AddTriangle(id23, v2.Id, id13, tri2.Id);
+                //tri1 = Mesh.AddTriangle(v1.Id, id23, id13, tri1.Id);
+                //tri2 = Mesh.AddTriangle(v2.Id, id13, id23, tri2.Id);
 
-                tris.Remove(tri1);
-                tris.Remove(tri2);
-                tris.Add(T1);
-                tris.Add(T2);
+                //tris.Add(tri1.Id, tri1);
+                //tris.Add(tri2.Id, tri2);
 
-                
-
-
-                
             }
         }
 

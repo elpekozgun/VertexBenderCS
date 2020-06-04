@@ -36,6 +36,7 @@ namespace Engine.GLApi
         public int DownSample { get; set; }
         public eMarchMethod Method { get; set; }
         public float SmoothenRadius { get; set; }
+        public short MaxIntensity => rawVolData.MaxIntensity;
 
         private GpuVertex[] vertices;
         private VolOutput rawVolData;
@@ -110,7 +111,7 @@ namespace Engine.GLApi
 
         private void UpdateInputFromVol(VolOutput vol)
         {
-            input = new Vector4[vol.IntensityMap.Count];
+            input = new Vector4[vol.IntensityMap.Length];
             int i = 0;
             foreach (var item in vol.IntensityMap)
             {
@@ -140,7 +141,7 @@ namespace Engine.GLApi
             }
 
             _watch.Stop();
-            Logger.Log($"Method: {Enum.GetName(typeof(eMarchMethod), Method)}, elapsed: {_watch.ElapsedMilliseconds} ms");
+            //Logger.Log($"Method: {Enum.GetName(typeof(eMarchMethod), Method)}, elapsed: {_watch.ElapsedMilliseconds} ms");
         }
 
         public Mesh FinalizeMesh(bool smoothen, bool removeIslands, bool fillHoles, int smoothIt, int fillIt)
@@ -168,7 +169,6 @@ namespace Engine.GLApi
                 HoleFiller filler = new HoleFiller(mesh);
                 filler.FillHoles(fillIt);
             }
-
             if (smoothen)
                 Algorithm.Smoothen(ref mesh, smoothIt);
             return mesh;
@@ -382,21 +382,21 @@ namespace Engine.GLApi
 
                 vertices[3 * i] = new GpuVertex()
                 {
-                    Coord = tris[i].v0.Xyz * -subVolData.Spacing,
+                    Coord = tris[i].v0.Xyz * subVolData.Spacing,
                     Normal = normal,
                     Color = new Vector3(0.0f, 0.0f, 0.0f)
                 };
 
                 vertices[3 * i + 1] = new GpuVertex()
                 {
-                    Coord = tris[i].v1.Xyz * -subVolData.Spacing,
+                    Coord = tris[i].v1.Xyz * subVolData.Spacing,
                     Normal = normal,
                     Color = new Vector3(0.0f, 0.0f, 0.0f)
                 };
 
                 vertices[3 * i + 2] = new GpuVertex()
                 {
-                    Coord = tris[i].v2.Xyz * -subVolData.Spacing,
+                    Coord = tris[i].v2.Xyz * subVolData.Spacing,
                     Normal = normal,
                     Color = new Vector3(0.0f, 0.0f, 0.0f)
                 };
@@ -420,13 +420,13 @@ namespace Engine.GLApi
             vertices = new GpuVertex[tris.Count * 3];
             for (int i = 0; i < tris.Count; i++)
             {
-                Vector3 normal = Vector3.Cross(tris[i][2] - tris[i][0], tris[i][2] - tris[i][1]).Normalized();
+                Vector3 normal = subVolData.ImportMatrix * Vector3.Cross(tris[i][2] - tris[i][0], tris[i][2] - tris[i][1]).Normalized();
 
                 for (int j = 0; j < 3; j++)
                 {
                     vertices[3 * i + j] = new GpuVertex()
                     {
-                        Coord = tris[i][j] * -subVolData.Spacing,
+                        Coord = tris[i][j] * subVolData.Spacing,
                         Normal = normal,
                         Color = new Vector3(0.0f, 0.0f, 0.0f)
                     };

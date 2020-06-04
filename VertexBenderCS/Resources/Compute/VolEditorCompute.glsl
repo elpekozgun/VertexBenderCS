@@ -21,7 +21,7 @@ void main()
 {
 	uint a = gl_GlobalInvocationID.x;
 
-	vec4 pos = Model * pointCloud[a] * -spacing;
+	vec4 pos = Model * pointCloud[a] * spacing;
 
 	float dif = length(pos.xyz - point );
 

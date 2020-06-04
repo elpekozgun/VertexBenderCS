@@ -1280,11 +1280,11 @@ namespace Engine.Processing
 
             var retval = new List<CubicCell>();
 
-            for (int i = 0; i < output.IntensityMap.Count; i++)
+            for (int i = 0; i < output.IntensityMap.Length; i++)
             {
 
                 var val = output.IntensityMap[i].Key;
-                if (val.X == x - 1 || val.Y == y - 1 || val.Z == z - 1)
+                if (Math.Abs(val.X) == x - 1 || Math.Abs(val.Y) == y - 1 || Math.Abs(val.Z) == z - 1)
                 {
                     continue;
                 }
@@ -1438,16 +1438,12 @@ namespace Engine.Processing
                 return volumeInfo;
             }
 
-            var intensities = new List<short>();
             var intensityMap = new List<KeyValuePair<Vector3, short>>();
 
             var dimX = volumeInfo.XCount;
             var dimY = volumeInfo.YCount;
             var dimZ = volumeInfo.ZCount;
 
-            // This is utter crap for now..
-            // needs a huge todo for this shit...
-            //sampleSize = Math.Max(2, sampleSize);
             for (int z = 0; z < dimZ; z += sampleSize)
             {
                 for (int y = 0; y < dimY; y += sampleSize)
@@ -1455,24 +1451,23 @@ namespace Engine.Processing
                     for (int x = 0; x < dimX; x += sampleSize)
                     {
                         short intensity = 0;
-                        //intensity += volumeInfo.IntensityMap[z * (dimX * dimY) + (y * dimX) + x].Value;
+                        intensity += volumeInfo.IntensityMap[z * (dimX * dimY) + (y * dimX) + x].Value;
 
-                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
-                        intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
-                        intensity /= 6;
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min(z * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + (y * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x, volumeInfo.Intensities.Count - 1)];
+                        //intensity += volumeInfo.Intensities[Math.Min((z + 1) * (dimX * dimY) + ((y + 1) * dimX) + x + 1, volumeInfo.Intensities.Count - 1)];
+                        //intensity /= 6;
 
 
-                        intensities.Add(intensity);
-                        intensityMap.Add(new KeyValuePair<Vector3, short>(new Vector3(x, y, z) / sampleSize, intensity));
+                        intensityMap.Add(new KeyValuePair<Vector3, short>(volumeInfo.ImportMatrix * new Vector3(x, y, z) / sampleSize, intensity));
                     }
                 }
             }
 
-            return new VolOutput((int)Math.Ceiling((double)dimX / sampleSize), (int)Math.Ceiling((double)dimY / sampleSize), (int)Math.Ceiling((double)dimZ / sampleSize), intensities, intensityMap, volumeInfo.Spacing * sampleSize);
+            return new VolOutput((int)Math.Ceiling((double)dimX / sampleSize), (int)Math.Ceiling((double)dimY / sampleSize), (int)Math.Ceiling((double)dimZ / sampleSize), intensityMap.ToArray(), volumeInfo.ImportMatrix, volumeInfo.Spacing * sampleSize, volumeInfo.MaxIntensity);
         }
 
         public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)

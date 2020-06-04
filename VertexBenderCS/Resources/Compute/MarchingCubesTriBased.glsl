@@ -113,14 +113,14 @@ void main()
         };
 
         uint cubeIndex = 0;
-        if (corners[0].w >= intensity) cubeIndex |= 1;
-        if (corners[1].w >= intensity) cubeIndex |= 2;
-        if (corners[2].w >= intensity) cubeIndex |= 4;
-        if (corners[3].w >= intensity) cubeIndex |= 8;
-        if (corners[4].w >= intensity) cubeIndex |= 16;
-        if (corners[5].w >= intensity) cubeIndex |= 32;
-        if (corners[6].w >= intensity) cubeIndex |= 64;
-        if (corners[7].w >= intensity) cubeIndex |= 128;
+        if (corners[0].w <= intensity) cubeIndex |= 1;
+        if (corners[1].w <= intensity) cubeIndex |= 2;
+        if (corners[2].w <= intensity) cubeIndex |= 4;
+        if (corners[3].w <= intensity) cubeIndex |= 8;
+        if (corners[4].w <= intensity) cubeIndex |= 16;
+        if (corners[5].w <= intensity) cubeIndex |= 32;
+        if (corners[6].w <= intensity) cubeIndex |= 64;
+        if (corners[7].w <= intensity) cubeIndex |= 128;
 
         for(int i = 0; i < 16; i+=3) 
         {

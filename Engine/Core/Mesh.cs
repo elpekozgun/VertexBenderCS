@@ -259,11 +259,6 @@ namespace Engine.Core
             var ti3 = ti.GetThirdVertexId(v1, v2);
             var tj3 = tj.GetThirdVertexId(v1, v2);
 
-            var edge = Vertices[v1].Edges.Intersect(Vertices[v2].Edges).First();
-            RemoveEdge(edge);
-
-            AddEdge(ti3, tj3, (Vertices[ti3].Coord - Vertices[tj3].Coord).Length , false);
-
             ti.UpdateIndex(v2, tj3);
             tj.UpdateIndex(v1, ti3);
 
@@ -272,6 +267,9 @@ namespace Engine.Core
 
             Vertices[v1].Verts.Remove(v2);
             Vertices[v2].Verts.Remove(v1);
+
+            Vertices[v1].Tris.Remove(tj.Id);
+            Vertices[v2].Tris.Remove(ti.Id);
 
             Vertices[ti3].Verts.Add(tj3);
             Vertices[tj3].Verts.Add(ti3);
@@ -335,9 +333,7 @@ namespace Engine.Core
                 var tri = Triangles[id];
 
                 if (Vertices.TryGetValue(tri.V1, out Vertex v1))
-                {
                     v1.Tris.Remove(tri.Id);
-                }
 
                 if (Vertices.TryGetValue(tri.V2, out Vertex v2))
                     v2.Tris.Remove(tri.Id);
@@ -345,16 +341,38 @@ namespace Engine.Core
                 if (Vertices.TryGetValue(tri.V3, out Vertex v3))
                     v3.Tris.Remove(tri.Id);
 
-                if (v1.Tris.Count == 1)
-                {
-                    if (v1.Edges.Count > 2)
-                    {
-                        for (int i = 0; i < v1.Edges.Count; i++)
-                        {
-                            RemoveEdge(v1.Edges[i]);
-                        }
-                    }
-                }
+               // //if (v1.Tris.Count == 1)
+               // {
+               //     if (v1.Edges.Count > 2)
+               //     {
+               //         for (int i = 0; i < v1.Edges.Count; i++)
+               //         {
+               //             RemoveEdge(v1.Edges[i]);
+               //         }
+               //     }
+               // }
+
+               // //if (v2.Tris.Count == 1)
+               // {
+               //     if (v2.Edges.Count > 2)
+               //     {
+               //         for (int i = 0; i < v2.Edges.Count; i++)
+               //         {
+               //             RemoveEdge(v2.Edges[i]);
+               //         }
+               //     }
+               // }
+
+               ////if (v3.Tris.Count == 1)
+               // {
+               //     if (v3.Edges.Count > 2)
+               //     {
+               //         for (int i = 0; i < v3.Edges.Count; i++)
+               //         {
+               //             RemoveEdge(v3.Edges[i]);
+               //         }
+               //     }
+               // }
 
                 Triangles.Remove(id);
             }
@@ -409,12 +427,12 @@ namespace Engine.Core
             var v2 = Vertices[tri.V2].Coord;
             var v3 = Vertices[tri.V3].Coord;
 
-            return -Vector3.Cross(v2 - v1, v3 - v1).Normalized();
+            return Vector3.Cross(v1 - v2, v3 - v1).Normalized();
         }
 
         internal Vector3 CalculateTriangleNormals(Vector3 v1, Vector3 v2, Vector3 v3)
         {
-            return -Vector3.Cross(v2 - v1, v3 - v1).Normalized();
+            return Vector3.Cross(v1 - v2, v3 - v1).Normalized();
         }
 
         internal void CalculateVertexNormals()
@@ -428,8 +446,8 @@ namespace Engine.Core
                 Vector3 normal = Vector3.Zero;
                 for (int j = 0; j < vertex.Tris.Count; j++)
                 {
-                    //normal += CalculateTriangleNormals(Triangles[v.Tris[j]]) * TriangleArea(Triangles[v.Tris[j]]);
-                    normal += CalculateTriangleNormals(Triangles[vertex.Tris[j]]) * GetTriangleAngle(vertex.Tris[j], keys[i]);
+                    normal += (CalculateTriangleNormals(Triangles[vertex.Tris[j]])* TriangleArea(Triangles[vertex.Tris[j]])).Normalized();
+                    //normal += CalculateTriangleNormals(Triangles[vertex.Tris[j]])/* * GetTriangleAngle(vertex.Tris[j], keys[i])*/;
                 }
 
                 vertex.UpdateVertex(vertex.Coord, normal.Normalized());
