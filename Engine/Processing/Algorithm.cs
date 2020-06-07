@@ -250,6 +250,60 @@ namespace Engine.Processing
             return new ShortestPathOutput(eShortestPathMethod.MinHeap, nodeMap[target].Item.Priority, path, _watch.ElapsedMilliseconds);
         }
 
+        public static ShortestPathOutput DijkstraMinHeap(Graph graph, int src, int target, bool earlyTerminate = false)
+        {
+            _watch.Reset();
+            _watch.Start();
+
+            var que = new BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                var dist = i == src ? 0 : float.MaxValue;
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(new HeapNode(i, graph.Nodes[i].Neighbors, dist), dist);
+                nodeMap[i] = output;
+            }
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                if (earlyTerminate && u.id == target)
+                {
+                    break;
+                }
+
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
+            }
+
+            var path = new List<int>();
+            int k = target;
+            path.Add(k);
+            while (k != src)
+            {
+                k = nodeMap[k].Item.PrevId;
+                path.Add(k);
+            }
+
+            _watch.Stop();
+
+            //Logger.Log($"{mesh.Name}: Dijkstra Min Heap -> Source: {src}, Target: {target} Duration: {_watch.ElapsedMilliseconds} ms. Max distance -> {nodeMap[target].Item.Priority}");
+
+            return new ShortestPathOutput(eShortestPathMethod.MinHeap, nodeMap[target].Item.Priority, path, _watch.ElapsedMilliseconds);
+        }
+
+
         public static ShortestPathOutput AStarMinHeap(Mesh mesh, int src, int target)
         {
             var graph = new Graph(mesh);
@@ -697,6 +751,74 @@ namespace Engine.Processing
 
             return retVal;
         }
+
+        public static Dictionary<int,float> DijkstraMinHeapKey(Graph graph, int src)
+        {
+            var que = new PriorityQueues.BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
+            var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
+
+            for (int i = 0; i < graph.Nodes.Count; i++)
+            {
+                var dist = i == src ? 0 : float.MaxValue;
+
+                var n = new HeapNode(i, graph.Nodes[i].Neighbors, dist);
+                IPriorityQueueEntry<HeapNode> output = que.Enqueue(n, dist);
+                nodeMap[i] = output;
+            }
+
+            while (que.Count > 0)
+            {
+                var u = que.Dequeue();
+
+                foreach (var neighbor in graph.Nodes[u.id].Neighbors)
+                {
+                    float val = nodeMap[u.id].Item.Priority + neighbor.Value;
+                    if (val < nodeMap[neighbor.Key].Item.Priority)
+                    {
+                        nodeMap[neighbor.Key].Item.Priority = val;
+                        que.UpdatePriority(nodeMap[neighbor.Key], val);
+                        nodeMap[neighbor.Key].Item.PrevId = u.id;
+                    }
+                }
+
+            }
+            var retVal = new Dictionary<int,float>();
+            for (int i = 0; i < nodeMap.Count; i++)
+            {
+                retVal.Add(i, nodeMap[i].Item.Priority);
+            }
+
+            return retVal;
+        }
+
+        public static Dictionary<int,float> AverageGeodesicDistance2(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
+        {
+            _watch.Reset();
+            _watch.Start();
+
+            Dictionary<int, float> distances = new Dictionary<int, float>();
+
+            var samples = FarthestPointSampling(graph, sampleCount, startIndex, updateProgress);
+
+            for (int i = 0; i < samples.SampleIndices.Count; i++)
+            {
+                var dist = DijkstraMinHeap(graph, samples.SampleIndices[i]);
+                for (int j = 0; j < dist.Length; j++)
+                {
+                    distances[j] += (dist[j] / samples.SamplePoints.Count);
+                }
+                updateProgress((int)(100 * ((float)i / (float)samples.SampleIndices.Count)));
+            }
+
+            _watch.Stop();
+
+            Logger.Log($"Average geodesic distance -> Duration: {_watch.ElapsedMilliseconds} ms");
+
+            return distances;
+
+            
+        }
+
 
         #endregion
 

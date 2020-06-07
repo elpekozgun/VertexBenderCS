@@ -39,6 +39,10 @@ namespace Engine.GLApi
 
         public Vector4 Color { get; set; }
 
+        private Shader _normalShader;
+
+        public bool ShowNormals{ get; set; }
+
         public void SetMesh(Mesh mesh)
         {
             ExtractVertices(mesh);
@@ -87,6 +91,8 @@ namespace Engine.GLApi
             Shader = Shader.Standard;
             EnableCull = true;
             IsEnabled = true;
+            _normalShader = Shader.NormalShader;
+            ShowNormals = true;
         }
 
         public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
@@ -126,7 +132,6 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(0);
 
-            GL.LineWidth(1.1f);
             GL.PointSize(5);
             GL.PolygonOffset(1.0f, 2);
         }
@@ -184,6 +189,15 @@ namespace Engine.GLApi
 
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
 
+                if (ShowNormals)
+                {
+                    _normalShader.Use();
+                    _normalShader.SetMat4("Model", ModelMatrix);
+                    _normalShader.SetMat4("View", cam.View);
+                    _normalShader.SetMat4("Projection", cam.Projection);
+                    GL.LineWidth(1.5f);
+                    GL.DrawElements(BeginMode.Points, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+                }
             }
             if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)
             {
@@ -201,6 +215,8 @@ namespace Engine.GLApi
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
 
                 GL.Enable(EnableCap.PolygonOffsetFill);
+                GL.LineWidth(1.1f);
+
                 GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
                 GL.Disable(EnableCap.PolygonOffsetLine);
 

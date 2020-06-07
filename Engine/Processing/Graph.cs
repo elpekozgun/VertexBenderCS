@@ -66,6 +66,28 @@ namespace Engine.Processing
             //    );    
             //}
         }
+
+        public Graph(Dictionary<int, Vertex> vertices, Mesh mesh)
+        {
+            Nodes = new List<GraphNode>();
+
+            foreach (var vertex in vertices)
+            {
+                Nodes.Add
+                (
+                    new GraphNode
+                    (
+                        vertex.Key,
+                        vertex.Value.Coord,
+                        ExtractNeighbors(mesh, vertex.Value)
+                    //mesh.Vertices[i].Verts
+                    )
+                );
+            }
+
+        }
+
+
     }
 
 }

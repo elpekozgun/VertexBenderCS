@@ -475,9 +475,20 @@ namespace VertexBenderCS.Forms
             //Mesh mesh = new Mesh();
             //Dictionary<int, Vertex> b = new Dictionary<int, Vertex>();
             HoleFiller filler = new HoleFiller(mesh);
-            filler.FillHoles();
+            filler.FillHoles(5);
 
             meshRenderer.SetMesh(mesh);
+
+            //var output = Algorithm.AverageGeodesicDistance(new Graph(mesh), 8, 3350, (x) => { });
+            //float max = output.Distances.Max();
+
+            //var color = new Vector3[output.Distances.Length];
+            //for (int i = 0; i < color.Length; i++)
+            //{
+            //    color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f;
+            //}
+
+            //meshRenderer.SetColorBuffer(color);
 
             //var meshrend = new MeshRenderer(mesh, "final")
             //{

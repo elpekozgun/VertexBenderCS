@@ -93,6 +93,14 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoFragment.glsl", ShaderType.FragmentShader)
         );
 
+        private static readonly Shader _normalShader = ShaderBuilder.CreateShader
+        (
+            "normal",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\normal.vert", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\normal.geom", ShaderType.GeometryShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\normal.frag", ShaderType.FragmentShader)
+        );
+
         public static Shader Standard => _standard;
         public static Shader Gouraud => _gouraud;
         public static Shader Unlit => _unlit;
@@ -105,6 +113,7 @@ namespace Engine.GLApi
         public static Shader SmoothenCompute => _smoothenCompute;
         public static Shader DirectComputePaint => _directComputePaint;
         public static Shader Gizmo => _gizmoShader;
+        public static Shader NormalShader => _normalShader;
 
         #endregion
 

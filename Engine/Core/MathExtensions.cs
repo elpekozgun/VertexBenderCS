@@ -42,6 +42,10 @@ namespace Engine.Core
 
         public static Vector3 RotateAroundArbitraryAxis(this Vector3 source, Vector3 start, Vector3 axis, float angle)
         {
+            if (axis.Length == 0)
+            {
+                return source;
+            }
             // align on XZ plane
             var T = Matrix4.CreateTranslation(-start);
 
@@ -56,7 +60,7 @@ namespace Engine.Core
 
             Vector4 translated = new Vector4(source, 1.0f);
 
-            var result = Matrix4.Invert(T) * Matrix4.Invert(RZ) * Matrix4.Invert(RY) * RZ * RY * RX * T * translated;
+            var result = Matrix4.Invert(T) * Matrix4.Invert(RX) * Matrix4.Invert(RY) * RZ * RY * RX * T * translated;
 
             return result.Xyz;
         }
