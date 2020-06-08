@@ -476,7 +476,7 @@ namespace VertexBenderCS.Forms
             //Dictionary<int, Vertex> b = new Dictionary<int, Vertex>();
             HoleFiller filler = new HoleFiller(mesh);
             filler.FillHoles(5);
-
+            meshRenderer.ShowNormals = false;
             meshRenderer.SetMesh(mesh);
 
             //var output = Algorithm.AverageGeodesicDistance(new Graph(mesh), 8, 3350, (x) => { });

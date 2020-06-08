@@ -173,38 +173,184 @@ namespace Engine.Processing
                 newTrianglesList[i] = triangles;
 
             }
-            //Mesh.CalculateVertexNormals();
-
-            //return;
+            Mesh.CalculateVertexNormals();
+            //Mesh.RefreshMesh();
 
             var oldNormalsList = new List<Dictionary<int,Vector3>>();
 
-            var avGeoDists = new List<Dictionary<int, float>>();
+            for (int i = 0; i < _allBoundaries.Count; i++)
+            {
+                var oldList = new Dictionary<int, Vector3>() ;
+
+                foreach (var v in _holeVertices[i])
+                {
+                    oldList.Add(v.Key, Mesh.Vertices[v.Key].Normal);
+                }
+                oldNormalsList.Add(oldList);
+            }
+
 
             for (int i = 0; i < _allBoundaries.Count; i++)
             {
                 var d = SmoothenHole(i);
-
-                if (d.Count > 0)
-                {
-                    avGeoDists.Add(d);
-                }
             }
 
-            Mesh.RefreshMesh();
+            for (int i = 0; i < _allBoundaries.Count; i++)
+            {
+                var boundary = _allBoundaries[i];
+                var holes = _holeVertices[i];
 
-            //for (int k = 0; k < 4; k++)
+                var nextBorder = new Dictionary<int, Vertex>();
+
+                foreach (var b in boundary)
+                {
+                    var bv = Mesh.Vertices[b.Value];
+                    for (int j = 0; j < bv.Verts.Count; j++)
+                    {
+                        if (holes.TryGetValue(bv.Verts[j], out Vertex v))
+                        {
+                            if (!nextBorder.ContainsKey(v.Id))
+                            {
+                                nextBorder.Add(v.Id, v);
+                            }
+                        }
+                    }
+                }
+
+                var newBorder = new Dictionary<int, Vertex>();
+                foreach (var v in boundary)
+                {
+                    newBorder.Add(v.Value, Mesh.Vertices[v.Value]);
+                }
+
+
+                while (holes.Count   > 0)
+                {
+
+                    // Get common tris between boundary and next border.
+                    foreach (var v in nextBorder)
+                    {
+                        var tris = new List<int>();
+
+                        for (int j = 0; j < v.Value.Tris.Count; j++)
+                        {
+                            var tri = Mesh.Triangles[v.Value.Tris[j]];
+
+                            foreach (var b in newBorder)
+                            {
+                                if (tri.ContainsId(b.Key))
+                                {
+                                    tris.Add(tri.Id);
+                                }
+                            }
+                        }
+
+
+                        // Burayla ilgili problem olmalı. ne olabilir acaba.
+                        var actualNormal = Mesh.Vertices[v.Key].Normal;
+                        var newNormal = Vector3.Zero;
+
+                        var newDot = Vector3.Dot(actualNormal.Normalized(), newNormal);
+                        var dot = 0.0f;
+
+                        while (true)
+                        {
+                            for (int j = 0; j < tris.Count; j++)
+                            {
+                                newNormal += Mesh.CalculateTriangleNormals(Mesh.Triangles[tris[j]]);
+                            }
+
+                            newDot = Vector3.Dot(actualNormal.Normalized(), newNormal.Normalized());
+                            if (dot > newDot || newDot > 0.95f)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                dot = newDot;
+                            }
+
+                            var curV = Mesh.Vertices[v.Key];
+
+                            Mesh.Vertices[v.Key] = new Vertex(v.Key, curV.Coord + actualNormal * 0.001f, actualNormal)
+                            {
+                                Verts = Mesh.Vertices[v.Key].Verts,
+                                Edges = Mesh.Vertices[v.Key].Edges,
+                                Tris = Mesh.Vertices[v.Key].Tris,
+                            };
+
+                        }
+                        holes.Remove(v.Key);
+                    }
+
+                    newBorder = new Dictionary<int,Vertex>(nextBorder);
+
+                    nextBorder.Clear();
+
+                    foreach (var b in newBorder)
+                    {
+                        var bv = Mesh.Vertices[b.Key];
+                        for (int j = 0; j < bv.Verts.Count; j++)
+                        {
+                            if (holes.TryGetValue(bv.Verts[j], out Vertex v))
+                            {
+                                if (!nextBorder.ContainsKey(v.Id))
+                                {
+                                    nextBorder.Add(v.Id, v);
+                                }
+                            }
+                        }
+                    }
+
+                }		
+            }
+
+            /*
+             
+            ok so heres the idea.
+            We get boundary vertices for a hole,
+            We get the hole vertices in triangulation,
+            Then we get the hole vertices that are neighboring the boundary vertices.
+            We then calculate the average of triangles that neighbor hole vertices and boundary vertices create.
+            We calculate their normal and check difference between the normal we want.
+            Until it converges we move the point, recalculate triangle normals.
+            When all hole vertices are finished, we set them as our next boundary vertices and repeat the process until no hole vertices left in sequence.
+                        
+             
+             */
+
+
+
+
+
+            //for (int i = 0; i < _allBoundaries.Count; i++)
             //{
-            //    for (int i = 0; i < avGeoDists.Count; i++)
+            //    int k = 50;
+            //    foreach (var v in _holeVertices[i])
             //    {
-            //        var holeGraph = new Graph(_holeVertices[i], Mesh);
-
-            //        var max = avGeoDists[i].Select(x => x.Value).Max();
-            //        foreach (var v in _holeVertices[i])
+            //        var desiredNormal = v.Value.Normal;
+            //        var vx = Mesh.GetVertexNormal(v.Key);
+            //        var dot = Vector3.Dot(desiredNormal, vx.Normalized());
+            //        var lastDot = Vector3.Dot(desiredNormal, vx.Normalized());
+            //        do
             //        {
-            //            var val = max - avGeoDists[i][v.Key];
-            //            Mesh.Vertices[v.Key] = new Vertex(v.Key, v.Value.Coord + v.Value.Normal * val , v.Value.Normal);
-            //        }
+            //            dot = lastDot;
+
+            //            var newV = new Vertex(v.Key, v.Value.Coord + desiredNormal * dot * 0.1f, v.Value.Normal)
+            //            {
+            //                Verts = Mesh.Vertices[v.Key].Verts,
+            //                Edges = Mesh.Vertices[v.Key].Edges,
+            //                Tris = Mesh.Vertices[v.Key].Tris
+            //            };
+            //            Mesh.Vertices[v.Key] = newV;
+
+            //            vx = Mesh.GetVertexNormal(v.Key);
+            //            lastDot = Vector3.Dot(desiredNormal, vx.Normalized());
+
+
+            //            //} while (Math.Abs(dot - lastDot) > 0.01f);
+            //        } while (k-- > 0);
+
             //    }
             //}
 
@@ -482,7 +628,12 @@ namespace Engine.Processing
                     normal += (Mesh.Vertices[vb.Value].Normal) / d;
                 }
                 ad /= _allBoundaries[boundaryID].Count;
-                Mesh.Vertices[v.Key] = new Vertex(v.Key, v.Value.Coord, normal.Normalized());
+
+                var newV = new Vertex(v.Key, v.Value.Coord, normal.Normalized());
+                newV.Verts = Mesh.Vertices[v.Key].Verts;
+                newV.Edges = Mesh.Vertices[v.Key].Edges;
+                newV.Tris = Mesh.Vertices[v.Key].Tris;
+                Mesh.Vertices[v.Key] = newV;
 
                 agds.Add(v.Key, ad);
             }

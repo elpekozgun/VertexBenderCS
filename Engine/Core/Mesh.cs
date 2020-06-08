@@ -435,6 +435,19 @@ namespace Engine.Core
             return Vector3.Cross(v1 - v2, v3 - v1).Normalized();
         }
 
+        internal Vector3 GetVertexNormal(int id)
+        {
+            var v = Vertices[id];
+            var normal = Vector3.Zero;
+
+            for (int i = 0; i < v.Tris.Count; i++)
+            {
+                normal += CalculateTriangleNormals(Triangles[v.Tris[i]]);
+            }
+            return normal.Normalized();
+        }
+
+
         internal void CalculateVertexNormals()
         {
             var keys = Vertices.Select(x => x.Key).ToList();
