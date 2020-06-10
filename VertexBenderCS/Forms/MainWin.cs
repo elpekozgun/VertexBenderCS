@@ -62,6 +62,7 @@ namespace VertexBenderCS.Forms
         private eRenderMode _renderMode;
         private bool _isPerspective;
 
+        private bool _Update = true;
 
         private bool _editMode;
         private bool _mouseOnGL;
@@ -78,9 +79,6 @@ namespace VertexBenderCS.Forms
         {
             InvokeIfRequired(GLControl, () =>
             {
-                GLControl.Invalidate();
-                GLControl.Update();
-
                 if (GLControl.Focused)
                 {
                     _cameraController.Navigate(KeyState);
@@ -89,6 +87,8 @@ namespace VertexBenderCS.Forms
                     MouseState = OpenTK.Input.Mouse.GetState();
                     ApplyEdit();
                 }
+
+                GLControl.Invalidate();
             });
         }
         
@@ -168,7 +168,7 @@ namespace VertexBenderCS.Forms
             _mouseY = (int)(Height * 0.5);
             _isFirstMouse = true;
 
-            _timer = new System.Timers.Timer(1000.0 / 144);
+            _timer = new System.Timers.Timer(8);
             _timer.Elapsed += Update;
             _timer.Start();
 
@@ -256,6 +256,9 @@ namespace VertexBenderCS.Forms
             toolbarWireframe.Click += ToolbarWireframe_Click;
             toolbarProjectionMode.Click += ToolbarProjectionMode_Click;
             toolbarIsBlinn.Click += ToolbarIsBlinn_Click;
+            toolbarShowNormals.Click += ToolbarShowNormals_Click;
+
+
             toolStripButton2.Click += ToolStripButton2_Click;
         }
 
@@ -466,7 +469,7 @@ namespace VertexBenderCS.Forms
 
         private void CoarseTri()
         {
-            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\pumpkin.off");
+            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\egg.off");
 
             var meshRenderer = new MeshRenderer(mesh, "face");
             _SceneGraph.AddObject(meshRenderer);
@@ -474,8 +477,8 @@ namespace VertexBenderCS.Forms
 
             //Mesh mesh = new Mesh();
             //Dictionary<int, Vertex> b = new Dictionary<int, Vertex>();
-            HoleFiller filler = new HoleFiller(mesh);
-            filler.FillHoles(5);
+            //HoleFiller filler = new HoleFiller(mesh);
+            //filler.FillHoles(5);
             meshRenderer.ShowNormals = false;
             meshRenderer.SetMesh(mesh);
 
@@ -1814,6 +1817,20 @@ namespace VertexBenderCS.Forms
                 _SceneGraph.IsBlinnPhong = !_SceneGraph.IsBlinnPhong;
             }
         }
+
+
+        private void ToolbarShowNormals_Click(object sender, EventArgs e)
+        {
+            if (_selectedTransform is MeshRenderer)
+            {
+                (_selectedTransform as MeshRenderer).ShowNormals = !(_selectedTransform as MeshRenderer).ShowNormals;
+            }
+            else
+            {
+                MessageBox.Show("Please Select a meshrenderer", "No meshes selected", MessageBoxButtons.OK);
+            }
+        }
+
 
         #endregion
 

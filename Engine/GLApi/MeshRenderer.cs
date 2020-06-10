@@ -92,7 +92,7 @@ namespace Engine.GLApi
             EnableCull = true;
             IsEnabled = true;
             _normalShader = Shader.NormalShader;
-            ShowNormals = true;
+            ShowNormals = false;
         }
 
         public MeshRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)

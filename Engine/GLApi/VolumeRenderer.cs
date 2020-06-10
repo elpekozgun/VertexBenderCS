@@ -141,7 +141,7 @@ namespace Engine.GLApi
             }
 
             _watch.Stop();
-            //Logger.Log($"Method: {Enum.GetName(typeof(eMarchMethod), Method)}, elapsed: {_watch.ElapsedMilliseconds} ms");
+            Logger.Log($"Method: {Enum.GetName(typeof(eMarchMethod), Method)}, elapsed: {_watch.ElapsedMilliseconds} ms");
         }
 
         public Mesh FinalizeMesh(bool smoothen, bool removeIslands, bool fillHoles, int smoothIt, int fillIt)
