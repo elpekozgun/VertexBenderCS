@@ -50,6 +50,7 @@ namespace VertexBenderCS.Forms
         private Camera _camera;
         private CameraController _cameraController;
         private SceneGraph _SceneGraph;
+        private SceneTools _SceneTools;
         private Transform _selectedTransform;
 
         private FrmProcess _frmProcess;
@@ -66,8 +67,6 @@ namespace VertexBenderCS.Forms
 
         private bool _editMode;
         private bool _mouseOnGL;
-        private GizmoRenderer _gizmo;
-        private MeshRenderer _sphereRenderer;
         private int _direction = -1;
 
         private Dictionary<Transform, IsoCurveOutput> _IsoCurveOutputs;
@@ -175,6 +174,7 @@ namespace VertexBenderCS.Forms
             _frmProcess = null;
             _frmFinalize = null;
             _SceneGraph = new SceneGraph();
+            _SceneTools = new SceneTools();
             _camera = new Camera(GLControl.Width, GLControl.Height);
             _cameraController = new CameraController(_camera);
             _IsoCurveOutputs = new Dictionary<Transform, IsoCurveOutput>();
@@ -288,9 +288,11 @@ namespace VertexBenderCS.Forms
                 HoleFiller filler = new HoleFiller(mr);
                 filler.FillHoles();
 
+                //Algorithm.Smoothen(ref mr, 5);
+
                 var meshrend = new MeshRenderer(mr, "final")
                 {
-                    Position = new Vector3(0, 0, -0.05f),
+                    //Position = new Vector3(0, 0, -0.05f),
                     EnableCull = false,
                     Color = new Vector4(1,0,0,1)
                 };
@@ -306,7 +308,8 @@ namespace VertexBenderCS.Forms
             //ComputeTest();
             //HoleFillTest();
             //HoleFillTestBasic();
-            CoarseTri();
+            //CoarseTri();
+            //PointCloudTest();
         }
 
         private void StarTest()
@@ -382,7 +385,7 @@ namespace VertexBenderCS.Forms
         {
             var mesh = new Mesh();
             mesh.Vertices.Add(0, new Vertex(0, Vector3.Zero));
-            var pointCloud = new PointCloudRenderer(mesh, new List<int>() { 255 }, 1);
+            var pointCloud = new PointCloudRenderer(mesh, new List<short>() { 255 }, 1);
             _SceneGraph.AddObject(pointCloud);
         }
 
@@ -405,12 +408,12 @@ namespace VertexBenderCS.Forms
             sceneGraphTree.SelectedNode = null;
 
             var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
-            _sphereRenderer = new MeshRenderer(sphere, Shader.Unlit, "Sphere")
-            {
-                Scale = new Vector3(0.01f, 0.01f, 0.01f)
-            };
-            _SceneGraph.AddObject(_sphereRenderer);
-            _sphereRenderer.IsEnabled = false;
+            //_sphereRenderer = new MeshRenderer(sphere, Shader.Unlit, "Sphere")
+            //{
+            //    Scale = new Vector3(0.01f, 0.01f, 0.01f)
+            //};
+            //_SceneGraph.AddObject(_sphereRenderer);
+            //_sphereRenderer.IsEnabled = false;
 
         }
 
@@ -439,31 +442,6 @@ namespace VertexBenderCS.Forms
                 Color = volRenderer.Color
             };
             _SceneGraph.AddObject(meshrend);
-
-        }
-
-        private void HoleFillTestBasic()
-        {
-            var mesh = ObjectLoader.LoadOff(@"C:\Users\ozgun\Desktop\boundary.off");
-
-            var meshRenderer = new MeshRenderer(mesh, "face");
-            _SceneGraph.AddObject(meshRenderer);
-
-            Algorithm.FillHoles(ref mesh);
-
-            sceneGraphTree.SelectedNode = null;
-
-            var meshrend = new MeshRenderer(mesh, "final")
-            {
-                Position = new Vector3(0, 0, -0.05f),
-                EnableCull = false
-            };
-            _SceneGraph.AddObject(meshrend);
-
-            _camera.Position = new Vector3(0.02f, 0.251f, 0.012f);
-            _camera.Front = -Vector3.UnitY;
-            _camera.Up = Vector3.UnitZ;
-
 
         }
 
@@ -501,6 +479,14 @@ namespace VertexBenderCS.Forms
             //_SceneGraph.AddObject(meshrend);
         }
 
+        private void PointCloudTest()
+        {
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out VolOutput volOutput);
+            var pointRenderer = new PointCloudRenderer(output, volOutput.IntensityMap.Select(x=>x.Value).ToList(), volOutput.Spacing);
+
+            sceneGraphTree.SelectedNode = null;
+            _SceneGraph.AddObject(pointRenderer);
+        }
 
         #endregion
 
@@ -815,15 +801,15 @@ namespace VertexBenderCS.Forms
         {
             if (KeyState.IsKeyDown(OpenTK.Input.Key.LControl))
             {
-                if (_sphereRenderer != null)
+                if (_editMode)
                 {
-                    _sphereRenderer.Scale += (Vector3.One * 0.001f * e.Delta / Math.Abs(e.Delta));
+                    _SceneTools.VolumeEditor.Scale += (Vector3.One * 0.001f * e.Delta / Math.Abs(e.Delta));
                 }
 
                 var volRend = (_selectedTransform as VolumeRenderer);
                 if (volRend != null)
                 {
-                    volRend.SmoothenRadius = _sphereRenderer.Scale.X;
+                    volRend.SmoothenRadius = _SceneTools.VolumeEditor.Scale.X;
                     volRend.Compute();
                 }
                 return;
@@ -862,23 +848,13 @@ namespace VertexBenderCS.Forms
 
             if (_editMode && _mouseOnGL)
             {
-                if (_gizmo != null)
-                {
-                    _gizmo.Position = new Vector2( 2 * (-0.5f + _mouseX / GLControl.Width) , -2 * (-0.5f + _mouseY / GLControl.Height));
-                    _gizmo.Aspect = GLControl.AspectRatio;
-                    _gizmo.Radius = 0.4f;
-                    _gizmo.Border = 0.2f;
-                }
-
                 var volRend = (_selectedTransform as VolumeRenderer);
                 if (volRend != null)
                 {
                     Vector3 pos = _camera.ScreenToWorld(_mouseX, _mouseY, GLControl.Width, GLControl.Height);
 
                     volRend.ComputeIntersection(pos, (pos - _camera.Position).Normalized(), out Vector3 result);
-                    _sphereRenderer.Position = result;
-                    _sphereRenderer.EnableBlend = true;
-                    _sphereRenderer.Color = new Vector4(0.3f, 0.4f, 0.3f, 0.5f);
+                    _SceneTools.VolumeEditor.Position = result;
                 }
             }
         }
@@ -943,10 +919,7 @@ namespace VertexBenderCS.Forms
             if (_editMode)
             {
                 Cursor.Show();
-                if (_sphereRenderer != null)
-                {
-                    _sphereRenderer.IsEnabled = false;
-                }
+                 _SceneTools.VolumeEditor.IsEnabled = false;
                 _mouseOnGL = false;
             }
 
@@ -957,10 +930,7 @@ namespace VertexBenderCS.Forms
             if (_editMode)
             {
                 _mouseOnGL = true;
-                if (_sphereRenderer != null)
-                {
-                    _sphereRenderer.IsEnabled = true;
-                }
+                _SceneTools.VolumeEditor.IsEnabled = true;
                 Cursor.Hide();
             }
         }
@@ -1353,7 +1323,7 @@ namespace VertexBenderCS.Forms
                 EnableCull = false
             };
             renderer.Position += new Vector3(0.0f, 0.0f, 0.4f);
-            _sphereRenderer.IsEnabled = false;
+            _SceneTools.VolumeEditor.IsEnabled = false;
             _editMode = false;
             sceneGraphTree.SelectedNode = null;
             _SceneGraph.AddObject(renderer);
@@ -1365,14 +1335,12 @@ namespace VertexBenderCS.Forms
 
             if (_editMode)
             {
-                _gizmo = new GizmoRenderer();
-                _sphereRenderer.IsEnabled = true;
+                _SceneTools.VolumeEditor.IsEnabled = true;
                 Logger.Log("edit mode");
             }
             else 
             {
-                _gizmo = null;
-                _sphereRenderer.IsEnabled = false;
+                _SceneTools.VolumeEditor.IsEnabled = false;
                 Logger.Log("not edit mode");   
             }
         }
@@ -1433,12 +1401,8 @@ namespace VertexBenderCS.Forms
             GL.CullFace(CullFaceMode.Front);
 
             _camera.IsOrtho = !_isPerspective;
-
             _SceneGraph.RenderAll(_camera, _renderMode);
-            if (_gizmo !=null)
-            {
-                _gizmo.Render();
-            }
+            _SceneTools.RenderAll(_camera);
 
             GL.Flush();
             GLControl.SwapBuffers();
@@ -1481,7 +1445,13 @@ namespace VertexBenderCS.Forms
                         {
                             _direction = 1;
                         }
-                        volRend.ComputeVolEditor(_sphereRenderer.Position, _sphereRenderer.Scale.X, (float)numericPressure.Value, _direction);
+                        volRend.ComputeVolEditor
+                        (
+                            _SceneTools.VolumeEditor.Position, 
+                            _SceneTools.VolumeEditor.Scale.X, 
+                            (float)numericPressure.Value, 
+                            _direction
+                        );
                     }
                 }
             }
@@ -1627,94 +1597,117 @@ namespace VertexBenderCS.Forms
 
         private void MenuImport_Click(object sender, EventArgs e)
         {
-            var d = new OpenFileDialog();
-            d.ValidateNames = true;
-            d.Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* ";
+            var d = new OpenFileDialog
+            {
+                ValidateNames = true,
+                Filter = "Off files (*.off)|*.off|All Files(*.*)|*.* "
+            };
             if (d.ShowDialog() == DialogResult.OK)
             {
-                var v = d.FileName.Substring(d.FileName.Length - 4);
-                if (v.ToLower() == ".off")
+                try
                 {
-                    var split = d.FileName.Split(new char[] { '\\'});
-                    var name = split[split.Length - 1];
+                    var v = d.FileName.Substring(d.FileName.Length - 4);
+                    if (v.ToLower() == ".off")
+                    {
+                        var split = d.FileName.Split(new char[] { '\\' });
+                        var name = split[split.Length - 1];
 
-                    //_SceneGraph.Clean();
-                    var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
-                    obj.Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-                    obj.Mesh.Name = obj.Name;
+                        //_SceneGraph.Clean();
+                        var obj = new MeshRenderer(ObjectLoader.LoadOff(d.FileName), name);
+                        obj.Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+                        obj.Mesh.Name = obj.Name;
 
-                    sceneGraphTree.SelectedNode = null;
-                    _SceneGraph.AddObject(obj);
+                        sceneGraphTree.SelectedNode = null;
+                        _SceneGraph.AddObject(obj);
+                    }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Logger.Log(ex.Message);
                 }
             }
+            d.Dispose();
         }
 
         private void MenuImportVol_Click(object sender, EventArgs e)
         {
-            var d = new OpenFileDialog();
-            d.ValidateNames = true;
-            d.Filter = "VOL files (*.vol)|*.vol|All Files(*.*)|*.* ";
+            var d = new OpenFileDialog
+            {
+                ValidateNames = true,
+                Filter = "VOL files (*.vol)|*.vol|All Files(*.*)|*.* "
+            };
             if (d.ShowDialog() == DialogResult.OK)
             {
-                var v = d.FileName.Substring(d.FileName.Length - 4);
-                if (v.ToLower() == ".vol")
+                try
                 {
-                    var split = d.FileName.Split(new char[] { '\\' });
-                    var name = split[split.Length - 1];
-
-                    var output = ObjectLoader.LoadVol(d.FileName);
-
-                    var volRenderer = new VolumeRenderer(output, name)
+                    var v = d.FileName.Substring(d.FileName.Length - 4);
+                    if (v.ToLower() == ".vol")
                     {
-                        Intensity = 60,
-                        DownSample = 6,
-                        Method = eMarchMethod.GpuBoost,
-                        SmoothenRadius = 0.0001f 
-                    };
-                    volRenderer.Compute();
-                    _SceneGraph.AddObject(volRenderer);
+                        var split = d.FileName.Split(new char[] { '\\' });
+                        var name = split[split.Length - 1];
 
-                    sceneGraphTree.SelectedNode = null;
+                        var output = ObjectLoader.LoadVol(d.FileName);
 
-                    if (_sphereRenderer == null)
-                    {
-                        var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
-                        _sphereRenderer = new MeshRenderer(sphere, Shader.Unlit, "Sphere")
+                        var volRenderer = new VolumeRenderer(output, name)
                         {
-                            Scale = new Vector3(0.01f, 0.01f, 0.01f)
+                            Intensity = 60,
+                            DownSample = 6,
+                            Method = eMarchMethod.GpuBoost,
+                            SmoothenRadius = 0.0001f
                         };
-                        _SceneGraph.AddObject(_sphereRenderer);
-                        _sphereRenderer.IsEnabled = false;
-                    }
+                        volRenderer.Compute();
+                        _SceneGraph.AddObject(volRenderer);
 
+                        sceneGraphTree.SelectedNode = null;
+                    }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Logger.Log(ex.Message);
                 }
             }
+            d.Dispose();
         }
 
         private void MenuImportNifti_Click(object sender, EventArgs e)
         {
-            if (_sphereRenderer == null)
+            var d = new OpenFileDialog
             {
-                var sphere = PrimitiveObjectFactory.Sphere(1, 4, eSphereGenerationType.Cube);
-                _sphereRenderer = new MeshRenderer(sphere, Shader.Unlit, "Sphere")
-                {
-                    Scale = new Vector3(0.01f, 0.01f, 0.01f)
-                };
-                _SceneGraph.AddObject(_sphereRenderer);
-                _sphereRenderer.IsEnabled = false;
-            }
-
-            var output = ObjectLoader.LoadNifti("");
-            var volRenderer = new VolumeRenderer(output, "nifti")
-            {
-                Intensity = 60,
-                DownSample = 6,
-                Method = eMarchMethod.GpuBoost,
-                SmoothenRadius = 0.0001f
+                ValidateNames = true,
+                Filter = "Nifti files (*.nii)|*.nii|All Files(*.*)|*.* "
             };
-            volRenderer.Compute();
-            _SceneGraph.AddObject(volRenderer);
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var v = d.FileName.Substring(d.FileName.Length - 4);
+                    if (v.ToLower() == ".nii")
+                    {
+                        var split = d.FileName.Split(new char[] { '\\' });
+                        var name = split[split.Length - 1];
 
+                        var output = ObjectLoader.LoadNifti(d.FileName);
+
+                        var volRenderer = new VolumeRenderer(output, name)
+                        {
+                            Intensity = 60,
+                            DownSample = 6,
+                            Method = eMarchMethod.GpuBoost,
+                            SmoothenRadius = 0.0001f
+                        };
+                        volRenderer.Compute();
+                        _SceneGraph.AddObject(volRenderer);
+
+                        sceneGraphTree.SelectedNode = null;
+                    }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Logger.Log(ex.Message);
+                }
+                
+            }
+            d.Dispose();
         }
 
         private void MenuAddSphereTetra_Click(object sender, EventArgs e)

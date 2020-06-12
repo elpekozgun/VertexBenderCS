@@ -287,11 +287,11 @@
             this.toolbarShaded,
             this.toolbarWireframe,
             this.toolbarPoint,
+            this.toolbarShowNormals,
             this.toolStripSeparator4,
             this.toolStripButton2,
             this.toolbarIsBlinn,
-            this.toolStripButton7,
-            this.toolbarShowNormals});
+            this.toolStripButton7});
             this.toolBar.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolBar.Location = new System.Drawing.Point(0, 24);
             this.toolBar.MinimumSize = new System.Drawing.Size(1231, 70);
@@ -1193,11 +1193,10 @@
             this.pointCloudPanel.Controls.Add(this.sliderMin);
             this.pointCloudPanel.Controls.Add(this.label2);
             this.pointCloudPanel.Controls.Add(this.label3);
-            this.pointCloudPanel.Location = new System.Drawing.Point(0, -2);
+            this.pointCloudPanel.Location = new System.Drawing.Point(0, 149);
             this.pointCloudPanel.Name = "pointCloudPanel";
             this.pointCloudPanel.Size = new System.Drawing.Size(226, 93);
             this.pointCloudPanel.TabIndex = 24;
-            this.pointCloudPanel.Visible = false;
             // 
             // sliderMaxText
             // 
@@ -1282,7 +1281,6 @@
             this.volumeRendererPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.volumeRendererPanel.Controls.Add(this.label12);
             this.volumeRendererPanel.Controls.Add(this.numericPressure);
-            this.volumeRendererPanel.Controls.Add(this.pointCloudPanel);
             this.volumeRendererPanel.Controls.Add(this.btnFinalize);
             this.volumeRendererPanel.Controls.Add(this.btnEdit);
             this.volumeRendererPanel.Controls.Add(this.cmbVolMethod);
@@ -1297,7 +1295,6 @@
             this.volumeRendererPanel.Name = "volumeRendererPanel";
             this.volumeRendererPanel.Size = new System.Drawing.Size(226, 187);
             this.volumeRendererPanel.TabIndex = 27;
-            this.volumeRendererPanel.Visible = false;
             // 
             // label12
             // 
@@ -1424,6 +1421,7 @@
             this.panel1.AutoScroll = true;
             this.panel1.Controls.Add(this.transformPanel);
             this.panel1.Controls.Add(this.volumeRendererPanel);
+            this.panel1.Controls.Add(this.pointCloudPanel);
             this.panel1.Controls.Add(this.spherePanel);
             this.panel1.Location = new System.Drawing.Point(3, 439);
             this.panel1.Name = "panel1";

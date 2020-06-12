@@ -28,6 +28,7 @@ namespace Engine.GLApi
 
         public bool EnableCull;
         public bool EnableBlend;
+        public bool EnableDepth;
 
         private bool _initialized;
 
@@ -91,6 +92,7 @@ namespace Engine.GLApi
             Shader = Shader.Standard;
             EnableCull = true;
             IsEnabled = true;
+            EnableDepth = true;
             _normalShader = Shader.NormalShader;
             ShowNormals = false;
         }
@@ -166,6 +168,12 @@ namespace Engine.GLApi
                 GL.Enable(EnableCap.Blend);
                 GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); 
             }
+
+            if (!EnableDepth)
+            {
+                GL.Disable(EnableCap.DepthTest);
+            }
+
 
             if (!EnableCull)
             {
@@ -247,6 +255,10 @@ namespace Engine.GLApi
             if (!EnableCull)
             {
                 GL.Enable(EnableCap.CullFace);
+            }
+            if (!EnableDepth)
+            {
+                GL.Enable(EnableCap.DepthTest);
             }
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);

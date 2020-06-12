@@ -522,7 +522,7 @@ namespace Engine.Core
 
         public static VolOutput LoadNifti(string path)
         {
-            var nifti = NiftiFile.Read(@"C:\Users\ozgun\Desktop\ceng599 project\CT\4821\4823\20130118_0933183DHEADs002a002.nii");
+            var nifti = NiftiFile.Read(path);
             
             var dimensionX = nifti.Dimensions[0];
             var dimensionY = nifti.Dimensions[1];

@@ -1712,7 +1712,6 @@ namespace Engine.Processing
                         for (int k = 0; k < mesh.Vertices[i].Verts.Count; k++)
                         {
                             Lu += mesh.Vertices[mesh.Vertices[i].Verts[k]].Coord;
-                            normal += mesh.Vertices[mesh.Vertices[i].Verts[k]].Normal;
                         }
                         Lu /= mesh.Vertices[i].Verts.Count;
                         Lu -= mesh.Vertices[i].Coord;
@@ -1728,6 +1727,8 @@ namespace Engine.Processing
                 iteration--;
 
             }
+            mesh.RefreshMesh();
+            mesh.CalculateVertexNormals();
 
             _watch.Stop();
             Logger.Log($" smooth: {_watch.ElapsedMilliseconds} ms");
@@ -1800,6 +1801,7 @@ namespace Engine.Processing
             }
             _watch.Stop();
             mesh.RefreshMesh();
+            mesh.CalculateVertexNormals();
 
             Logger.Log($"island removal: {_watch.ElapsedMilliseconds} ms");
 

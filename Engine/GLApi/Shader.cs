@@ -34,6 +34,13 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\UnlitFragment.glsl", ShaderType.FragmentShader)
         );
 
+        private static readonly Shader _indicator = ShaderBuilder.CreateShader
+        (
+        "indicator",
+        ShaderBuilder.CreateShaderSource(@"Resources\Shader\indicator.vert", ShaderType.VertexShader),
+        ShaderBuilder.CreateShaderSource(@"Resources\Shader\indicator.frag", ShaderType.FragmentShader)
+        );
+
         private static readonly Shader _cuberilleGeometry = ShaderBuilder.CreateShader
         (
             "cuberille",
@@ -86,11 +93,11 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\ComputeFragment.glsl", ShaderType.FragmentShader)
         );
 
-        private static readonly Shader _gizmoShader = ShaderBuilder.CreateShader
+        private static readonly Shader _EditorSphere = ShaderBuilder.CreateShader
         (
-            "gizmo",
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoVertex.glsl", ShaderType.VertexShader),
-            ShaderBuilder.CreateShaderSource(@"Resources\Shader\GizmoFragment.glsl", ShaderType.FragmentShader)
+            "Editor Sphere",
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\EditorSphere.vert", ShaderType.VertexShader),
+            ShaderBuilder.CreateShaderSource(@"Resources\Shader\EditorSphere.frag", ShaderType.FragmentShader)
         );
 
         private static readonly Shader _normalShader = ShaderBuilder.CreateShader
@@ -112,8 +119,9 @@ namespace Engine.GLApi
         public static Shader VolEditorCompute => _volEditorCompute;
         public static Shader SmoothenCompute => _smoothenCompute;
         public static Shader DirectComputePaint => _directComputePaint;
-        public static Shader Gizmo => _gizmoShader;
+        public static Shader EditorSphere => _EditorSphere;
         public static Shader NormalShader => _normalShader;
+        public static Shader Indicator => _indicator;
 
         #endregion
 

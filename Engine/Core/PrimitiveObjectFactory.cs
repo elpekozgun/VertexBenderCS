@@ -395,6 +395,86 @@ namespace Engine.Core
             return new Sphere(radius, subdivision, type, sphere);
         }
 
+        public static Mesh Arrow3D(float radius, float length, int division)
+        {
+            Mesh arrow3D = new Mesh();
+
+            // total 38 vertex
+
+            arrow3D.AddVertex(0.0f, 0.0f, 0.0f);
+
+            //bottom 1 - 12
+            for (int i = 0; i < division; i++)
+            {
+                arrow3D.AddVertex
+                (
+                    radius * (float)Math.Cos(i * (2 * Math.PI / division)), 
+                    0,                                          
+                    radius * (float)Math.Sin(i * (2 * Math.PI / division))
+                );
+            }
+
+            //top 13 - 24
+            for (int i = 0; i < division; i++)
+            {
+                arrow3D.AddVertex
+                (
+                    radius * (float)Math.Cos(i * (2 * Math.PI / division)), 
+                    length,                                     
+                    radius * (float)Math.Sin(i * (2 * Math.PI / division))
+                );
+            }
+
+            ////Cone Skirt 25 - 36
+            //for (int i = 0; i < division; i++)
+            //{
+            //    arrow3D.AddVertex
+            //    (
+            //        (2 * radius) * (float)Math.Cos(i * (2 * Math.PI / division)), 
+            //         length, 
+            //        (2 * radius) * (float)Math.Sin(i * (2 * Math.PI / division))
+            //    );
+            //}
+
+            //top pin 37
+            arrow3D.AddVertex(0.0f,  length , 0.0f);
+
+            // base
+            for (int i = 1; i < division; i++)
+            {
+                arrow3D.AddTriangle(i, i + 1, 0);
+            }
+
+            // sides
+            for (int i = 1; i < division; i++)
+            {
+                arrow3D.AddTriangle(i, i + 1, i + division);
+                arrow3D.AddTriangle(i + 1, i + division + 1, i + division);
+            }
+
+            // top
+            for (int i = 1; i < division; i++)
+            {
+                arrow3D.AddTriangle(i, i + 1, 2 * division + 1);
+            }
+
+            //// side to skirt 
+            //for (int i = division + 1; i < 2 * division; i++)
+            //{
+            //    arrow3D.AddTriangle(i, i + 1, i + division);
+            //    arrow3D.AddTriangle(i + 1, i + division, i + division + 1);
+            //}
+
+            ////// cone
+            //for (int i = 2 * division + 1; i < 3 * division; i++)
+            //{
+            //    arrow3D.AddTriangle(i, i + 1, division * 3 + 1);
+            //}
+
+            arrow3D.CalculateVertexNormals();
+
+            return arrow3D;
+        }
     }
 
     public class Sphere : Mesh

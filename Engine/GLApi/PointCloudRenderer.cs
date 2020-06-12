@@ -47,7 +47,7 @@ namespace Engine.GLApi
 
         public Vector4 Color { get; set; }
 
-        private void ExtractVertices(Mesh mesh, List<int> intensities)
+        private void ExtractVertices(Mesh mesh, List<short> intensities)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
             int i = 0;
@@ -64,7 +64,7 @@ namespace Engine.GLApi
             }
         }
 
-        public PointCloudRenderer(Mesh mesh, List<int> intensities, float spacing, int min = 0, int max = 255, string name = "")
+        public PointCloudRenderer(Mesh mesh, List<short> intensities, float spacing, int min = 0, int max = 255, string name = "")
             : base(name)
         {
             Max = max;
@@ -78,7 +78,7 @@ namespace Engine.GLApi
             IsEnabled = true;
         }
 
-        public PointCloudRenderer(Mesh mesh, List<int> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)
+        public PointCloudRenderer(Mesh mesh, List<short> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)
         {
             Shader = shader;
         }
@@ -123,6 +123,8 @@ namespace Engine.GLApi
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
 
+            GL.Enable(EnableCap.CullFace);
+
             GL.BindVertexArray(_VAO);
 
             var pointCloudShader = Shader.CuberilleGeometry;
@@ -147,6 +149,8 @@ namespace Engine.GLApi
 
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
+
+            GL.Disable(EnableCap.CullFace);
         }
 
         protected virtual void Dispose(bool disposing)

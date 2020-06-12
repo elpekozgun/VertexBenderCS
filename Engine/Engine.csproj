@@ -83,6 +83,7 @@
     <Compile Include="Core\MathExtensions.cs" />
     <Compile Include="Core\RayCaster.cs" />
     <Compile Include="Core\SceneGraph.cs" />
+    <Compile Include="Core\SceneTools.cs" />
     <Compile Include="Core\Transform.cs" />
     <Compile Include="GLApi\GizmoManager.cs" />
     <Compile Include="GLApi\GizmoRenderer.cs" />
