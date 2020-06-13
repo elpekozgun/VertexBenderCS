@@ -395,26 +395,24 @@ namespace Engine.Core
             return new Sphere(radius, subdivision, type, sphere);
         }
 
-        public static Mesh Arrow3D(float radius, float length, int division)
+        public static Mesh Cylinder(float radius, float baseOffset, float length, int division)
         {
             Mesh arrow3D = new Mesh();
 
-            // total 38 vertex
+            // 2 div + 2 vertex;
 
-            arrow3D.AddVertex(0.0f, 0.0f, 0.0f);
-
-            //bottom 1 - 12
+            //bottom 0 - 11
             for (int i = 0; i < division; i++)
             {
                 arrow3D.AddVertex
                 (
-                    radius * (float)Math.Cos(i * (2 * Math.PI / division)), 
-                    0,                                          
+                    radius * (float)Math.Cos(i * (2 * Math.PI / division)),
+                    baseOffset,                                          
                     radius * (float)Math.Sin(i * (2 * Math.PI / division))
                 );
             }
 
-            //top 13 - 24
+            //top 12 - 23
             for (int i = 0; i < division; i++)
             {
                 arrow3D.AddVertex
@@ -424,56 +422,68 @@ namespace Engine.Core
                     radius * (float)Math.Sin(i * (2 * Math.PI / division))
                 );
             }
-
-            ////Cone Skirt 25 - 36
-            //for (int i = 0; i < division; i++)
-            //{
-            //    arrow3D.AddVertex
-            //    (
-            //        (2 * radius) * (float)Math.Cos(i * (2 * Math.PI / division)), 
-            //         length, 
-            //        (2 * radius) * (float)Math.Sin(i * (2 * Math.PI / division))
-            //    );
-            //}
-
-            //top pin 37
+            
+            // base 24, top 25
+            arrow3D.AddVertex(0.0f, baseOffset, 0.0f);
             arrow3D.AddVertex(0.0f,  length , 0.0f);
 
+            int a, b, c, d;
             // base
-            for (int i = 1; i < division; i++)
+            for (int i = 0; i <= division; i++)
             {
-                arrow3D.AddTriangle(i, i + 1, 0);
+                a = i % division;
+                b = (i + 1) % division;
+                c = a + division;
+                d = b + division;
+
+                // bottom, top
+                arrow3D.AddTriangle(a, b, 2 * division);
+                arrow3D.AddTriangle(c, d, 2 * division + 1);
+                // sides
+                arrow3D.AddTriangle(a, b, c);
+                arrow3D.AddTriangle( c, b, d);
             }
-
-            // sides
-            for (int i = 1; i < division; i++)
-            {
-                arrow3D.AddTriangle(i, i + 1, i + division);
-                arrow3D.AddTriangle(i + 1, i + division + 1, i + division);
-            }
-
-            // top
-            for (int i = 1; i < division; i++)
-            {
-                arrow3D.AddTriangle(i, i + 1, 2 * division + 1);
-            }
-
-            //// side to skirt 
-            //for (int i = division + 1; i < 2 * division; i++)
-            //{
-            //    arrow3D.AddTriangle(i, i + 1, i + division);
-            //    arrow3D.AddTriangle(i + 1, i + division, i + division + 1);
-            //}
-
-            ////// cone
-            //for (int i = 2 * division + 1; i < 3 * division; i++)
-            //{
-            //    arrow3D.AddTriangle(i, i + 1, division * 3 + 1);
-            //}
 
             arrow3D.CalculateVertexNormals();
 
             return arrow3D;
+        }
+
+        public static Mesh Grid (int sizeX, int sizeY, int sizeZ, float gridDistance)
+        {
+            var grid = new Mesh();
+
+            for (int y = 0; y <= sizeY; y++)
+            {
+                for (int x = 0; x <= sizeX; x++)
+                {
+                    var v1 = grid.AddVertex(x, y, 0);
+                    var v2 = grid.AddVertex(x, y, sizeZ);
+                    grid.AddEdge(v1.Id, v2.Id, sizeZ, false);
+                }
+            }
+
+            for (int y = 0; y <= sizeY; y++)
+            {
+                for (int z = 0; z <= sizeX; z++)
+                {
+                    var v1 = grid.AddVertex(0, y, z);
+                    var v2 = grid.AddVertex(sizeX, y, z);
+                    grid.AddEdge(v1.Id, v2.Id, sizeX, false);
+                }
+            }
+
+            for (int z = 0; z <= sizeY; z++)
+            {
+                for (int x = 0; x <= sizeX; x++)
+                {
+                    var v1 = grid.AddVertex(x, 0, z);
+                    var v2 = grid.AddVertex(x, sizeY, z);
+                    grid.AddEdge(v1.Id, v2.Id, sizeY, false);
+                }
+            }
+
+            return grid;
         }
     }
 

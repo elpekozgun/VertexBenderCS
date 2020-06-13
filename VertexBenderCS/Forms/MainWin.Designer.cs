@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl();
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
@@ -43,11 +43,11 @@
             this.toolbarShaded = new System.Windows.Forms.ToolStripButton();
             this.toolbarWireframe = new System.Windows.Forms.ToolStripButton();
             this.toolbarPoint = new System.Windows.Forms.ToolStripButton();
+            this.toolbarShowNormals = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolbarIsBlinn = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton7 = new System.Windows.Forms.ToolStripButton();
-            this.toolbarShowNormals = new System.Windows.Forms.ToolStripButton();
             this.BottomToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.TopToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.RightToolStripPanel = new System.Windows.Forms.ToolStripPanel();
@@ -141,6 +141,13 @@
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.meshRendererPanel = new System.Windows.Forms.Panel();
+            this.btnColor = new System.Windows.Forms.Button();
+            this.chkCull = new System.Windows.Forms.CheckBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.label17 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -166,6 +173,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).BeginInit();
             this.panel1.SuspendLayout();
+            this.meshRendererPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -221,48 +230,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisX.LabelStyle.Interval = 0D;
-            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea1.AxisY.LabelStyle.Interval = 0D;
-            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea1.BackColor = System.Drawing.Color.White;
-            chartArea1.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea1);
-            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend1.ForeColor = System.Drawing.Color.Gainsboro;
-            legend1.InterlacedRowsColor = System.Drawing.Color.White;
-            legend1.Name = "Legend1";
-            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend1);
+            chartArea2.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisX.LabelStyle.Interval = 0D;
+            chartArea2.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea2.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea2.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea2.AxisY.LabelStyle.Interval = 0D;
+            chartArea2.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea2.BackColor = System.Drawing.Color.White;
+            chartArea2.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea2);
+            legend2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend2.ForeColor = System.Drawing.Color.Gainsboro;
+            legend2.InterlacedRowsColor = System.Drawing.Color.White;
+            legend2.Name = "Legend1";
+            legend2.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend2);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series1.BackSecondaryColor = System.Drawing.Color.White;
-            series1.ChartArea = "isoCurve-Distances";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series1.Color = System.Drawing.Color.DodgerBlue;
-            series1.CustomProperties = "PointWidth=0.3";
-            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series1.IsVisibleInLegend = false;
-            series1.LabelBackColor = System.Drawing.Color.White;
-            series1.LabelBorderColor = System.Drawing.Color.White;
-            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series1.Legend = "Legend1";
-            series1.MarkerBorderColor = System.Drawing.Color.White;
-            series1.MarkerColor = System.Drawing.Color.White;
-            series1.MarkerSize = 3;
-            series1.Name = "IsoCurve";
-            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series1);
+            series2.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series2.BackSecondaryColor = System.Drawing.Color.White;
+            series2.ChartArea = "isoCurve-Distances";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series2.Color = System.Drawing.Color.DodgerBlue;
+            series2.CustomProperties = "PointWidth=0.3";
+            series2.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series2.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series2.IsVisibleInLegend = false;
+            series2.LabelBackColor = System.Drawing.Color.White;
+            series2.LabelBorderColor = System.Drawing.Color.White;
+            series2.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series2.Legend = "Legend1";
+            series2.MarkerBorderColor = System.Drawing.Color.White;
+            series2.MarkerColor = System.Drawing.Color.White;
+            series2.MarkerSize = 3;
+            series2.Name = "IsoCurve";
+            series2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series2.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series2.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series2);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -340,6 +349,15 @@
             this.toolbarPoint.Size = new System.Drawing.Size(52, 67);
             this.toolbarPoint.Text = "Point Cloud";
             // 
+            // toolbarShowNormals
+            // 
+            this.toolbarShowNormals.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolbarShowNormals.Image = global::VertexBenderCS.Resources.normal;
+            this.toolbarShowNormals.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolbarShowNormals.Name = "toolbarShowNormals";
+            this.toolbarShowNormals.Size = new System.Drawing.Size(52, 67);
+            this.toolbarShowNormals.Text = "btnShowNormals";
+            // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
@@ -375,15 +393,6 @@
             this.toolStripButton7.Name = "toolStripButton7";
             this.toolStripButton7.Size = new System.Drawing.Size(52, 67);
             this.toolStripButton7.Text = "Toggle Indicators";
-            // 
-            // toolbarShowNormals
-            // 
-            this.toolbarShowNormals.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolbarShowNormals.Image = global::VertexBenderCS.Resources.normal;
-            this.toolbarShowNormals.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolbarShowNormals.Name = "toolbarShowNormals";
-            this.toolbarShowNormals.Size = new System.Drawing.Size(52, 67);
-            this.toolbarShowNormals.Text = "btnShowNormals";
             // 
             // BottomToolStripPanel
             // 
@@ -1197,6 +1206,7 @@
             this.pointCloudPanel.Name = "pointCloudPanel";
             this.pointCloudPanel.Size = new System.Drawing.Size(226, 93);
             this.pointCloudPanel.TabIndex = 24;
+            this.pointCloudPanel.Visible = false;
             // 
             // sliderMaxText
             // 
@@ -1428,6 +1438,85 @@
             this.panel1.Size = new System.Drawing.Size(250, 299);
             this.panel1.TabIndex = 28;
             // 
+            // colorDialog1
+            // 
+            this.colorDialog1.AnyColor = true;
+            this.colorDialog1.FullOpen = true;
+            // 
+            // meshRendererPanel
+            // 
+            this.meshRendererPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
+            this.meshRendererPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.meshRendererPanel.Controls.Add(this.btnColor);
+            this.meshRendererPanel.Controls.Add(this.chkCull);
+            this.meshRendererPanel.Controls.Add(this.label8);
+            this.meshRendererPanel.Controls.Add(this.numericUpDown1);
+            this.meshRendererPanel.Controls.Add(this.label17);
+            this.meshRendererPanel.Location = new System.Drawing.Point(3, 587);
+            this.meshRendererPanel.Name = "meshRendererPanel";
+            this.meshRendererPanel.Size = new System.Drawing.Size(226, 84);
+            this.meshRendererPanel.TabIndex = 37;
+            // 
+            // btnColor
+            // 
+            this.btnColor.Location = new System.Drawing.Point(109, 27);
+            this.btnColor.Name = "btnColor";
+            this.btnColor.Size = new System.Drawing.Size(75, 23);
+            this.btnColor.TabIndex = 39;
+            this.btnColor.Text = "Color";
+            this.btnColor.UseVisualStyleBackColor = true;
+            // 
+            // chkCull
+            // 
+            this.chkCull.AutoSize = true;
+            this.chkCull.Location = new System.Drawing.Point(8, 24);
+            this.chkCull.Name = "chkCull";
+            this.chkCull.Size = new System.Drawing.Size(46, 19);
+            this.chkCull.TabIndex = 36;
+            this.chkCull.Text = "Cull";
+            this.chkCull.UseVisualStyleBackColor = true;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(16, 152);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(51, 15);
+            this.label8.TabIndex = 35;
+            this.label8.Text = "Pressure";
+            // 
+            // numericUpDown1
+            // 
+            this.numericUpDown1.Location = new System.Drawing.Point(71, 150);
+            this.numericUpDown1.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.ReadOnly = true;
+            this.numericUpDown1.Size = new System.Drawing.Size(37, 24);
+            this.numericUpDown1.TabIndex = 33;
+            this.numericUpDown1.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(3, 3);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(86, 15);
+            this.label17.TabIndex = 0;
+            this.label17.Text = "Mesh Renderer";
+            // 
             // MainWin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -1435,6 +1524,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1298, 905);
+            this.Controls.Add(this.meshRendererPanel);
             this.Controls.Add(this.GLControl);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.statusBar);
@@ -1482,6 +1572,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).EndInit();
             this.panel1.ResumeLayout(false);
+            this.meshRendererPanel.ResumeLayout(false);
+            this.meshRendererPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1598,6 +1691,13 @@
         private System.Windows.Forms.ToolStripMenuItem menuSTlBinExport;
         private OpenTK.GLControl GLControl;
         private System.Windows.Forms.ToolStripButton toolbarShowNormals;
+        private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.Windows.Forms.Panel meshRendererPanel;
+        private System.Windows.Forms.Button btnColor;
+        private System.Windows.Forms.CheckBox chkCull;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Label label17;
     }
 }
 

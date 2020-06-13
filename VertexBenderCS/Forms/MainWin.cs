@@ -185,6 +185,7 @@ namespace VertexBenderCS.Forms
             InitTransformPanel();
             InitSpherePanel();
             InitVolumeRendererPanel();
+            InitMeshRendererPanel();
         }
 
         public void SubscribeEvents()
@@ -1062,6 +1063,20 @@ namespace VertexBenderCS.Forms
                         numericSubdivision.ValueChanged += NumericSubdivision_ValueChanged;
                         numericSize.ValueChanged += NumericSize_ValueChanged;
                     }
+                    else
+                    {
+
+                        btnColor.Click -= BtnColor_Click;
+                        chkCull.CheckedChanged -= ChkCull_CheckedChanged;
+
+                        meshRendererPanel.Visible = true;
+                        btnColor.BackColor =  Color.FromArgb((int)(255 * mesh.Color.Z), (int)(255 * mesh.Color.X), (int)(255 * mesh.Color.Y), (int)(255 * mesh.Color.Z));
+                        chkCull.Checked = mesh.EnableCull;
+
+                        btnColor.Click += BtnColor_Click;
+                        chkCull.CheckedChanged += ChkCull_CheckedChanged;
+
+                    }
                 }
                 else if (_selectedTransform is PointCloudRenderer)
                 {
@@ -1388,6 +1403,43 @@ namespace VertexBenderCS.Forms
                         break;
                 }
                 volRend.Compute();
+            }
+        }
+
+        private void InitMeshRendererPanel()
+        {
+            meshRendererPanel.Visible = false;
+
+            chkCull.CheckedChanged += ChkCull_CheckedChanged;
+            btnColor.Click += BtnColor_Click;
+        }
+
+        private void BtnColor_Click(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var meshRend = _selectedTransform as MeshRenderer;
+                if (colorDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    meshRend.Color = new Vector4
+                    (
+                        colorDialog1.Color.R, 
+                        colorDialog1.Color.G, 
+                        colorDialog1.Color.B, 
+                        colorDialog1.Color.A
+                    ) / 255.0f;
+                    btnColor.BackColor = colorDialog1.Color;
+                }
+
+            }
+        }
+
+        private void ChkCull_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var meshRend = _selectedTransform as MeshRenderer;
+                meshRend.EnableCull = chkCull.Checked;
             }
         }
 

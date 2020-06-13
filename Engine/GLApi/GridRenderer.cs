@@ -9,7 +9,7 @@ using OpenTK;
 
 namespace Engine.GLApi
 {
-    public class GizmoRenderer : Transform, IDisposable, IRenderable
+    public class GridRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
@@ -57,18 +57,17 @@ namespace Engine.GLApi
             }
 
             i = 0;
-            indices = new int[mesh.Triangles.Count * 3];
-            foreach (var tri in mesh.Triangles)
+            indices = new int[mesh.Edges.Count * 2];
+            foreach (var edge in mesh.Edges)
             {
-                indices[i * 3] = map[tri.Value.V1];
-                indices[i * 3 + 1] = map[tri.Value.V2];
-                indices[i * 3 + 2] = map[tri.Value.V3];
+                indices[i * 2] = map[edge.Value.Start];
+                indices[i * 2 + 1] = map[edge.Value.End];
                 i++;
             }
 
         }
 
-        public GizmoRenderer(Mesh mesh, string name = "")
+        public GridRenderer(Mesh mesh, string name = "")
             : base(name)
         {
             ExtractVertices(mesh);
@@ -82,7 +81,7 @@ namespace Engine.GLApi
             IsEnabled = true;
         }
 
-        public GizmoRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
+        public GridRenderer(Mesh mesh, Shader shader, string name = "") : this(mesh, name)
         {
             Shader = shader;
         }
@@ -155,7 +154,7 @@ namespace Engine.GLApi
 
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             GL.Enable(EnableCap.PolygonSmooth);
-            GL.DrawElements(BeginMode.Triangles, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(BeginMode.Lines, indices.Length * 4, DrawElementsType.UnsignedInt, 0);
             GL.Disable(EnableCap.PolygonSmooth);
             if (!EnableCull)
             {

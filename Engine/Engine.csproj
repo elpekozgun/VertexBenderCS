@@ -88,6 +88,7 @@
     <Compile Include="GLApi\GizmoManager.cs" />
     <Compile Include="GLApi\GizmoRenderer.cs" />
     <Compile Include="GLApi\GpuVertex.cs" />
+    <Compile Include="GLApi\GridRenderer.cs" />
     <Compile Include="GLApi\IRenderable.cs" />
     <Compile Include="GLApi\LineRenderer.cs" />
     <Compile Include="GLApi\Material.cs" />

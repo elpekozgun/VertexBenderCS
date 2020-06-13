@@ -13,10 +13,11 @@ namespace Engine.Core
     {
         public List<Transform> SceneItems;
         public GizmoRenderer VolumeEditor;
-        public GizmoRenderer Grid;
+        public GridRenderer Grid;
         public GizmoRenderer CartesianX;
         public GizmoRenderer CartesianY;
         public GizmoRenderer CartesianZ;
+        public GizmoRenderer CartesianCore;
 
         public SceneTools()
         {
@@ -33,46 +34,49 @@ namespace Engine.Core
             SceneItems.Add(VolumeEditor);
             VolumeEditor.IsEnabled = false;
 
-            CartesianX = new GizmoRenderer(PrimitiveObjectFactory.Arrow3D(0.25f, 2.0f, 24), Shader.Indicator)
+            var arrow = PrimitiveObjectFactory.Cylinder(0.25f, 0.25f, 4.0f, 48);
+
+            CartesianX = new GizmoRenderer(arrow, Shader.Indicator)
             {
                 Scale = new Vector3(0.1f, 0.1f, 0.1f),
                 Rotation = Quaternion.FromAxisAngle(Vector3.UnitZ, -(float)Math.PI / 2),
-                EnableBlend = false,
-                EnableCull = false,
-                EnableDepth = false,
-                Color = new Vector4(1, 0, 0, 1)
-                //Color = new Vector4(1.0f, 0.4f, 0.3f, 0.5f)
+                Color = new Vector4(1, 0.2f, 0, 1)
             };
             SceneItems.Add(CartesianX);
             CartesianX.IsEnabled = true;
 
-            CartesianY = new GizmoRenderer(PrimitiveObjectFactory.Arrow3D(0.25f, 2.0f, 24), Shader.Indicator)
+            CartesianY = new GizmoRenderer(arrow, Shader.Indicator)
             {
                 Scale = new Vector3(0.1f, 0.1f, 0.1f),
-                EnableBlend = false,
-                EnableCull = false,
-                EnableDepth = false,
-                Color = new Vector4(0, 1, 0, 1)
-                //Color = new Vector4(1.0f, 0.4f, 0.3f, 0.5f)
+                Color = new Vector4(0, 1, 0.2f, 1)
             };
             SceneItems.Add(CartesianY);
             CartesianY.IsEnabled = true;
 
-            CartesianZ = new GizmoRenderer(PrimitiveObjectFactory.Arrow3D(0.25f, 2.0f, 24), Shader.Indicator)
+            CartesianZ = new GizmoRenderer(arrow, Shader.Indicator)
             {
                 Scale = new Vector3(0.1f, 0.1f, 0.1f),
                 Rotation = Quaternion.FromAxisAngle(Vector3.UnitX, (float)Math.PI / 2),
-                EnableBlend = false,
-                EnableCull = false,
-                EnableDepth = false,
-                Color = new Vector4(0, 0, 1, 1)
-                //Color = new Vector4(1.0f, 0.4f, 0.3f, 0.5f)
+                Color = new Vector4(0.2f, 0, 1, 1)
             };
             SceneItems.Add(CartesianZ);
             CartesianZ.IsEnabled = true;
 
+            CartesianCore = new GizmoRenderer(PrimitiveObjectFactory.Sphere(0.5f, 4, eSphereGenerationType.Cube), Shader.Indicator)
+            {
+                Scale = new Vector3(0.1f, 0.1f, 0.1f),
+                Color = new Vector4(0.4f, 0.4f, 0.4f, 1.0f)
+            };
+            SceneItems.Add(CartesianCore);
+            CartesianCore.IsEnabled = true;
 
-
+            Grid = new GridRenderer(PrimitiveObjectFactory.Grid(10, 10, 10, 1), Shader.Indicator)
+            {
+                EnableBlend = true,
+                Color = new Vector4(0.4f, 0.4f, 0.4f, 0.5f)
+            };
+            SceneItems.Add(Grid);
+            Grid.IsEnabled = true;
         }
 
         public void Clean()
