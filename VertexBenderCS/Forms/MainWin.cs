@@ -57,8 +57,6 @@ namespace VertexBenderCS.Forms
         private eRenderMode _renderMode;
         private bool _isPerspective;
 
-        private bool _Update = false;
-
         private bool _editMode;
         private bool _mouseOnGL;
         private int _direction = -1;
@@ -183,6 +181,7 @@ namespace VertexBenderCS.Forms
             InitVolumeRendererPanel();
             InitMeshRendererPanel();
             InitializeDirLightSegment();
+            InitPointCloudPanel();
         }
 
         private void InitializeDirLightSegment()
@@ -397,14 +396,6 @@ namespace VertexBenderCS.Forms
             _SceneGraph.AddObject(center);
         }
 
-        private void GeometryShaderTest()
-        {
-            var mesh = new Mesh();
-            mesh.Vertices.Add(0, new Vertex(0, Vector3.Zero));
-            var pointCloud = new PointCloudRenderer(mesh, new List<short>() { 255 }, 1);
-            _SceneGraph.AddObject(pointCloud);
-        }
-
         private void ComputeTest()
         {
             var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_5.vol");
@@ -497,9 +488,9 @@ namespace VertexBenderCS.Forms
 
         private void PointCloudTest()
         {
-            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol", out VolOutput volOutput);
+            var output = ObjectLoader.LoadVol(@"C:\Users\ozgun\Desktop\IMG_20200227_6_1.vol");
             //var output2 = ObjectLoader.LoadNifti(@"C:\Users\ozgun\Desktop\ceng599 project\CT\4821\4823\20130118_0933183DHEADs002a002.nii", out VolOutput volOutput2);
-            var pointRenderer = new PointCloudRenderer(output, volOutput.IntensityMap.Select(x => x.Value).ToList(), volOutput.Spacing);
+            var pointRenderer = new PointCloudRenderer(output);
             //var pointRenderer2 = new PointCloudRenderer(output2, volOutput2.IntensityMap.Select(x => x.Value).ToList(), volOutput2.Spacing);
 
             
@@ -1123,14 +1114,17 @@ namespace VertexBenderCS.Forms
 
                     pointCloudPanel.Visible = true;
 
-                    sliderMax.ValueChanged -= SliderMax_ValueChanged;
-                    sliderMin.ValueChanged -= SliderMin_ValueChanged;
+                    sliderPointCloud.ValueChanged -= SliderPointCloud_ValueChanged;
+                    chkIsCuberille.CheckedChanged -= ChkIsCuberille_CheckedChanged;
+                    numericPCDownSample.ValueChanged -= NumericPCDownSample_ValueChanged;
 
-                    sliderMax.Value = mesh.Max;
-                    sliderMin.Value = mesh.Min;
+                    sliderPointCloud.Value = mesh.Intensity;
+                    numericPCDownSample.Value = mesh.DownSample;
+                    chkIsCuberille.Checked = mesh.IsCuberille;
 
-                    sliderMax.ValueChanged += SliderMax_ValueChanged;
-                    sliderMin.ValueChanged += SliderMin_ValueChanged;
+                    sliderPointCloud.ValueChanged += SliderPointCloud_ValueChanged;
+                    chkIsCuberille.CheckedChanged += ChkIsCuberille_CheckedChanged;
+                    numericPCDownSample.ValueChanged += NumericPCDownSample_ValueChanged;
 
                 }
                 else if (_selectedTransform is VolumeRenderer)
@@ -1160,6 +1154,7 @@ namespace VertexBenderCS.Forms
                 _SceneGraph.SceneTools.Reset();
             }
         }
+
 
         private void SceneGraphTree_KeyDown(object sender, KeyEventArgs e)
         {
@@ -1320,7 +1315,16 @@ namespace VertexBenderCS.Forms
             }
         }
 
-        private void SliderMin_ValueChanged(object sender, EventArgs e)
+        private void InitPointCloudPanel()
+        {
+            pointCloudPanel.Visible = false;
+
+            chkIsCuberille.CheckedChanged += ChkIsCuberille_CheckedChanged;
+            numericPCDownSample.ValueChanged += NumericPCDownSample_ValueChanged;
+            sliderPointCloud.ValueChanged += SliderPointCloud_ValueChanged;
+        }
+
+        private void SliderPointCloud_ValueChanged(object sender, EventArgs e)
         {
             if (_selectedTransform != null)
             {
@@ -1328,24 +1332,32 @@ namespace VertexBenderCS.Forms
                 var mesh = _selectedTransform as PointCloudRenderer;
                 if (mesh is PointCloudRenderer)
                 {
-                    mesh.SetMin(s.Value);
-                    sliderMax.Value = Math.Max(s.Value, sliderMax.Value);
+                    mesh.Intensity = s.Value;
                     sliderMinText.Text = s.Value.ToString();
                 }
             }
         }
 
-        private void SliderMax_ValueChanged(object sender, EventArgs e)
+        private void NumericPCDownSample_ValueChanged(object sender, EventArgs e)
         {
             if (_selectedTransform != null)
             {
-                var s = sender as TrackBar;
-                var mesh = _selectedTransform as PointCloudRenderer;
-                if (mesh is PointCloudRenderer)
+                var pcRend = _selectedTransform as PointCloudRenderer;
+                if (pcRend is PointCloudRenderer)
                 {
-                    mesh.SetMax(s.Value);
-                    sliderMin.Value = Math.Min(s.Value, sliderMin.Value);
-                    sliderMaxText.Text = s.Value.ToString();
+                    pcRend.DownSample = (int)numericPCDownSample.Value;
+                }
+            }
+        }
+
+        private void ChkIsCuberille_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_selectedTransform != null)
+            {
+                var pcRend = _selectedTransform as PointCloudRenderer;
+                if (pcRend is PointCloudRenderer)
+                {
+                    pcRend.IsCuberille = chkIsCuberille.Checked;
                 }
             }
         }
@@ -1483,7 +1495,7 @@ namespace VertexBenderCS.Forms
         {
             if (_selectedTransform != null)
             {
-                var meshRend = _selectedTransform as MeshRenderer;
+                var meshRend = _selectedTransform as IRenderable;
                 meshRend.EnableCull = chkCull.Checked;
             }
         }
@@ -1786,28 +1798,47 @@ namespace VertexBenderCS.Forms
             var d = new OpenFileDialog
             {
                 ValidateNames = true,
-                Filter = "VOL files (*.vol)|*.vol|All Files(*.*)|*.* "
+                Filter = "VOL files (*.vol)|*.vol|Nifti files (*.nii)|*.nii|All Files(*.*)|*.* "
             };
             if (d.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
                     var v = d.FileName.Substring(d.FileName.Length - 4);
+                    var output = new VolOutput();
+                    bool loaded = false;
                     if (v.ToLower() == ".vol")
                     {
                         var split = d.FileName.Split(new char[] { '\\' });
                         var name = split[split.Length - 1];
 
-                        var mesh = ObjectLoader.LoadVol(d.FileName, out VolOutput output);
+                        output = ObjectLoader.LoadVol(d.FileName);
+                        loaded = true;
+                    }
+                    else if (v.ToLower() == ".nii")
+                    {
+                        var split = d.FileName.Split(new char[] { '\\' });
+                        var name = split[split.Length - 1];
 
-                        var pointCloud = new PointCloudRenderer(mesh, output.IntensityMap.Select(x => x.Value).ToList(), output.Spacing)
+                        output = ObjectLoader.LoadNifti(d.FileName);
+                        loaded = true;
+                    }
+                    if (loaded)
+                    {
+                        sliderPointCloud.Maximum = output.MaxIntensity;
+
+                        var pointCloud = new PointCloudRenderer(output)
                         {
-                            IsEnabled = true
+                            IsEnabled = true,
+                            IsCuberille = false,
+                            Intensity = output.MaxIntensity / 4,
+                            DownSample = 4
                         };
                         _SceneGraph.AddObject(pointCloud);
-
-                        sceneGraphTree.SelectedNode = null;
                     }
+                    sceneGraphTree.SelectedNode = null;
+
+
                 }
                 catch (FileNotFoundException ex)
                 {

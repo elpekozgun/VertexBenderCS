@@ -60,6 +60,7 @@
             this.menuImportObj = new System.Windows.Forms.ToolStripMenuItem();
             this.menuImportDae = new System.Windows.Forms.ToolStripMenuItem();
             this.menuImportVol = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuImportVolAsPC = new System.Windows.Forms.ToolStripMenuItem();
             this.menuImportNifti = new System.Windows.Forms.ToolStripMenuItem();
             this.menuExport = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIsoCurveExport = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,6 +77,7 @@
             this.menuProcessGC = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessDescriptor = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessParametrization = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuProcessPostProcessing = new System.Windows.Forms.ToolStripMenuItem();
             this.addMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAddCube = new System.Windows.Forms.ToolStripMenuItem();
             this.menuAddTetrahedron = new System.Windows.Forms.ToolStripMenuItem();
@@ -119,12 +121,9 @@
             this.label6 = new System.Windows.Forms.Label();
             this.numericSize = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
-            this.sliderMin = new System.Windows.Forms.TrackBar();
+            this.sliderPointCloud = new System.Windows.Forms.TrackBar();
             this.pointCloudPanel = new System.Windows.Forms.Panel();
-            this.sliderMaxText = new System.Windows.Forms.Label();
             this.sliderMinText = new System.Windows.Forms.Label();
-            this.sliderMax = new System.Windows.Forms.TrackBar();
-            this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.numericMarch = new System.Windows.Forms.NumericUpDown();
@@ -157,8 +156,9 @@
             this.labelDirLightY = new System.Windows.Forms.Label();
             this.labelDirLightZ = new System.Windows.Forms.Label();
             this.labelDirLightX = new System.Windows.Forms.Label();
-            this.menuImportVolAsPC = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuProcessPostProcessing = new System.Windows.Forms.ToolStripMenuItem();
+            this.label1 = new System.Windows.Forms.Label();
+            this.numericPCDownSample = new System.Windows.Forms.NumericUpDown();
+            this.chkIsCuberille = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -176,9 +176,8 @@
             this.spherePanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericSubdivision)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericSize)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sliderMin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.sliderPointCloud)).BeginInit();
             this.pointCloudPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.sliderMax)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).BeginInit();
             this.volumeRendererPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
@@ -189,6 +188,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.directLightX)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightZ)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPCDownSample)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -496,8 +496,8 @@
             this.menuImportObj,
             this.menuImportDae,
             this.menuImportVol,
-            this.menuImportVolAsPC,
-            this.menuImportNifti});
+            this.menuImportNifti,
+            this.menuImportVolAsPC});
             this.menuImport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImport.Image = ((System.Drawing.Image)(resources.GetObject("menuImport.Image")));
             this.menuImport.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -510,7 +510,7 @@
             // 
             this.menuImportOff.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportOff.Name = "menuImportOff";
-            this.menuImportOff.Size = new System.Drawing.Size(220, 22);
+            this.menuImportOff.Size = new System.Drawing.Size(199, 22);
             this.menuImportOff.Text = "Object File Format (.off)";
             // 
             // menuImportObj
@@ -518,7 +518,7 @@
             this.menuImportObj.Enabled = false;
             this.menuImportObj.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportObj.Name = "menuImportObj";
-            this.menuImportObj.Size = new System.Drawing.Size(220, 22);
+            this.menuImportObj.Size = new System.Drawing.Size(199, 22);
             this.menuImportObj.Text = "Wavefront (.obj)";
             // 
             // menuImportDae
@@ -526,21 +526,28 @@
             this.menuImportDae.Enabled = false;
             this.menuImportDae.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportDae.Name = "menuImportDae";
-            this.menuImportDae.Size = new System.Drawing.Size(220, 22);
+            this.menuImportDae.Size = new System.Drawing.Size(199, 22);
             this.menuImportDae.Text = "Collada (.dae)";
             // 
             // menuImportVol
             // 
             this.menuImportVol.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportVol.Name = "menuImportVol";
-            this.menuImportVol.Size = new System.Drawing.Size(220, 22);
+            this.menuImportVol.Size = new System.Drawing.Size(199, 22);
             this.menuImportVol.Text = "Volume (.vol)";
+            // 
+            // menuImportVolAsPC
+            // 
+            this.menuImportVolAsPC.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuImportVolAsPC.Name = "menuImportVolAsPC";
+            this.menuImportVolAsPC.Size = new System.Drawing.Size(199, 22);
+            this.menuImportVolAsPC.Text = "Point Cloud(.vol, .nii)";
             // 
             // menuImportNifti
             // 
             this.menuImportNifti.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportNifti.Name = "menuImportNifti";
-            this.menuImportNifti.Size = new System.Drawing.Size(220, 22);
+            this.menuImportNifti.Size = new System.Drawing.Size(199, 22);
             this.menuImportNifti.Text = "Nifti (.nii)";
             // 
             // menuExport
@@ -672,6 +679,13 @@
             this.menuProcessParametrization.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D4)));
             this.menuProcessParametrization.Size = new System.Drawing.Size(244, 22);
             this.menuProcessParametrization.Text = "&Parametrization";
+            // 
+            // menuProcessPostProcessing
+            // 
+            this.menuProcessPostProcessing.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuProcessPostProcessing.Name = "menuProcessPostProcessing";
+            this.menuProcessPostProcessing.Size = new System.Drawing.Size(244, 22);
+            this.menuProcessPostProcessing.Text = "Post-Processing";
             // 
             // addMenu
             // 
@@ -1210,39 +1224,30 @@
             this.label7.TabIndex = 0;
             this.label7.Text = "Sphere";
             // 
-            // sliderMin
+            // sliderPointCloud
             // 
-            this.sliderMin.Location = new System.Drawing.Point(59, 21);
-            this.sliderMin.Maximum = 255;
-            this.sliderMin.Name = "sliderMin";
-            this.sliderMin.Size = new System.Drawing.Size(167, 45);
-            this.sliderMin.TabIndex = 23;
+            this.sliderPointCloud.Location = new System.Drawing.Point(59, 21);
+            this.sliderPointCloud.Maximum = 255;
+            this.sliderPointCloud.Name = "sliderPointCloud";
+            this.sliderPointCloud.Size = new System.Drawing.Size(167, 45);
+            this.sliderPointCloud.TabIndex = 23;
             // 
             // pointCloudPanel
             // 
             this.pointCloudPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
             this.pointCloudPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pointCloudPanel.Controls.Add(this.sliderMaxText);
-            this.pointCloudPanel.Controls.Add(this.sliderMinText);
-            this.pointCloudPanel.Controls.Add(this.sliderMax);
+            this.pointCloudPanel.Controls.Add(this.chkIsCuberille);
             this.pointCloudPanel.Controls.Add(this.label1);
-            this.pointCloudPanel.Controls.Add(this.sliderMin);
+            this.pointCloudPanel.Controls.Add(this.numericPCDownSample);
+            this.pointCloudPanel.Controls.Add(this.sliderMinText);
+            this.pointCloudPanel.Controls.Add(this.sliderPointCloud);
             this.pointCloudPanel.Controls.Add(this.label2);
             this.pointCloudPanel.Controls.Add(this.label3);
-            this.pointCloudPanel.Location = new System.Drawing.Point(0, 238);
+            this.pointCloudPanel.Location = new System.Drawing.Point(3, 238);
             this.pointCloudPanel.Name = "pointCloudPanel";
-            this.pointCloudPanel.Size = new System.Drawing.Size(226, 93);
+            this.pointCloudPanel.Size = new System.Drawing.Size(223, 117);
             this.pointCloudPanel.TabIndex = 24;
             this.pointCloudPanel.Visible = false;
-            // 
-            // sliderMaxText
-            // 
-            this.sliderMaxText.AutoSize = true;
-            this.sliderMaxText.Location = new System.Drawing.Point(36, 56);
-            this.sliderMaxText.Name = "sliderMaxText";
-            this.sliderMaxText.Size = new System.Drawing.Size(25, 15);
-            this.sliderMaxText.TabIndex = 26;
-            this.sliderMaxText.Text = "255";
             // 
             // sliderMinText
             // 
@@ -1252,24 +1257,6 @@
             this.sliderMinText.Size = new System.Drawing.Size(13, 15);
             this.sliderMinText.TabIndex = 25;
             this.sliderMinText.Text = "0";
-            // 
-            // sliderMax
-            // 
-            this.sliderMax.Location = new System.Drawing.Point(59, 54);
-            this.sliderMax.Maximum = 255;
-            this.sliderMax.Name = "sliderMax";
-            this.sliderMax.Size = new System.Drawing.Size(167, 45);
-            this.sliderMax.TabIndex = 24;
-            this.sliderMax.TabStop = false;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(5, 55);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(32, 15);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Max:";
             // 
             // label2
             // 
@@ -1630,19 +1617,48 @@
             this.labelDirLightX.Size = new System.Drawing.Size(0, 15);
             this.labelDirLightX.TabIndex = 37;
             // 
-            // menuImportVolAsPC
+            // label1
             // 
-            this.menuImportVolAsPC.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.menuImportVolAsPC.Name = "menuImportVolAsPC";
-            this.menuImportVolAsPC.Size = new System.Drawing.Size(220, 22);
-            this.menuImportVolAsPC.Text = "Volume as Point Cloud(.vol)";
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(8, 56);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(77, 15);
+            this.label1.TabIndex = 29;
+            this.label1.Text = "down sample";
             // 
-            // menuProcessPostProcessing
+            // numericPCDownSample
             // 
-            this.menuProcessPostProcessing.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.menuProcessPostProcessing.Name = "menuProcessPostProcessing";
-            this.menuProcessPostProcessing.Size = new System.Drawing.Size(244, 22);
-            this.menuProcessPostProcessing.Text = "Post-Processing";
+            this.numericPCDownSample.Location = new System.Drawing.Point(89, 54);
+            this.numericPCDownSample.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericPCDownSample.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericPCDownSample.Name = "numericPCDownSample";
+            this.numericPCDownSample.ReadOnly = true;
+            this.numericPCDownSample.Size = new System.Drawing.Size(120, 24);
+            this.numericPCDownSample.TabIndex = 28;
+            this.numericPCDownSample.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // chkIsCuberille
+            // 
+            this.chkIsCuberille.AutoSize = true;
+            this.chkIsCuberille.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkIsCuberille.Location = new System.Drawing.Point(18, 84);
+            this.chkIsCuberille.Name = "chkIsCuberille";
+            this.chkIsCuberille.Size = new System.Drawing.Size(83, 19);
+            this.chkIsCuberille.TabIndex = 37;
+            this.chkIsCuberille.Text = "Is Cuberille";
+            this.chkIsCuberille.UseVisualStyleBackColor = true;
             // 
             // MainWin
             // 
@@ -1697,10 +1713,9 @@
             this.spherePanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericSubdivision)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericSize)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sliderMin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.sliderPointCloud)).EndInit();
             this.pointCloudPanel.ResumeLayout(false);
             this.pointCloudPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.sliderMax)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).EndInit();
             this.volumeRendererPanel.ResumeLayout(false);
             this.volumeRendererPanel.PerformLayout();
@@ -1713,6 +1728,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.directLightX)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightZ)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPCDownSample)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1802,13 +1818,10 @@
         private System.Windows.Forms.NumericUpDown numericSize;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ToolStripMenuItem menuAddSphereCube;
-        private System.Windows.Forms.TrackBar sliderMin;
+        private System.Windows.Forms.TrackBar sliderPointCloud;
         private System.Windows.Forms.Panel pointCloudPanel;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TrackBar sliderMax;
-        private System.Windows.Forms.Label sliderMaxText;
         private System.Windows.Forms.Label sliderMinText;
         private System.Windows.Forms.ToolStripMenuItem menuOffExport;
         private System.Windows.Forms.NumericUpDown numericMarch;
@@ -1847,6 +1860,9 @@
         private System.Windows.Forms.Label labelDirLightX;
         private System.Windows.Forms.ToolStripMenuItem menuImportVolAsPC;
         private System.Windows.Forms.ToolStripMenuItem menuProcessPostProcessing;
+        private System.Windows.Forms.CheckBox chkIsCuberille;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.NumericUpDown numericPCDownSample;
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using Engine.Core;
+using Engine.Processing;
 using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using System;
@@ -20,62 +21,39 @@ namespace Engine.GLApi
         private int _VAO;
         private int _VBO;
 
-        public int Min { get; private set; }
-        public int Max { get; private set; }
-        public float Spacing { get; private set; }
-
-        public void SetMax(int max)
-        {
-            Max = max;
-            //Shader.Use();
-            //Shader.SetFloat("MaxIntensity", max / 255.0f);
-        }
-
-        public void SetMin(int min)
-        {
-            Min = min;
-        }
-
+        public bool IsCuberille { get; set; }
         public bool EnableCull { get; set; }
+        public int Intensity { get; set; }
 
-        public Mesh Mesh { get; set; }
+        private VolOutput rawVolData;
+        private VolOutput subVolData;
 
         public Vector4 Color { get; set; }
 
         public bool ShowBoundingBox { get; set; }
 
-        private void ExtractVertices(Mesh mesh, List<short> intensities)
-        {
-            vertices = new GpuVertex[mesh.Vertices.Count];
-            int i = 0;
+        public int DownSample { get; set; }
 
-            foreach (var vertex in mesh.Vertices)
-            {
-                vertices[i] = new GpuVertex()
-                {
-                    Coord = vertex.Value.Coord,
-                    Normal = vertex.Value.Normal,
-                    Color = new Vector3((float)intensities[i] / 255.0f, 0.5f * (float)intensities[i] / 255.0f, 0)
-                };
-                i++;
-            }
-        }
+        private int _currentDownSample;
 
-        public PointCloudRenderer(Mesh mesh, List<short> intensities, float spacing, int min = 0, int max = 255, string name = "")
+        public PointCloudRenderer(VolOutput vol, string name = "")
             : base(name)
         {
-            Max = max;
-            Min = min;
-            Spacing = spacing;
-            ExtractVertices(mesh, intensities);
-            Setup();
-            _initialized = true;
-            Mesh = mesh;
+            rawVolData = vol;
+            subVolData = vol;
+
             Shader = Shader.PointCloud;
+            UpdateInputFromVol(rawVolData);
+
             IsEnabled = true;
+            _initialized = true;
+            IsCuberille = false;
+
+            DownSample = 4;
+            Intensity = 60;
         }
 
-        public PointCloudRenderer(Mesh mesh, List<short> intensity, float spacing, Shader shader, int min = 0, int max = 255, string name = "") : this(mesh, intensity, spacing, min, max, name)
+        public PointCloudRenderer(VolOutput vol, Shader shader, string name = "") : this(vol, name)
         {
             Shader = shader;
         }
@@ -90,6 +68,7 @@ namespace Engine.GLApi
             GL.BindBuffer(BufferTarget.ArrayBuffer, _VBO);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * GpuVertex.Size, vertices, BufferUsageHint.StaticDraw);
 
+            //coord
             //coord
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 0);
@@ -115,10 +94,33 @@ namespace Engine.GLApi
             Setup();
         }
 
+        private void UpdateInputFromVol(VolOutput vol)
+        {
+            vertices = new GpuVertex[vol.IntensityMap.Length];
+            int i = 0;
+            foreach (var item in vol.IntensityMap)
+            {
+                vertices[i] = new GpuVertex()
+                {
+                    Coord = item.Key * vol.Spacing,
+                    Normal = Vector3.Zero,
+                    Color = new Vector3((float)item.Value / vol.MaxIntensity , 0.5f * (float)item.Value / vol.MaxIntensity, 0.0f)
+                };
+                i++;
+
+            }
+            Setup();
+        }
+
+
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
+            if (_currentDownSample != DownSample)
+            {
+                subVolData = Algorithm.Downsample(rawVolData, DownSample);
+                UpdateInputFromVol(subVolData);
+                _currentDownSample = DownSample;
+            }
 
             if (EnableCull)
             {
@@ -126,21 +128,22 @@ namespace Engine.GLApi
             }
 
             GL.BindVertexArray(_VAO);
-
-            var pointCloudShader = Shader.CuberilleGeometry;
-            if ((mode & eRenderMode.pointCloud) == eRenderMode.pointCloud)
+            if (IsCuberille)
             {
-                pointCloudShader = Shader.PointCloud;
+                Shader = Shader.CuberilleGeometry;
+            }
+            else
+            {
+                Shader = Shader.PointCloud;
             }
 
-            pointCloudShader.Use();
-            pointCloudShader.SetMat4("Model", ModelMatrix);
-            pointCloudShader.SetMat4("View", cam.View);
-            pointCloudShader.SetMat4("Projection", cam.Projection);
-            pointCloudShader.SetVec4("OutColor", Color);
-            pointCloudShader.SetFloat("MaxIntensity", (float)Max / 255.0f);
-            pointCloudShader.SetFloat("MinIntensity", (float)Min / 255.0f);
-            pointCloudShader.SetFloat("Spacing", Spacing);
+            Shader.Use();
+            Shader.SetMat4("Model", ModelMatrix);
+            Shader.SetMat4("View", cam.View);
+            Shader.SetMat4("Projection", cam.Projection);
+            Shader.SetVec4("OutColor", Color);
+            Shader.SetFloat("Intensity", (float)Intensity / subVolData.MaxIntensity);
+            Shader.SetFloat("Spacing", subVolData.Spacing);
 
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
             GL.PointSize(2);
@@ -148,7 +151,6 @@ namespace Engine.GLApi
             GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
 
             GL.BindVertexArray(0);
-            GL.ActiveTexture(TextureUnit.Texture0);
 
             if (EnableCull)
             {

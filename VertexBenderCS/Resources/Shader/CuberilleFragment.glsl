@@ -3,12 +3,11 @@
 out vec4 FragColor;
 in vec3 OutColor;
 
-uniform float MaxIntensity;
-uniform float MinIntensity;
+uniform float Intensity;
 
 void main()
 {
-	if(OutColor.x < MinIntensity || OutColor.x > MaxIntensity)
+	if(OutColor.x < Intensity)
 	{
 		discard;
 	}

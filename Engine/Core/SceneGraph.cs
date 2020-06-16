@@ -89,7 +89,7 @@ namespace Engine.Core
             {
                 var v = OpenTK.Matrix3.CreateRotationZ(DirectionalLightZ) *
                         OpenTK.Matrix3.CreateRotationY(DirectionalLightY) *
-                        OpenTK.Matrix3.CreateRotationX(DirectionalLightX) * -OpenTK.Vector3.UnitY ;
+                        OpenTK.Matrix3.CreateRotationX(DirectionalLightX) * OpenTK.Vector3.UnitY ;
 
                 obj.Shader.SetVec3("directLight.direction",  v);
                 obj.Shader.SetVec3("directLight.ambient", 0.25f, 0.25f, 0.25f);
