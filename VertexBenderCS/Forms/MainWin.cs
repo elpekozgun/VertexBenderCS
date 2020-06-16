@@ -324,7 +324,7 @@ namespace VertexBenderCS.Forms
             //HoleFillTest();
             //HoleFillTestBasic();
             //CoarseTri();
-            PointCloudTest();
+            //PointCloudTest();
         }
 
         private void StarTest()
