@@ -1,28 +1,13 @@
 ﻿using Engine.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MathNet.Numerics.LinearAlgebra;
 using OpenTK;
 using PriorityQueues;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
-using MathNet.Numerics.LinearAlgebra;
-using KdTree;
-using Engine.GLApi;
-using System.Security.Policy;
-using MathNet.Numerics;
-using System.Windows.Forms;
-using OpenTK.Graphics.ES10;
-using System.Runtime.Remoting.Messaging;
-using System.Windows.Forms.VisualStyles;
-using OpenTK.Input;
-using System.Net.Sockets;
-using MathNet.Numerics.LinearAlgebra.Solvers;
-using OpenTK.Graphics.ES11;
-using OpenTK.Graphics.ES20;
-using System.Data.SqlTypes;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace Engine.Processing
 {
@@ -30,7 +15,7 @@ namespace Engine.Processing
     {
         Array = 0x1,
         MinHeap = 0x2,
-        Fibonacci= 0x4,
+        Fibonacci = 0x4,
         Astar = 0x8
     }
 
@@ -752,7 +737,7 @@ namespace Engine.Processing
             return retVal;
         }
 
-        public static Dictionary<int,float> DijkstraMinHeapKey(Graph graph, int src)
+        public static Dictionary<int, float> DijkstraMinHeapKey(Graph graph, int src)
         {
             var que = new PriorityQueues.BinaryHeap<HeapNode, float>(PriorityQueueType.Minimum);
             var nodeMap = new Dictionary<int, IPriorityQueueEntry<HeapNode>>();
@@ -782,7 +767,7 @@ namespace Engine.Processing
                 }
 
             }
-            var retVal = new Dictionary<int,float>();
+            var retVal = new Dictionary<int, float>();
             for (int i = 0; i < nodeMap.Count; i++)
             {
                 retVal.Add(i, nodeMap[i].Item.Priority);
@@ -791,7 +776,7 @@ namespace Engine.Processing
             return retVal;
         }
 
-        public static Dictionary<int,float> AverageGeodesicDistance2(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
+        public static Dictionary<int, float> AverageGeodesicDistance2(Graph graph, int sampleCount, int startIndex, Action<int> updateProgress)
         {
             _watch.Reset();
             _watch.Start();
@@ -816,7 +801,7 @@ namespace Engine.Processing
 
             return distances;
 
-            
+
         }
 
 
@@ -1029,7 +1014,7 @@ namespace Engine.Processing
             }
         }
 
-        public static void RecursivelyFindAllBoundaries(Dictionary<int,Vertex> vertices, List<Edge> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
+        public static void RecursivelyFindAllBoundaries(Dictionary<int, Vertex> vertices, List<Edge> candidates, ref List<Dictionary<int, Vertex>> totalBoundaries)
         {
 
             var candidateItems = candidates.Select(x => x).ToDictionary(x => x.Id);
@@ -1396,14 +1381,25 @@ namespace Engine.Processing
 
         private static List<CubicCell> MakeGrid(VolOutput output)
         {
+            if (output.ImportMatrix[1,0] == -1)
+            {
+
+            }
+
             var x = output.XCount;
             var y = output.YCount;
             var z = output.ZCount;
+            //Logger.Log(x.ToString());
+            //Logger.Log(y.ToString());
+            //Logger.Log(z.ToString());
+            //Logger.Log(output.IntensityMap.Count().ToString());
 
             var retval = new List<CubicCell>();
 
             for (int i = 0; i < output.IntensityMap.Length; i++)
             {
+
+
 
                 var val = output.IntensityMap[i].Key;
                 if (Math.Abs(val.X) == x - 1 || Math.Abs(val.Y) == y - 1 || Math.Abs(val.Z) == z - 1)
@@ -1436,7 +1432,7 @@ namespace Engine.Processing
 
             return retval;
         }
-        
+
         private static List<Vector3[]> Polygonize(CubicCell cell, float isoLevel, bool interpolate)
         {
             int cubeIndex = 0;
@@ -1521,7 +1517,7 @@ namespace Engine.Processing
 
             return triangles;
         }
-        
+
         private static Vector3 Interpolate(float value, KeyValuePair<Vector3, short> c1, KeyValuePair<Vector3, short> c2, bool interpolate = true)
         {
             if (!interpolate)
@@ -1552,7 +1548,7 @@ namespace Engine.Processing
             );
 
         }
-        
+
         public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
         {
             if (sampleSize <= 1)
@@ -1596,7 +1592,7 @@ namespace Engine.Processing
         {
             var grid = MakeGrid(output);
 
-            Dictionary<Vector3d, int> vertexDict = new Dictionary<Vector3d, int>();
+            Dictionary<Vector3d, long> vertexDict = new Dictionary<Vector3d, long>();
             HashSet<Triangle> triangleIDs = new HashSet<Triangle>();
             var triangles = new List<Vector3[]>();
 
@@ -1608,7 +1604,7 @@ namespace Engine.Processing
 
                 for (int j = 0; j < tris.Count; j++)
                 {
-                    if(tris[j][0] != tris[j][1] && tris[j][1] != tris[j][2] && tris[j][2] != tris[j][0])
+                    if (tris[j][0] != tris[j][1] && tris[j][1] != tris[j][2] && tris[j][2] != tris[j][0])
                     {
                         triangles.Add(tris[j]);
                     }
@@ -1628,7 +1624,7 @@ namespace Engine.Processing
             int id = 0;
             int triId = 0;
 
-            for (int i = 0; i < vertices.Length ; i+=6)
+            for (int i = 0; i < vertices.Length; i += 6)
             {
                 int a, b, c = -1;
 
@@ -1738,14 +1734,14 @@ namespace Engine.Processing
         {
             _watch.Reset();
             _watch.Start();
-            
+
             bool[] visited = new bool[mesh.Vertices.Count];
             Queue<int> queue = new Queue<int>(mesh.Vertices.Count);
 
-            HashSet<int> deleteVertices = new HashSet<int>(); 
+            HashSet<int> deleteVertices = new HashSet<int>();
 
             int trueCount = 0;
-            foreach(var vertex in mesh.Vertices)
+            foreach (var vertex in mesh.Vertices)
             {
                 int i = vertex.Key;
                 if (!visited[i])
@@ -1926,7 +1922,7 @@ namespace Engine.Processing
             List<int> boundaryAddition = new List<int>();
 
             List<Vertex> newVertices = new List<Vertex>();
-            List<Triangle> newTriangles= new List<Triangle>();
+            List<Triangle> newTriangles = new List<Triangle>();
 
             for (int i = 0; i < angles.Count; i++)
             {
@@ -1962,7 +1958,7 @@ namespace Engine.Processing
 
                         //newTriangles.Add(new Triangle(mesh.Triangles.Count,prevV.Id, start.Id, newVertex.Id));
                         //newTriangles.Add(new Triangle(mesh.Triangles.Count,start.Id, nextV.Id, newVertex.Id));
-                        
+
                         boundaryDeletion.Add(angle.Key);
                         boundaryAddition.Add(newVertex.Id);
 
@@ -2114,7 +2110,7 @@ namespace Engine.Processing
 
         }
 
-        public static void CoarseTriangulate(ref Mesh mesh, ref Dictionary<int,Vertex> boundary)
+        public static void CoarseTriangulate(ref Mesh mesh, ref Dictionary<int, Vertex> boundary)
         {
             var a = boundary.Select(x => x.Value).ToList();
 

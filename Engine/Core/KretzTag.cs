@@ -4,8 +4,8 @@
     {
         public class KretzTag
         {
-            public ushort  Group;
-            public ushort  Element;
+            public ushort Group;
+            public ushort Element;
 
             public KretzTag(ushort tagGroup, ushort tagElement)
             {

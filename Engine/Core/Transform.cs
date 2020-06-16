@@ -6,7 +6,7 @@ namespace Engine.Core
     public class Transform
     {
         private Transform _parent;
-        
+
         public string Name;
         public Transform Parent
         {
@@ -37,7 +37,7 @@ namespace Engine.Core
             Children = new List<Transform>();
         }
 
-        public Matrix4 ModelMatrix
+        public virtual Matrix4 ModelMatrix
         {
             get
             {

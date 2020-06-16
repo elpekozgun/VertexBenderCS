@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Engine.Core
 {
@@ -17,7 +14,7 @@ namespace Engine.Core
 
         public static void Log(string text)
         {
-            lock(lockObject)
+            lock (lockObject)
             {
                 LogItems.Add(text);
                 OnItemLogged?.Invoke(text);
@@ -26,7 +23,7 @@ namespace Engine.Core
 
         public static void Clear()
         {
-            lock(lockObject)
+            lock (lockObject)
             {
                 LogItems.Clear();
                 OnLogCleaned?.Invoke("");

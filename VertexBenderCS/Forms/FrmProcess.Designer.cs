@@ -51,6 +51,8 @@
             this.labelSampleCount = new System.Windows.Forms.Label();
             this.numericSampleCount = new System.Windows.Forms.NumericUpDown();
             this.tabParametrization = new System.Windows.Forms.TabPage();
+            this.checkUseCenter = new System.Windows.Forms.CheckBox();
+            this.label10 = new System.Windows.Forms.Label();
             this.checkUniformBoundary = new System.Windows.Forms.CheckBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
@@ -64,8 +66,12 @@
             this.labelDiskMethod = new System.Windows.Forms.Label();
             this.cmbDisk = new System.Windows.Forms.ComboBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.checkUseCenter = new System.Windows.Forms.CheckBox();
-            this.label10 = new System.Windows.Forms.Label();
+            this.tabPostProcess = new System.Windows.Forms.TabPage();
+            this.numericFill = new System.Windows.Forms.NumericUpDown();
+            this.numericSmoothen = new System.Windows.Forms.NumericUpDown();
+            this.chkFill = new System.Windows.Forms.CheckBox();
+            this.chkSmoothen = new System.Windows.Forms.CheckBox();
+            this.chkIsland = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericTarget)).BeginInit();
             this.tabProcess.SuspendLayout();
@@ -78,6 +84,9 @@
             this.tabParametrization.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericIteration)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericWeight)).BeginInit();
+            this.tabPostProcess.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericFill)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSmoothen)).BeginInit();
             this.SuspendLayout();
             // 
             // cmbShortestPathMethod
@@ -186,6 +195,7 @@
             this.tabProcess.Controls.Add(this.tabGm);
             this.tabProcess.Controls.Add(this.tabDescriptor);
             this.tabProcess.Controls.Add(this.tabParametrization);
+            this.tabProcess.Controls.Add(this.tabPostProcess);
             this.tabProcess.Font = new System.Drawing.Font("Ebrima", 9F);
             this.tabProcess.Location = new System.Drawing.Point(-2, 33);
             this.tabProcess.Name = "tabProcess";
@@ -367,6 +377,29 @@
             this.tabParametrization.Text = "Parametrization";
             this.tabParametrization.UseVisualStyleBackColor = true;
             // 
+            // checkUseCenter
+            // 
+            this.checkUseCenter.AutoSize = true;
+            this.checkUseCenter.Checked = true;
+            this.checkUseCenter.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkUseCenter.Location = new System.Drawing.Point(147, 236);
+            this.checkUseCenter.Name = "checkUseCenter";
+            this.checkUseCenter.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkUseCenter.Size = new System.Drawing.Size(15, 14);
+            this.checkUseCenter.TabIndex = 27;
+            this.checkUseCenter.UseVisualStyleBackColor = true;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.label10.Location = new System.Drawing.Point(72, 234);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(66, 15);
+            this.label10.TabIndex = 26;
+            this.label10.Text = "Use Center:";
+            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // checkUniformBoundary
             // 
             this.checkUniformBoundary.AutoSize = true;
@@ -528,28 +561,98 @@
             this.progressBar1.Size = new System.Drawing.Size(175, 24);
             this.progressBar1.TabIndex = 13;
             // 
-            // checkUseCenter
+            // tabPostProcess
             // 
-            this.checkUseCenter.AutoSize = true;
-            this.checkUseCenter.Checked = true;
-            this.checkUseCenter.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkUseCenter.Location = new System.Drawing.Point(147, 236);
-            this.checkUseCenter.Name = "checkUseCenter";
-            this.checkUseCenter.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.checkUseCenter.Size = new System.Drawing.Size(15, 14);
-            this.checkUseCenter.TabIndex = 27;
-            this.checkUseCenter.UseVisualStyleBackColor = true;
+            this.tabPostProcess.Controls.Add(this.numericFill);
+            this.tabPostProcess.Controls.Add(this.numericSmoothen);
+            this.tabPostProcess.Controls.Add(this.chkFill);
+            this.tabPostProcess.Controls.Add(this.chkSmoothen);
+            this.tabPostProcess.Controls.Add(this.chkIsland);
+            this.tabPostProcess.Location = new System.Drawing.Point(4, 24);
+            this.tabPostProcess.Name = "tabPostProcess";
+            this.tabPostProcess.Size = new System.Drawing.Size(277, 277);
+            this.tabPostProcess.TabIndex = 4;
+            this.tabPostProcess.Text = "Post-Process";
+            this.tabPostProcess.UseVisualStyleBackColor = true;
             // 
-            // label10
+            // numericFill
             // 
-            this.label10.AutoSize = true;
-            this.label10.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.label10.Location = new System.Drawing.Point(72, 234);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(66, 15);
-            this.label10.TabIndex = 26;
-            this.label10.Text = "Use Center:";
-            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.numericFill.Location = new System.Drawing.Point(156, 108);
+            this.numericFill.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericFill.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericFill.Name = "numericFill";
+            this.numericFill.ReadOnly = true;
+            this.numericFill.Size = new System.Drawing.Size(37, 24);
+            this.numericFill.TabIndex = 40;
+            this.numericFill.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // numericSmoothen
+            // 
+            this.numericSmoothen.Location = new System.Drawing.Point(156, 65);
+            this.numericSmoothen.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericSmoothen.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericSmoothen.Name = "numericSmoothen";
+            this.numericSmoothen.ReadOnly = true;
+            this.numericSmoothen.Size = new System.Drawing.Size(37, 24);
+            this.numericSmoothen.TabIndex = 39;
+            this.numericSmoothen.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // chkFill
+            // 
+            this.chkFill.AutoSize = true;
+            this.chkFill.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.chkFill.Location = new System.Drawing.Point(22, 109);
+            this.chkFill.Name = "chkFill";
+            this.chkFill.Size = new System.Drawing.Size(74, 19);
+            this.chkFill.TabIndex = 38;
+            this.chkFill.Text = "Fill Holes";
+            this.chkFill.UseVisualStyleBackColor = true;
+            // 
+            // chkSmoothen
+            // 
+            this.chkSmoothen.AutoSize = true;
+            this.chkSmoothen.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.chkSmoothen.Location = new System.Drawing.Point(22, 65);
+            this.chkSmoothen.Name = "chkSmoothen";
+            this.chkSmoothen.Size = new System.Drawing.Size(112, 19);
+            this.chkSmoothen.TabIndex = 37;
+            this.chkSmoothen.Text = "Smoothen Mesh";
+            this.chkSmoothen.UseVisualStyleBackColor = true;
+            // 
+            // chkIsland
+            // 
+            this.chkIsland.AutoSize = true;
+            this.chkIsland.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.chkIsland.Location = new System.Drawing.Point(22, 19);
+            this.chkIsland.Name = "chkIsland";
+            this.chkIsland.Size = new System.Drawing.Size(193, 19);
+            this.chkIsland.TabIndex = 36;
+            this.chkIsland.Text = "Remove Disconnected Elements";
+            this.chkIsland.UseVisualStyleBackColor = true;
             // 
             // FrmProcess
             // 
@@ -584,6 +687,10 @@
             this.tabParametrization.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericIteration)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericWeight)).EndInit();
+            this.tabPostProcess.ResumeLayout(false);
+            this.tabPostProcess.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericFill)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericSmoothen)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -629,5 +736,11 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.CheckBox checkUseCenter;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TabPage tabPostProcess;
+        private System.Windows.Forms.NumericUpDown numericFill;
+        private System.Windows.Forms.NumericUpDown numericSmoothen;
+        private System.Windows.Forms.CheckBox chkFill;
+        private System.Windows.Forms.CheckBox chkSmoothen;
+        private System.Windows.Forms.CheckBox chkIsland;
     }
 }

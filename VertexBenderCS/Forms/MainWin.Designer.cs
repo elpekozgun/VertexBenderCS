@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
             this.GLControl = new OpenTK.GLControl();
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
@@ -45,9 +45,9 @@
             this.toolbarPoint = new System.Windows.Forms.ToolStripButton();
             this.toolbarShowNormals = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
-            this.toolbarIsBlinn = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton7 = new System.Windows.Forms.ToolStripButton();
+            this.btnShowGrid = new System.Windows.Forms.ToolStripButton();
+            this.btnShowHeadLight = new System.Windows.Forms.ToolStripButton();
+            this.btnShowDirectLight = new System.Windows.Forms.ToolStripButton();
             this.BottomToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.TopToolStripPanel = new System.Windows.Forms.ToolStripPanel();
             this.RightToolStripPanel = new System.Windows.Forms.ToolStripPanel();
@@ -141,13 +141,24 @@
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
-            this.meshRendererPanel = new System.Windows.Forms.Panel();
+            this.renderablePanel = new System.Windows.Forms.Panel();
             this.btnColor = new System.Windows.Forms.Button();
             this.chkCull = new System.Windows.Forms.CheckBox();
             this.label8 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label17 = new System.Windows.Forms.Label();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.directLightX = new System.Windows.Forms.TrackBar();
+            this.directLightY = new System.Windows.Forms.TrackBar();
+            this.directLightZ = new System.Windows.Forms.TrackBar();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.labelDirLightY = new System.Windows.Forms.Label();
+            this.labelDirLightZ = new System.Windows.Forms.Label();
+            this.labelDirLightX = new System.Windows.Forms.Label();
+            this.menuImportVolAsPC = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuProcessPostProcessing = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -173,8 +184,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).BeginInit();
             this.panel1.SuspendLayout();
-            this.meshRendererPanel.SuspendLayout();
+            this.renderablePanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.directLightX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.directLightY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.directLightZ)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -230,48 +244,48 @@
             this.chartIsoCurve.BorderSkin.BackSecondaryColor = System.Drawing.Color.Transparent;
             this.chartIsoCurve.BorderSkin.BorderWidth = 20;
             this.chartIsoCurve.BorderSkin.PageColor = System.Drawing.Color.Transparent;
-            chartArea2.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea2.AxisX.LabelStyle.Interval = 0D;
-            chartArea2.AxisX.LabelStyle.IntervalOffset = 0D;
-            chartArea2.AxisX.TitleForeColor = System.Drawing.Color.White;
-            chartArea2.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
-            chartArea2.AxisY.LabelStyle.Interval = 0D;
-            chartArea2.AxisY.LabelStyle.IntervalOffset = 0D;
-            chartArea2.BackColor = System.Drawing.Color.White;
-            chartArea2.Name = "isoCurve-Distances";
-            this.chartIsoCurve.ChartAreas.Add(chartArea2);
-            legend2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
-            legend2.ForeColor = System.Drawing.Color.Gainsboro;
-            legend2.InterlacedRowsColor = System.Drawing.Color.White;
-            legend2.Name = "Legend1";
-            legend2.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.chartIsoCurve.Legends.Add(legend2);
+            chartArea1.AxisX.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisX.LabelStyle.Interval = 0D;
+            chartArea1.AxisX.LabelStyle.IntervalOffset = 0D;
+            chartArea1.AxisX.TitleForeColor = System.Drawing.Color.White;
+            chartArea1.AxisY.LabelStyle.ForeColor = System.Drawing.Color.Gainsboro;
+            chartArea1.AxisY.LabelStyle.Interval = 0D;
+            chartArea1.AxisY.LabelStyle.IntervalOffset = 0D;
+            chartArea1.BackColor = System.Drawing.Color.White;
+            chartArea1.Name = "isoCurve-Distances";
+            this.chartIsoCurve.ChartAreas.Add(chartArea1);
+            legend1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
+            legend1.ForeColor = System.Drawing.Color.Gainsboro;
+            legend1.InterlacedRowsColor = System.Drawing.Color.White;
+            legend1.Name = "Legend1";
+            legend1.ShadowColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.chartIsoCurve.Legends.Add(legend1);
             this.chartIsoCurve.Location = new System.Drawing.Point(920, 102);
             this.chartIsoCurve.Margin = new System.Windows.Forms.Padding(0);
             this.chartIsoCurve.Name = "chartIsoCurve";
             this.chartIsoCurve.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.Berry;
             this.chartIsoCurve.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            series2.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
-            series2.BackSecondaryColor = System.Drawing.Color.White;
-            series2.ChartArea = "isoCurve-Distances";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series2.Color = System.Drawing.Color.DodgerBlue;
-            series2.CustomProperties = "PointWidth=0.3";
-            series2.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
-            series2.EmptyPointStyle.Color = System.Drawing.Color.White;
-            series2.IsVisibleInLegend = false;
-            series2.LabelBackColor = System.Drawing.Color.White;
-            series2.LabelBorderColor = System.Drawing.Color.White;
-            series2.LabelForeColor = System.Drawing.Color.Gainsboro;
-            series2.Legend = "Legend1";
-            series2.MarkerBorderColor = System.Drawing.Color.White;
-            series2.MarkerColor = System.Drawing.Color.White;
-            series2.MarkerSize = 3;
-            series2.Name = "IsoCurve";
-            series2.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
-            series2.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
-            series2.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
-            this.chartIsoCurve.Series.Add(series2);
+            series1.BackImageAlignment = System.Windows.Forms.DataVisualization.Charting.ChartImageAlignmentStyle.Center;
+            series1.BackSecondaryColor = System.Drawing.Color.White;
+            series1.ChartArea = "isoCurve-Distances";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series1.Color = System.Drawing.Color.DodgerBlue;
+            series1.CustomProperties = "PointWidth=0.3";
+            series1.EmptyPointStyle.BorderDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Dot;
+            series1.EmptyPointStyle.Color = System.Drawing.Color.White;
+            series1.IsVisibleInLegend = false;
+            series1.LabelBackColor = System.Drawing.Color.White;
+            series1.LabelBorderColor = System.Drawing.Color.White;
+            series1.LabelForeColor = System.Drawing.Color.Gainsboro;
+            series1.Legend = "Legend1";
+            series1.MarkerBorderColor = System.Drawing.Color.White;
+            series1.MarkerColor = System.Drawing.Color.White;
+            series1.MarkerSize = 3;
+            series1.Name = "IsoCurve";
+            series1.Palette = System.Windows.Forms.DataVisualization.Charting.ChartColorPalette.SeaGreen;
+            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
+            series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Single;
+            this.chartIsoCurve.Series.Add(series1);
             this.chartIsoCurve.Size = new System.Drawing.Size(370, 230);
             this.chartIsoCurve.TabIndex = 15;
             this.chartIsoCurve.Text = "chart1";
@@ -298,9 +312,9 @@
             this.toolbarPoint,
             this.toolbarShowNormals,
             this.toolStripSeparator4,
-            this.toolStripButton2,
-            this.toolbarIsBlinn,
-            this.toolStripButton7});
+            this.btnShowGrid,
+            this.btnShowHeadLight,
+            this.btnShowDirectLight});
             this.toolBar.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolBar.Location = new System.Drawing.Point(0, 24);
             this.toolBar.MinimumSize = new System.Drawing.Size(1231, 70);
@@ -321,7 +335,9 @@
             // 
             // toolbarShaded
             // 
+            this.toolbarShaded.Checked = true;
             this.toolbarShaded.CheckOnClick = true;
+            this.toolbarShaded.CheckState = System.Windows.Forms.CheckState.Checked;
             this.toolbarShaded.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolbarShaded.Image = global::VertexBenderCS.Resources.Shaded;
             this.toolbarShaded.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -348,6 +364,7 @@
             this.toolbarPoint.Name = "toolbarPoint";
             this.toolbarPoint.Size = new System.Drawing.Size(52, 67);
             this.toolbarPoint.Text = "Point Cloud";
+            this.toolbarPoint.ToolTipText = "Points";
             // 
             // toolbarShowNormals
             // 
@@ -357,42 +374,50 @@
             this.toolbarShowNormals.Name = "toolbarShowNormals";
             this.toolbarShowNormals.Size = new System.Drawing.Size(52, 67);
             this.toolbarShowNormals.Text = "btnShowNormals";
+            this.toolbarShowNormals.ToolTipText = "Normals";
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
             this.toolStripSeparator4.Size = new System.Drawing.Size(6, 70);
             // 
-            // toolStripButton2
+            // btnShowGrid
             // 
-            this.toolStripButton2.CheckOnClick = true;
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton2.Image = global::VertexBenderCS.Resources.grid;
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(52, 67);
-            this.toolStripButton2.Text = "Show Grid";
+            this.btnShowGrid.Checked = true;
+            this.btnShowGrid.CheckOnClick = true;
+            this.btnShowGrid.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.btnShowGrid.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnShowGrid.Image = global::VertexBenderCS.Resources.grid;
+            this.btnShowGrid.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnShowGrid.Name = "btnShowGrid";
+            this.btnShowGrid.Size = new System.Drawing.Size(52, 67);
+            this.btnShowGrid.Text = "Show Grid";
+            this.btnShowGrid.ToolTipText = "Grid";
             // 
-            // toolbarIsBlinn
+            // btnShowHeadLight
             // 
-            this.toolbarIsBlinn.CheckOnClick = true;
-            this.toolbarIsBlinn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolbarIsBlinn.Image = global::VertexBenderCS.Resources.showLight;
-            this.toolbarIsBlinn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolbarIsBlinn.Name = "toolbarIsBlinn";
-            this.toolbarIsBlinn.Size = new System.Drawing.Size(52, 67);
-            this.toolbarIsBlinn.Text = "Toggle Lights";
-            this.toolbarIsBlinn.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.btnShowHeadLight.CheckOnClick = true;
+            this.btnShowHeadLight.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnShowHeadLight.Image = global::VertexBenderCS.Resources.showLight;
+            this.btnShowHeadLight.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnShowHeadLight.Name = "btnShowHeadLight";
+            this.btnShowHeadLight.Size = new System.Drawing.Size(52, 67);
+            this.btnShowHeadLight.Text = "Toggle Lights";
+            this.btnShowHeadLight.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.btnShowHeadLight.ToolTipText = "Head Light";
             // 
-            // toolStripButton7
+            // btnShowDirectLight
             // 
-            this.toolStripButton7.CheckOnClick = true;
-            this.toolStripButton7.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton7.Image = global::VertexBenderCS.Resources.showGizmo;
-            this.toolStripButton7.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton7.Name = "toolStripButton7";
-            this.toolStripButton7.Size = new System.Drawing.Size(52, 67);
-            this.toolStripButton7.Text = "Toggle Indicators";
+            this.btnShowDirectLight.Checked = true;
+            this.btnShowDirectLight.CheckOnClick = true;
+            this.btnShowDirectLight.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.btnShowDirectLight.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnShowDirectLight.Image = global::VertexBenderCS.Resources.showGizmo;
+            this.btnShowDirectLight.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnShowDirectLight.Name = "btnShowDirectLight";
+            this.btnShowDirectLight.Size = new System.Drawing.Size(52, 67);
+            this.btnShowDirectLight.Text = "Toggle Indicators";
+            this.btnShowDirectLight.ToolTipText = "Directional Light";
             // 
             // BottomToolStripPanel
             // 
@@ -471,20 +496,21 @@
             this.menuImportObj,
             this.menuImportDae,
             this.menuImportVol,
+            this.menuImportVolAsPC,
             this.menuImportNifti});
             this.menuImport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImport.Image = ((System.Drawing.Image)(resources.GetObject("menuImport.Image")));
             this.menuImport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuImport.Name = "menuImport";
             this.menuImport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.menuImport.Size = new System.Drawing.Size(149, 22);
+            this.menuImport.Size = new System.Drawing.Size(180, 22);
             this.menuImport.Text = "&Import";
             // 
             // menuImportOff
             // 
             this.menuImportOff.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportOff.Name = "menuImportOff";
-            this.menuImportOff.Size = new System.Drawing.Size(199, 22);
+            this.menuImportOff.Size = new System.Drawing.Size(220, 22);
             this.menuImportOff.Text = "Object File Format (.off)";
             // 
             // menuImportObj
@@ -492,7 +518,7 @@
             this.menuImportObj.Enabled = false;
             this.menuImportObj.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportObj.Name = "menuImportObj";
-            this.menuImportObj.Size = new System.Drawing.Size(199, 22);
+            this.menuImportObj.Size = new System.Drawing.Size(220, 22);
             this.menuImportObj.Text = "Wavefront (.obj)";
             // 
             // menuImportDae
@@ -500,21 +526,21 @@
             this.menuImportDae.Enabled = false;
             this.menuImportDae.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportDae.Name = "menuImportDae";
-            this.menuImportDae.Size = new System.Drawing.Size(199, 22);
+            this.menuImportDae.Size = new System.Drawing.Size(220, 22);
             this.menuImportDae.Text = "Collada (.dae)";
             // 
             // menuImportVol
             // 
             this.menuImportVol.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportVol.Name = "menuImportVol";
-            this.menuImportVol.Size = new System.Drawing.Size(199, 22);
+            this.menuImportVol.Size = new System.Drawing.Size(220, 22);
             this.menuImportVol.Text = "Volume (.vol)";
             // 
             // menuImportNifti
             // 
             this.menuImportNifti.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImportNifti.Name = "menuImportNifti";
-            this.menuImportNifti.Size = new System.Drawing.Size(199, 22);
+            this.menuImportNifti.Size = new System.Drawing.Size(220, 22);
             this.menuImportNifti.Text = "Nifti (.nii)";
             // 
             // menuExport
@@ -529,7 +555,7 @@
             this.menuExport.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuExport.Name = "menuExport";
             this.menuExport.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.menuExport.Size = new System.Drawing.Size(149, 22);
+            this.menuExport.Size = new System.Drawing.Size(180, 22);
             this.menuExport.Text = "&Export";
             // 
             // menuIsoCurveExport
@@ -565,7 +591,7 @@
             this.toolStripSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator.ForeColor = System.Drawing.SystemColors.Desktop;
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(177, 6);
             // 
             // menuSave
             // 
@@ -575,7 +601,7 @@
             this.menuSave.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.menuSave.Name = "menuSave";
             this.menuSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.menuSave.Size = new System.Drawing.Size(149, 22);
+            this.menuSave.Size = new System.Drawing.Size(180, 22);
             this.menuSave.Text = "&Save";
             // 
             // menuSaveAs
@@ -583,7 +609,7 @@
             this.menuSaveAs.Enabled = false;
             this.menuSaveAs.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuSaveAs.Name = "menuSaveAs";
-            this.menuSaveAs.Size = new System.Drawing.Size(149, 22);
+            this.menuSaveAs.Size = new System.Drawing.Size(180, 22);
             this.menuSaveAs.Text = "Save &As";
             // 
             // toolStripSeparator2
@@ -591,13 +617,13 @@
             this.toolStripSeparator2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(39)))), ((int)(((byte)(39)))));
             this.toolStripSeparator2.ForeColor = System.Drawing.SystemColors.Highlight;
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
             // 
             // menuExit
             // 
             this.menuExit.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuExit.Name = "menuExit";
-            this.menuExit.Size = new System.Drawing.Size(149, 22);
+            this.menuExit.Size = new System.Drawing.Size(180, 22);
             this.menuExit.Text = "E&xit";
             // 
             // processMenu
@@ -606,7 +632,8 @@
             this.menuProcessSP,
             this.menuProcessGC,
             this.menuProcessDescriptor,
-            this.menuProcessParametrization});
+            this.menuProcessParametrization,
+            this.menuProcessPostProcessing});
             this.processMenu.Font = new System.Drawing.Font("Ebrima", 9F);
             this.processMenu.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.processMenu.Name = "processMenu";
@@ -842,7 +869,7 @@
             this.transformPanel.Controls.Add(this.labelPosition);
             this.transformPanel.Controls.Add(this.numericPosX);
             this.transformPanel.Controls.Add(this.labelTransform);
-            this.transformPanel.Location = new System.Drawing.Point(0, 1);
+            this.transformPanel.Location = new System.Drawing.Point(0, 0);
             this.transformPanel.Name = "transformPanel";
             this.transformPanel.Size = new System.Drawing.Size(226, 142);
             this.transformPanel.TabIndex = 21;
@@ -1109,7 +1136,7 @@
             this.spherePanel.Controls.Add(this.label6);
             this.spherePanel.Controls.Add(this.numericSize);
             this.spherePanel.Controls.Add(this.label7);
-            this.spherePanel.Location = new System.Drawing.Point(0, 149);
+            this.spherePanel.Location = new System.Drawing.Point(0, 238);
             this.spherePanel.Name = "spherePanel";
             this.spherePanel.Size = new System.Drawing.Size(226, 93);
             this.spherePanel.TabIndex = 22;
@@ -1202,7 +1229,7 @@
             this.pointCloudPanel.Controls.Add(this.sliderMin);
             this.pointCloudPanel.Controls.Add(this.label2);
             this.pointCloudPanel.Controls.Add(this.label3);
-            this.pointCloudPanel.Location = new System.Drawing.Point(0, 149);
+            this.pointCloudPanel.Location = new System.Drawing.Point(0, 238);
             this.pointCloudPanel.Name = "pointCloudPanel";
             this.pointCloudPanel.Size = new System.Drawing.Size(226, 93);
             this.pointCloudPanel.TabIndex = 24;
@@ -1301,7 +1328,7 @@
             this.volumeRendererPanel.Controls.Add(this.intensityMarch);
             this.volumeRendererPanel.Controls.Add(this.label10);
             this.volumeRendererPanel.Controls.Add(this.label11);
-            this.volumeRendererPanel.Location = new System.Drawing.Point(0, 148);
+            this.volumeRendererPanel.Location = new System.Drawing.Point(0, 238);
             this.volumeRendererPanel.Name = "volumeRendererPanel";
             this.volumeRendererPanel.Size = new System.Drawing.Size(226, 187);
             this.volumeRendererPanel.TabIndex = 27;
@@ -1319,7 +1346,7 @@
             // 
             this.numericPressure.Location = new System.Drawing.Point(71, 150);
             this.numericPressure.Maximum = new decimal(new int[] {
-            15,
+            150,
             0,
             0,
             0});
@@ -1340,7 +1367,7 @@
             // 
             // btnFinalize
             // 
-            this.btnFinalize.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.btnFinalize.ForeColor = System.Drawing.Color.Black;
             this.btnFinalize.Location = new System.Drawing.Point(115, 116);
             this.btnFinalize.Name = "btnFinalize";
             this.btnFinalize.Size = new System.Drawing.Size(102, 23);
@@ -1350,7 +1377,7 @@
             // 
             // btnEdit
             // 
-            this.btnEdit.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.btnEdit.ForeColor = System.Drawing.Color.Black;
             this.btnEdit.Location = new System.Drawing.Point(8, 116);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(102, 23);
@@ -1420,42 +1447,38 @@
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(3, 3);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(97, 15);
+            this.label11.Size = new System.Drawing.Size(47, 15);
             this.label11.TabIndex = 0;
-            this.label11.Text = "Volume Renderer";
+            this.label11.Text = "Volume";
             // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.panel1.AutoScroll = true;
-            this.panel1.Controls.Add(this.transformPanel);
+            this.panel1.Controls.Add(this.renderablePanel);
             this.panel1.Controls.Add(this.volumeRendererPanel);
             this.panel1.Controls.Add(this.pointCloudPanel);
+            this.panel1.Controls.Add(this.transformPanel);
             this.panel1.Controls.Add(this.spherePanel);
             this.panel1.Location = new System.Drawing.Point(3, 439);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(250, 299);
             this.panel1.TabIndex = 28;
             // 
-            // colorDialog1
+            // renderablePanel
             // 
-            this.colorDialog1.AnyColor = true;
-            this.colorDialog1.FullOpen = true;
-            // 
-            // meshRendererPanel
-            // 
-            this.meshRendererPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
-            this.meshRendererPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.meshRendererPanel.Controls.Add(this.btnColor);
-            this.meshRendererPanel.Controls.Add(this.chkCull);
-            this.meshRendererPanel.Controls.Add(this.label8);
-            this.meshRendererPanel.Controls.Add(this.numericUpDown1);
-            this.meshRendererPanel.Controls.Add(this.label17);
-            this.meshRendererPanel.Location = new System.Drawing.Point(3, 587);
-            this.meshRendererPanel.Name = "meshRendererPanel";
-            this.meshRendererPanel.Size = new System.Drawing.Size(226, 84);
-            this.meshRendererPanel.TabIndex = 37;
+            this.renderablePanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
+            this.renderablePanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.renderablePanel.Controls.Add(this.btnColor);
+            this.renderablePanel.Controls.Add(this.chkCull);
+            this.renderablePanel.Controls.Add(this.label8);
+            this.renderablePanel.Controls.Add(this.numericUpDown1);
+            this.renderablePanel.Controls.Add(this.label17);
+            this.renderablePanel.Location = new System.Drawing.Point(0, 148);
+            this.renderablePanel.Name = "renderablePanel";
+            this.renderablePanel.Size = new System.Drawing.Size(226, 84);
+            this.renderablePanel.TabIndex = 37;
             // 
             // btnColor
             // 
@@ -1513,9 +1536,113 @@
             this.label17.AutoSize = true;
             this.label17.Location = new System.Drawing.Point(3, 3);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(86, 15);
+            this.label17.Size = new System.Drawing.Size(66, 15);
             this.label17.TabIndex = 0;
-            this.label17.Text = "Mesh Renderer";
+            this.label17.Text = "Renderable";
+            // 
+            // colorDialog1
+            // 
+            this.colorDialog1.AnyColor = true;
+            this.colorDialog1.FullOpen = true;
+            // 
+            // directLightX
+            // 
+            this.directLightX.AutoSize = false;
+            this.directLightX.Location = new System.Drawing.Point(480, 27);
+            this.directLightX.Maximum = 180;
+            this.directLightX.Minimum = -179;
+            this.directLightX.Name = "directLightX";
+            this.directLightX.Size = new System.Drawing.Size(167, 35);
+            this.directLightX.TabIndex = 30;
+            this.directLightX.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.directLightX.Value = 180;
+            // 
+            // directLightY
+            // 
+            this.directLightY.AutoSize = false;
+            this.directLightY.Location = new System.Drawing.Point(480, 47);
+            this.directLightY.Maximum = 180;
+            this.directLightY.Minimum = -179;
+            this.directLightY.Name = "directLightY";
+            this.directLightY.Size = new System.Drawing.Size(167, 24);
+            this.directLightY.TabIndex = 31;
+            this.directLightY.TickStyle = System.Windows.Forms.TickStyle.None;
+            // 
+            // directLightZ
+            // 
+            this.directLightZ.AutoSize = false;
+            this.directLightZ.Location = new System.Drawing.Point(480, 68);
+            this.directLightZ.Maximum = 180;
+            this.directLightZ.Minimum = -179;
+            this.directLightZ.Name = "directLightZ";
+            this.directLightZ.Size = new System.Drawing.Size(167, 23);
+            this.directLightZ.TabIndex = 32;
+            this.directLightZ.TickStyle = System.Windows.Forms.TickStyle.None;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(435, 29);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(17, 15);
+            this.label13.TabIndex = 34;
+            this.label13.Text = "X:";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(435, 69);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(17, 15);
+            this.label14.TabIndex = 35;
+            this.label14.Text = "Z:";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(435, 48);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(17, 15);
+            this.label15.TabIndex = 36;
+            this.label15.Text = "Y:";
+            // 
+            // labelDirLightY
+            // 
+            this.labelDirLightY.AutoSize = true;
+            this.labelDirLightY.Location = new System.Drawing.Point(453, 48);
+            this.labelDirLightY.Name = "labelDirLightY";
+            this.labelDirLightY.Size = new System.Drawing.Size(0, 15);
+            this.labelDirLightY.TabIndex = 39;
+            // 
+            // labelDirLightZ
+            // 
+            this.labelDirLightZ.AutoSize = true;
+            this.labelDirLightZ.Location = new System.Drawing.Point(453, 69);
+            this.labelDirLightZ.Name = "labelDirLightZ";
+            this.labelDirLightZ.Size = new System.Drawing.Size(0, 15);
+            this.labelDirLightZ.TabIndex = 38;
+            // 
+            // labelDirLightX
+            // 
+            this.labelDirLightX.AutoSize = true;
+            this.labelDirLightX.Location = new System.Drawing.Point(453, 29);
+            this.labelDirLightX.Name = "labelDirLightX";
+            this.labelDirLightX.Size = new System.Drawing.Size(0, 15);
+            this.labelDirLightX.TabIndex = 37;
+            // 
+            // menuImportVolAsPC
+            // 
+            this.menuImportVolAsPC.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuImportVolAsPC.Name = "menuImportVolAsPC";
+            this.menuImportVolAsPC.Size = new System.Drawing.Size(220, 22);
+            this.menuImportVolAsPC.Text = "Volume as Point Cloud(.vol)";
+            // 
+            // menuProcessPostProcessing
+            // 
+            this.menuProcessPostProcessing.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuProcessPostProcessing.Name = "menuProcessPostProcessing";
+            this.menuProcessPostProcessing.Size = new System.Drawing.Size(244, 22);
+            this.menuProcessPostProcessing.Text = "Post-Processing";
             // 
             // MainWin
             // 
@@ -1524,7 +1651,15 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1298, 905);
-            this.Controls.Add(this.meshRendererPanel);
+            this.Controls.Add(this.labelDirLightY);
+            this.Controls.Add(this.labelDirLightZ);
+            this.Controls.Add(this.labelDirLightX);
+            this.Controls.Add(this.label15);
+            this.Controls.Add(this.label14);
+            this.Controls.Add(this.label13);
+            this.Controls.Add(this.directLightZ);
+            this.Controls.Add(this.directLightY);
+            this.Controls.Add(this.directLightX);
             this.Controls.Add(this.GLControl);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.statusBar);
@@ -1572,9 +1707,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.intensityMarch)).EndInit();
             this.panel1.ResumeLayout(false);
-            this.meshRendererPanel.ResumeLayout(false);
-            this.meshRendererPanel.PerformLayout();
+            this.renderablePanel.ResumeLayout(false);
+            this.renderablePanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.directLightX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.directLightY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.directLightZ)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1628,9 +1766,9 @@
         private System.Windows.Forms.ToolStripStatusLabel Status;
         private System.Windows.Forms.TextBox Log;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
-        private System.Windows.Forms.ToolStripButton toolStripButton2;
-        private System.Windows.Forms.ToolStripButton toolbarIsBlinn;
-        private System.Windows.Forms.ToolStripButton toolStripButton7;
+        private System.Windows.Forms.ToolStripButton btnShowGrid;
+        private System.Windows.Forms.ToolStripButton btnShowHeadLight;
+        private System.Windows.Forms.ToolStripButton btnShowDirectLight;
         private System.Windows.Forms.Panel transformPanel;
         private System.Windows.Forms.Label labelScale;
         private System.Windows.Forms.Label labelRotation;
@@ -1692,12 +1830,23 @@
         private OpenTK.GLControl GLControl;
         private System.Windows.Forms.ToolStripButton toolbarShowNormals;
         private System.Windows.Forms.ColorDialog colorDialog1;
-        private System.Windows.Forms.Panel meshRendererPanel;
+        private System.Windows.Forms.Panel renderablePanel;
         private System.Windows.Forms.Button btnColor;
         private System.Windows.Forms.CheckBox chkCull;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TrackBar directLightX;
+        private System.Windows.Forms.TrackBar directLightY;
+        private System.Windows.Forms.TrackBar directLightZ;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label labelDirLightY;
+        private System.Windows.Forms.Label labelDirLightZ;
+        private System.Windows.Forms.Label labelDirLightX;
+        private System.Windows.Forms.ToolStripMenuItem menuImportVolAsPC;
+        private System.Windows.Forms.ToolStripMenuItem menuProcessPostProcessing;
     }
 }
 

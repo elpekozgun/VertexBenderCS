@@ -1,13 +1,7 @@
 ﻿using Engine.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK;
-using System.Drawing;
-using System.Drawing.Imaging;
+using OpenTK.Graphics.OpenGL4;
+using System;
 
 namespace Engine.GLApi
 {
@@ -29,11 +23,15 @@ namespace Engine.GLApi
 
         public Vector4 Color { get; set; }
 
+        public bool ShowBoundingBox { get; set; }
+
+        public bool EnableCull { get; set; }
+
         private void ExtractVertices(Mesh mesh)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
             int i = 0;
-            foreach(var vertex in mesh.Vertices)
+            foreach (var vertex in mesh.Vertices)
             {
                 vertices[i] = new GpuVertex()
                 {
@@ -119,7 +117,7 @@ namespace Engine.GLApi
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 //GL.Enable(EnableCap.PolygonSmooth);
 
-                GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length); 
+                GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length);
 
             }
             if ((mode & eRenderMode.wireFrame) == eRenderMode.wireFrame)

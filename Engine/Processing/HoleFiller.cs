@@ -410,7 +410,7 @@ namespace Engine.Processing
 
             float angle = 0;
 
-            if (i + 1 == j)
+            if (i + 1 == j && _allOpposites[boundaryID].ContainsKey(gi))
             {
                 angle = Math.Max(angle, DihedralAngle(gi, gj, gk, _allOpposites[boundaryID][gi]));
             }
@@ -419,7 +419,7 @@ namespace Engine.Processing
                 angle = Math.Max(angle, DihedralAngle(gi, gj, gk, _allBoundaries[boundaryID][indexTable[i, j]]));
             }
 
-            if (j + 1 == k)
+            if (j + 1 == k && _allOpposites[boundaryID].ContainsKey(gj))
             {
                 angle = Math.Max(angle, DihedralAngle(gj, gk, gi, _allOpposites[boundaryID][gj]));
             }
@@ -428,9 +428,12 @@ namespace Engine.Processing
                 angle = Math.Max(angle, DihedralAngle(gj, gk, gi, _allBoundaries[boundaryID][indexTable[j, k]]));
             }
 
-            if (i == 0 && k == _allBoundaries[boundaryID].Count - 1)
+            if (_allOpposites[boundaryID].ContainsKey(gk))
             {
-                angle = Math.Max(angle, DihedralAngle(gk, gi, gj, _allOpposites[boundaryID][gk]));
+                if (i == 0 && k == _allBoundaries[boundaryID].Count - 1)
+                {
+                    angle = Math.Max(angle, DihedralAngle(gk, gi, gj, _allOpposites[boundaryID][gk]));
+                }
             }
 
             var vi = Mesh.Vertices[gi].Coord;

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK;
+﻿using OpenTK;
+using System;
 
 namespace Engine.Core
 {
@@ -93,7 +88,7 @@ namespace Engine.Core
             v *= (float)vLength;
             h *= (float)hLength;
 
-            return Position + Front * Near + h * x + v * y ;
+            return Position + Front * Near + h * x + v * y;
 
 
             //float x = (2.0f * sx) / width - 1.0f;

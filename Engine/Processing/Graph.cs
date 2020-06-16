@@ -23,7 +23,7 @@ namespace Engine.Processing
     {
         public List<GraphNode> Nodes;
 
-        private List<KeyValuePair<int,float>> ExtractNeighbors(Mesh mesh, Vertex vertex)
+        private List<KeyValuePair<int, float>> ExtractNeighbors(Mesh mesh, Vertex vertex)
         {
             var retVal = new List<KeyValuePair<int, float>>();
             foreach (var neighbor in vertex.Verts)

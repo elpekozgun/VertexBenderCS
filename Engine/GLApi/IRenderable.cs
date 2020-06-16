@@ -1,9 +1,4 @@
 ﻿using Engine.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Engine.GLApi
 {
@@ -11,6 +6,8 @@ namespace Engine.GLApi
     {
         void Render(Camera cam, eRenderMode mode = eRenderMode.shaded);
         Shader Shader { get; set; }
-
+        bool EnableCull { get; set; }
+        OpenTK.Vector4 Color { get; set; }
+        bool ShowBoundingBox { get; set; }
     }
 }

@@ -2,7 +2,6 @@
 using OpenTK;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Engine.Processing
 {
@@ -16,7 +15,8 @@ namespace Engine.Processing
         GeodesicMatrix,
         DiscParametrization,
         SphereParametrization,
-        CutSeamParameterization
+        CutSeamParameterization,
+        PostProcessing
     }
 
     public interface IOutput
@@ -42,7 +42,7 @@ namespace Engine.Processing
             TargetDistance = targetDistance;
             Path = path;
         }
-        
+
     }
 
     public struct DijkstraOutput : IOutput
@@ -202,9 +202,9 @@ namespace Engine.Processing
     {
         public ShortestPathOutput ShortestPath;
         public Engine.Core.Mesh Cutmesh;
-        public List<Dictionary<int,Vertex>> boundary;
+        public List<Dictionary<int, Vertex>> boundary;
 
-        public CutMeshOutput(Mesh cutmesh, ShortestPathOutput shortestPath, List<Dictionary<int,Vertex>> boundary)
+        public CutMeshOutput(Mesh cutmesh, ShortestPathOutput shortestPath, List<Dictionary<int, Vertex>> boundary)
         {
             this.boundary = boundary;
             Cutmesh = cutmesh;
@@ -212,7 +212,18 @@ namespace Engine.Processing
         }
 
     }
-        
+
+    public struct PostProcessOutput : IOutput
+    {
+        public Engine.Core.Mesh newMesh;
+
+        public PostProcessOutput(Mesh mesh)
+        {
+            newMesh = mesh;
+        }
+
+        public eOutputType Type => eOutputType.PostProcessing;
+    }
 
 
 }

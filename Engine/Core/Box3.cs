@@ -67,7 +67,7 @@ namespace Engine.Core
             return new Box3(maxY, minY, maxX, minX, maxZ, minZ);
         }
 
-        public static Box3 CalculateBoundingBox(Dictionary<int,Vertex> vertices)
+        public static Box3 CalculateBoundingBox(Dictionary<int, Vertex> vertices)
         {
             float minX = float.MaxValue;
             float minY = float.MaxValue;
@@ -129,7 +129,7 @@ namespace Engine.Core
                     0.5f * (Right + Left),
                     0.5f * (Top + Bottom),
                     0.5f * (Front + Back)
-                ); 
+                );
             }
         }
 

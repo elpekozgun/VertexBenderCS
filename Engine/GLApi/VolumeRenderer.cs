@@ -2,15 +2,9 @@
 using Engine.Processing;
 using OpenTK;
 using OpenTK.Graphics.OpenGL4;
-using OpenTK.Platform.Windows;
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Configuration;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace Engine.GLApi
 {
@@ -31,7 +25,7 @@ namespace Engine.GLApi
 
         public Vector3 Center { get; private set; }
         public Texture DiffuseTexture { get; set; }
-        
+
         public int Intensity { get; set; }
         public int DownSample { get; set; }
         public eMarchMethod Method { get; set; }
@@ -60,6 +54,11 @@ namespace Engine.GLApi
         private readonly Stopwatch _watch;
 
         public Vector4 Color { get; set; }
+
+        public bool EnableCull { get; set; }
+
+        public bool ShowBoundingBox { get; set; }
+
 
         public VolumeRenderer(VolOutput vol, string name = "")
             : base(name)
@@ -161,7 +160,7 @@ namespace Engine.GLApi
 
             var mesh = Algorithm.CreateMeshFromVolRendererOutput(clean.ToArray());
 
-            
+
             if (removeIslands)
                 Algorithm.RemoveIslands(ref mesh);
             if (fillHoles)
@@ -208,7 +207,7 @@ namespace Engine.GLApi
             GL.DispatchCompute(input.Length / 512, 1, 1);
             GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
 
-            Compute();
+            //Compute();
         }
 
         public bool ComputeIntersection(Vector3 origin, Vector3 direction, out Vector3 hit)
@@ -251,6 +250,7 @@ namespace Engine.GLApi
         {
             if (DownSample != _currentDownSample)
             {
+
                 subVolData = Algorithm.Downsample(rawVolData, DownSample);
                 UpdateInputFromVol(subVolData);
                 _currentDownSample = DownSample;
@@ -479,7 +479,7 @@ namespace Engine.GLApi
             GL.BindVertexArray(_VAO);
 
             GL.Disable(EnableCap.CullFace);
-            
+
             if (Method == eMarchMethod.GpuBoost)
             {
                 Shader = Shader.DirectComputePaint;

@@ -1,14 +1,8 @@
 ﻿using Engine.Core;
+using OpenTK;
+using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Diagnostics.SymbolStore;
 
 namespace Engine.GLApi
 {
@@ -42,17 +36,20 @@ namespace Engine.GLApi
             Min = min;
         }
 
+        public bool EnableCull { get; set; }
 
         public Mesh Mesh { get; set; }
 
         public Vector4 Color { get; set; }
+
+        public bool ShowBoundingBox { get; set; }
 
         private void ExtractVertices(Mesh mesh, List<short> intensities)
         {
             vertices = new GpuVertex[mesh.Vertices.Count];
             int i = 0;
 
-            foreach(var vertex in mesh.Vertices)
+            foreach (var vertex in mesh.Vertices)
             {
                 vertices[i] = new GpuVertex()
                 {
@@ -123,7 +120,10 @@ namespace Engine.GLApi
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, DiffuseTexture.Id);
 
-            GL.Enable(EnableCap.CullFace);
+            if (EnableCull)
+            {
+                GL.Enable(EnableCap.CullFace);
+            }
 
             GL.BindVertexArray(_VAO);
 
@@ -150,7 +150,10 @@ namespace Engine.GLApi
             GL.BindVertexArray(0);
             GL.ActiveTexture(TextureUnit.Texture0);
 
-            GL.Disable(EnableCap.CullFace);
+            if (EnableCull)
+            {
+                GL.Disable(EnableCap.CullFace);
+            }
         }
 
         protected virtual void Dispose(bool disposing)

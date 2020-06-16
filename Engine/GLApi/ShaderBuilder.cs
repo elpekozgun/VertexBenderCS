@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK;
+﻿using OpenTK.Graphics.OpenGL4;
+using System;
 using System.IO;
-using Engine.Core;
+using System.Linq;
 
 namespace Engine.GLApi
 {
@@ -73,7 +68,7 @@ namespace Engine.GLApi
                 //{
                 //Logger.Log(GL.GetShaderInfoLog(id));
                 //glGetShaderInfoLog(id, sizeof(infolog), NULL, infolog);
-                    //TITAN_LOG(type << "Linking Error: " << infolog << "\n" << std::endl);
+                //TITAN_LOG(type << "Linking Error: " << infolog << "\n" << std::endl);
                 //}
             }
         }

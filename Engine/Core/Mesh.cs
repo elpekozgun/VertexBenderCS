@@ -1,11 +1,7 @@
-﻿using MathNet.Numerics;
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 
 namespace Engine.Core
 {
@@ -15,9 +11,9 @@ namespace Engine.Core
         public Vertex(int id, float x, float y, float z, float nx = 0, float ny = 0, float nz = 0)
         {
             Id = id;
-            Coord = new Vector3(x,y,z);
+            Coord = new Vector3(x, y, z);
             Normal = new Vector3(nx, ny, nz);
-                
+
             Tris = new List<int>();
             Verts = new List<int>();
             Edges = new List<int>();
@@ -341,38 +337,38 @@ namespace Engine.Core
                 if (Vertices.TryGetValue(tri.V3, out Vertex v3))
                     v3.Tris.Remove(tri.Id);
 
-               // //if (v1.Tris.Count == 1)
-               // {
-               //     if (v1.Edges.Count > 2)
-               //     {
-               //         for (int i = 0; i < v1.Edges.Count; i++)
-               //         {
-               //             RemoveEdge(v1.Edges[i]);
-               //         }
-               //     }
-               // }
+                // //if (v1.Tris.Count == 1)
+                // {
+                //     if (v1.Edges.Count > 2)
+                //     {
+                //         for (int i = 0; i < v1.Edges.Count; i++)
+                //         {
+                //             RemoveEdge(v1.Edges[i]);
+                //         }
+                //     }
+                // }
 
-               // //if (v2.Tris.Count == 1)
-               // {
-               //     if (v2.Edges.Count > 2)
-               //     {
-               //         for (int i = 0; i < v2.Edges.Count; i++)
-               //         {
-               //             RemoveEdge(v2.Edges[i]);
-               //         }
-               //     }
-               // }
+                // //if (v2.Tris.Count == 1)
+                // {
+                //     if (v2.Edges.Count > 2)
+                //     {
+                //         for (int i = 0; i < v2.Edges.Count; i++)
+                //         {
+                //             RemoveEdge(v2.Edges[i]);
+                //         }
+                //     }
+                // }
 
-               ////if (v3.Tris.Count == 1)
-               // {
-               //     if (v3.Edges.Count > 2)
-               //     {
-               //         for (int i = 0; i < v3.Edges.Count; i++)
-               //         {
-               //             RemoveEdge(v3.Edges[i]);
-               //         }
-               //     }
-               // }
+                ////if (v3.Tris.Count == 1)
+                // {
+                //     if (v3.Edges.Count > 2)
+                //     {
+                //         for (int i = 0; i < v3.Edges.Count; i++)
+                //         {
+                //             RemoveEdge(v3.Edges[i]);
+                //         }
+                //     }
+                // }
 
                 Triangles.Remove(id);
             }
@@ -459,7 +455,7 @@ namespace Engine.Core
                 Vector3 normal = Vector3.Zero;
                 for (int j = 0; j < vertex.Tris.Count; j++)
                 {
-                    normal += (CalculateTriangleNormals(Triangles[vertex.Tris[j]])* TriangleArea(Triangles[vertex.Tris[j]])).Normalized();
+                    normal += (CalculateTriangleNormals(Triangles[vertex.Tris[j]]) * TriangleArea(Triangles[vertex.Tris[j]])).Normalized();
                     //normal += CalculateTriangleNormals(Triangles[vertex.Tris[j]])/* * GetTriangleAngle(vertex.Tris[j], keys[i])*/;
                 }
 
@@ -560,7 +556,7 @@ namespace Engine.Core
 
             Vector3 center = alpha * a + beta * b + gamma * c;
 
-            return (Vertices[nx].Coord - center).LengthSquared < (a - center).LengthSquared;   
+            return (Vertices[nx].Coord - center).LengthSquared < (a - center).LengthSquared;
         }
 
         private bool IsCCW(Triangle t)
@@ -569,7 +565,7 @@ namespace Engine.Core
             var v2 = Vertices[t.V2].Coord;
             var v3 = Vertices[t.V3].Coord;
 
-            return Vector3.CalculateAngle(v2 - v1, v3 - v1) > 0; 
+            return Vector3.CalculateAngle(v2 - v1, v3 - v1) > 0;
 
         }
 
@@ -632,7 +628,7 @@ namespace Engine.Core
         {
             var boundaries = new HashSet<Edge>();
 
-            foreach(var edge in Edges)
+            foreach (var edge in Edges)
             {
                 var e1 = edge.Value.Start;
                 var e2 = edge.Value.End;
@@ -668,8 +664,8 @@ namespace Engine.Core
 
         public void RefreshMesh()
         {
-            var tempV = new Dictionary<int,Vertex>(Vertices);
-            var tempT = new Dictionary<int,Triangle>(Triangles);
+            var tempV = new Dictionary<int, Vertex>(Vertices);
+            var tempT = new Dictionary<int, Triangle>(Triangles);
 
             _lastT = 0;
             _lastV = 0;
@@ -700,5 +696,9 @@ namespace Engine.Core
 
         }
 
+        public Box3 GetBoundingBox()
+        {
+            return Box3.CalculateBoundingBox(this.Vertices.Select(x => x.Value.Coord).ToList());
+        }
     }
 }

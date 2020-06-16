@@ -1,11 +1,8 @@
 ﻿using Engine.Core;
+using OpenTK;
+using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK;
 
 namespace Engine.GLApi
 {
@@ -26,7 +23,7 @@ namespace Engine.GLApi
         private GpuVertex[] vertices;
         private int[] indices;
 
-        public bool EnableCull;
+        public bool EnableCull { get; set; }
         public bool EnableBlend;
         public bool EnableDepth;
 
@@ -40,9 +37,11 @@ namespace Engine.GLApi
 
         public Vector4 Color { get; set; }
 
+        public bool ShowBoundingBox { get; set; }
+
         private Shader _normalShader;
 
-        public bool ShowNormals{ get; set; }
+        public bool ShowNormals { get; set; }
 
         public void SetMesh(Mesh mesh)
         {
@@ -81,7 +80,7 @@ namespace Engine.GLApi
 
         }
 
-        public MeshRenderer(Mesh mesh, string name = "") 
+        public MeshRenderer(Mesh mesh, string name = "")
             : base(name)
         {
             ExtractVertices(mesh);
@@ -151,7 +150,7 @@ namespace Engine.GLApi
         {
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i].TexCoord = new Vector2(MathHelper.Clamp(texcoord[i].X, 0 , 1), MathHelper.Clamp(texcoord[i].Y, 0, 1));
+                vertices[i].TexCoord = new Vector2(MathHelper.Clamp(texcoord[i].X, 0, 1), MathHelper.Clamp(texcoord[i].Y, 0, 1));
             }
             Setup();
         }
@@ -166,7 +165,7 @@ namespace Engine.GLApi
             if (EnableBlend)
             {
                 GL.Enable(EnableCap.Blend);
-                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); 
+                GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             }
 
             if (!EnableDepth)

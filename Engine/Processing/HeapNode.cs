@@ -2,7 +2,7 @@
 
 namespace Engine.Processing
 {
-    public class HeapNode 
+    public class HeapNode
     {
         public int id;
         public int PrevId { get; set; }

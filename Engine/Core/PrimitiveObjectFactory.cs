@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Engine.Core
 {
@@ -211,11 +209,11 @@ namespace Engine.Core
             var a = (float)Math.Sqrt(8.0 / 9.0);
             var c = (float)Math.Sqrt(2.0 / 3.0);
 
-            tetrahedron.AddVertex(a * size,  -size * (1.0f / 3.0f), 0.0f);
+            tetrahedron.AddVertex(a * size, -size * (1.0f / 3.0f), 0.0f);
             tetrahedron.AddVertex(-b * size, -size * (1.0f / 3.0f), size * c);
             tetrahedron.AddVertex(-b * size, -size * (1.0f / 3.0f), -size * c);
             tetrahedron.AddVertex(0, size, 0);
-                
+
             tetrahedron.AddTriangle(0, 1, 3);
             tetrahedron.AddTriangle(3, 1, 2);
             tetrahedron.AddTriangle(2, 0, 3);
@@ -328,10 +326,10 @@ namespace Engine.Core
 
                 copyMesh.Vertices[item.Value.V2].Verts.Remove(item.Value.V1);
                 copyMesh.Vertices[item.Value.V2].Verts.Remove(item.Value.V3);
-                
+
                 copyMesh.Vertices[item.Value.V3].Verts.Remove(item.Value.V1);
                 copyMesh.Vertices[item.Value.V3].Verts.Remove(item.Value.V2);
-                
+
                 copyMesh.RemoveTriangle(item.Key);
             }
 
@@ -357,7 +355,7 @@ namespace Engine.Core
 
             var vertDict = new Dictionary<OpenTK.Vector3, Vertex>();
 
-            while (recursionLevel> 0)
+            while (recursionLevel > 0)
             {
                 DivideFace(ref sphere, recursionLevel, ref vertDict);
                 recursionLevel--;
@@ -407,7 +405,7 @@ namespace Engine.Core
                 arrow3D.AddVertex
                 (
                     radius * (float)Math.Cos(i * (2 * Math.PI / division)),
-                    baseOffset,                                          
+                    baseOffset,
                     radius * (float)Math.Sin(i * (2 * Math.PI / division))
                 );
             }
@@ -417,15 +415,15 @@ namespace Engine.Core
             {
                 arrow3D.AddVertex
                 (
-                    radius * (float)Math.Cos(i * (2 * Math.PI / division)), 
-                    length,                                     
+                    radius * (float)Math.Cos(i * (2 * Math.PI / division)),
+                    length,
                     radius * (float)Math.Sin(i * (2 * Math.PI / division))
                 );
             }
-            
+
             // base 24, top 25
             arrow3D.AddVertex(0.0f, baseOffset, 0.0f);
-            arrow3D.AddVertex(0.0f,  length , 0.0f);
+            arrow3D.AddVertex(0.0f, length, 0.0f);
 
             int a, b, c, d;
             // base
@@ -441,7 +439,7 @@ namespace Engine.Core
                 arrow3D.AddTriangle(c, d, 2 * division + 1);
                 // sides
                 arrow3D.AddTriangle(a, b, c);
-                arrow3D.AddTriangle( c, b, d);
+                arrow3D.AddTriangle(c, b, d);
             }
 
             arrow3D.CalculateVertexNormals();
@@ -449,7 +447,31 @@ namespace Engine.Core
             return arrow3D;
         }
 
-        public static Mesh Grid (int sizeX, int sizeY, int sizeZ, float gridDistance)
+        public static Mesh ConeForLighting(float radius, float length, int division)
+        {
+            Mesh arrow3D = new Mesh();
+
+            for (int i = 0; i < division; i++)
+            {
+                arrow3D.AddVertex
+                (
+                    radius * (float)Math.Cos(i * (2 * Math.PI / division)),
+                    length,
+                    radius * (float)Math.Sin(i * (2 * Math.PI / division))
+                );
+            }
+            arrow3D.AddVertex(0.0f, 0.0f, 0.0f);
+
+            for (int i = 0; i < division; i++)
+            {
+                arrow3D.AddEdge(i , division, 1, false);
+            }
+
+            return arrow3D;
+        }
+
+
+        public static Mesh Grid(int sizeX, int sizeY, int sizeZ, float gridDistance)
         {
             var grid = new Mesh();
 
@@ -457,8 +479,8 @@ namespace Engine.Core
             {
                 for (int x = 0; x <= sizeX; x++)
                 {
-                    var v1 = grid.AddVertex(x, y, 0);
-                    var v2 = grid.AddVertex(x, y, sizeZ);
+                    var v1 = grid.AddVertex(-sizeX * 0.5f + x, -sizeY * 0.5f + y, -sizeZ * 0.5f);
+                    var v2 = grid.AddVertex(-sizeX * 0.5f + x, -sizeY * 0.5f + y, sizeZ * 0.5f);
                     grid.AddEdge(v1.Id, v2.Id, sizeZ, false);
                 }
             }
@@ -467,8 +489,8 @@ namespace Engine.Core
             {
                 for (int z = 0; z <= sizeX; z++)
                 {
-                    var v1 = grid.AddVertex(0, y, z);
-                    var v2 = grid.AddVertex(sizeX, y, z);
+                    var v1 = grid.AddVertex(-sizeX * 0.5f, -sizeY * 0.5f + y, -sizeZ * 0.5f + z);
+                    var v2 = grid.AddVertex(sizeX * 0.5f, -sizeY * 0.5f + y, -sizeZ * 0.5f + z);
                     grid.AddEdge(v1.Id, v2.Id, sizeX, false);
                 }
             }
@@ -477,14 +499,15 @@ namespace Engine.Core
             {
                 for (int x = 0; x <= sizeX; x++)
                 {
-                    var v1 = grid.AddVertex(x, 0, z);
-                    var v2 = grid.AddVertex(x, sizeY, z);
+                    var v1 = grid.AddVertex(-sizeX * 0.5f + x, -sizeY * 0.5f, -sizeZ * 0.5f + z);
+                    var v2 = grid.AddVertex(-sizeX * 0.5f + x, sizeY * 0.5f, -sizeZ * 0.5f + z);
                     grid.AddEdge(v1.Id, v2.Id, sizeY, false);
                 }
             }
 
             return grid;
         }
+
     }
 
     public class Sphere : Mesh
@@ -493,7 +516,7 @@ namespace Engine.Core
         public int Subdivision { get; set; }
         public eSphereGenerationType Type { get; set; }
 
-        public Sphere(float size, int subdivision, eSphereGenerationType type, Mesh mesh):base("asd")
+        public Sphere(float size, int subdivision, eSphereGenerationType type, Mesh mesh) : base("asd")
         {
             this.Vertices = mesh.Vertices;
             this.Triangles = mesh.Triangles;

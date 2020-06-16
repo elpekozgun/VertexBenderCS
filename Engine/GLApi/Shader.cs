@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL4;
-using OpenTK;
 
 namespace Engine.GLApi
 {
@@ -26,7 +21,7 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\GouraudVertex.glsl", ShaderType.VertexShader),
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\GouraudFragment.glsl", ShaderType.FragmentShader)
         );
-    
+
         private static readonly Shader _unlit = ShaderBuilder.CreateShader
         (
             "unlit",
@@ -125,7 +120,7 @@ namespace Engine.GLApi
 
         #endregion
 
-        public string Name { get; set; } 
+        public string Name { get; set; }
         private readonly int _id;
 
         public Shader(string name, int id)
@@ -189,7 +184,7 @@ namespace Engine.GLApi
             GL.UniformMatrix2(GL.GetUniformLocation(_id, name), false, ref value);
         }
 
-        public void SetMat3(string name,  Matrix3 value)
+        public void SetMat3(string name, Matrix3 value)
         {
             GL.UniformMatrix3(GL.GetUniformLocation(_id, name), false, ref value);
         }
@@ -200,7 +195,7 @@ namespace Engine.GLApi
         }
 
         // TODO: implement later, not deadly
-        public void SetUniform<T>(string name, T value) where T : struct 
+        public void SetUniform<T>(string name, T value) where T : struct
         {
             if (value.GetType() == typeof(Vector2))
             {

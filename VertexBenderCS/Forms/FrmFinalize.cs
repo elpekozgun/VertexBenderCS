@@ -1,22 +1,14 @@
 ﻿using Engine.Core;
 using Engine.GLApi;
-using Engine.Processing;
 using OpenTK;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace VertexBenderCS.Forms
 {
     public partial class FrmFinalize : Form
     {
-        public Action<Mesh,Vector4> BtnProcedeClicked;
+        public Action<Mesh, Vector4> BtnProcedeClicked;
 
         private VolumeRenderer _volRenderer;
 

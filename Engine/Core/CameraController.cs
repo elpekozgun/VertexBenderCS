@@ -1,10 +1,6 @@
 ﻿using OpenTK;
 using OpenTK.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Engine.Core
@@ -48,8 +44,8 @@ namespace Engine.Core
         public CameraController(Camera cam)
         {
             Cam = cam;
-            _yaw = -90.0f;
-            _pitch = 0.0f;
+            _yaw = 225f;
+            _pitch = -45f;
 
             UpdateCameraVectors();
         }
@@ -69,7 +65,7 @@ namespace Engine.Core
 
         public void Zoom(int val, bool isBoosted = false)
         {
-            Cam.OrthoSize =  new Vector2(Math.Max(Cam.OrthoSize.X - val * Cam.AspectRatio * MouseSensitivity, 0.0f) ,Math.Max(Cam.OrthoSize.Y - val * MouseSensitivity, 0.0f));
+            Cam.OrthoSize = new Vector2(Math.Max(Cam.OrthoSize.X - val * Cam.AspectRatio * MouseSensitivity, 0.0f), Math.Max(Cam.OrthoSize.Y - val * MouseSensitivity, 0.0f));
 
             if (isBoosted)
             {
@@ -92,8 +88,8 @@ namespace Engine.Core
         public void Rotate(float xoffset, float yoffset)
         {
 
-            xoffset *= MouseSensitivity*100;
-            yoffset *= MouseSensitivity*100;
+            xoffset *= MouseSensitivity * 100;
+            yoffset *= MouseSensitivity * 100;
 
             _yaw += xoffset;
             _pitch += yoffset;
@@ -180,7 +176,7 @@ namespace Engine.Core
             {
                 Cam.Position -= Vector3.UnitY * delta;
             }
-            
+
         }
 
         private void UpdateCameraVectors()

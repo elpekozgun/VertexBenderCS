@@ -1,11 +1,8 @@
 ﻿using Engine.Core;
+using OpenTK;
+using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK;
 
 namespace Engine.GLApi
 {
@@ -17,7 +14,7 @@ namespace Engine.GLApi
         private GpuVertex[] vertices;
         private int[] indices;
 
-        public bool EnableCull;
+        public bool EnableCull { get; set; }
         public bool EnableBlend;
         public bool EnableDepth;
 
@@ -30,6 +27,8 @@ namespace Engine.GLApi
         public Mesh Mesh { get; private set; }
 
         public Vector4 Color { get; set; }
+
+        public bool ShowBoundingBox { get; set; }
 
         public void SetMesh(Mesh mesh)
         {
@@ -149,6 +148,7 @@ namespace Engine.GLApi
             Shader.SetMat4("Model", ModelMatrix);
             Shader.SetMat4("View", cam.View);
             Shader.SetMat4("Projection", cam.Projection);
+            Shader.SetVec3("cameraPosition", cam.Position);
             Shader.SetVec4("Color", Color);
             Shader.SetFloat("Alpha", Color.W);
 

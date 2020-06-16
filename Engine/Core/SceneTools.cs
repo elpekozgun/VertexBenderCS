@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Engine.GLApi;
 using OpenTK;
-using OpenTK.Graphics.OpenGL4;
-using Engine.GLApi;
+using System;
+using System.Collections.Generic;
 
 namespace Engine.Core
 {
@@ -18,6 +14,44 @@ namespace Engine.Core
         public GizmoRenderer CartesianY;
         public GizmoRenderer CartesianZ;
         public GizmoRenderer CartesianCore;
+        public GizmoRenderer BoundingBox;
+        public GridRenderer DirectLight;
+
+        public bool ShowGrid;
+
+        public Vector3 DirectLightDir { get; set; }
+        public bool ShowDirectLightGizmo { get; set; }
+
+        public void SetCartesianPosition(Vector3 position)
+        {
+            CartesianCore.Position = position;
+            CartesianX.Position = position;
+            CartesianY.Position = position;
+            CartesianZ.Position = position;
+
+            CartesianCore.IsEnabled = true;
+            CartesianX.IsEnabled = true;
+            CartesianY.IsEnabled = true;
+            CartesianZ.IsEnabled = true;
+        }
+        
+        public void SetCartesianScale(float val)
+        {
+            CartesianCore.Scale = Vector3.One * val;
+            CartesianX.Scale = Vector3.One * val;
+            CartesianY.Scale = Vector3.One * val;
+            CartesianZ.Scale = Vector3.One * val;
+
+            DirectLight.Scale = Vector3.One * val * 10;
+        }
+
+        public void Reset()
+        {
+            CartesianCore.IsEnabled = false;
+            CartesianX.IsEnabled = false;
+            CartesianY.IsEnabled = false;
+            CartesianZ.IsEnabled = false;
+        }
 
         public SceneTools()
         {
@@ -33,6 +67,7 @@ namespace Engine.Core
             };
             SceneItems.Add(VolumeEditor);
             VolumeEditor.IsEnabled = false;
+            ShowGrid = true;
 
             var arrow = PrimitiveObjectFactory.Cylinder(0.25f, 0.25f, 4.0f, 48);
 
@@ -43,7 +78,7 @@ namespace Engine.Core
                 Color = new Vector4(1, 0.2f, 0, 1)
             };
             SceneItems.Add(CartesianX);
-            CartesianX.IsEnabled = true;
+            CartesianX.IsEnabled = false;
 
             CartesianY = new GizmoRenderer(arrow, Shader.Indicator)
             {
@@ -51,7 +86,7 @@ namespace Engine.Core
                 Color = new Vector4(0, 1, 0.2f, 1)
             };
             SceneItems.Add(CartesianY);
-            CartesianY.IsEnabled = true;
+            CartesianY.IsEnabled = false;
 
             CartesianZ = new GizmoRenderer(arrow, Shader.Indicator)
             {
@@ -60,7 +95,7 @@ namespace Engine.Core
                 Color = new Vector4(0.2f, 0, 1, 1)
             };
             SceneItems.Add(CartesianZ);
-            CartesianZ.IsEnabled = true;
+            CartesianZ.IsEnabled = false;
 
             CartesianCore = new GizmoRenderer(PrimitiveObjectFactory.Sphere(0.5f, 4, eSphereGenerationType.Cube), Shader.Indicator)
             {
@@ -68,15 +103,25 @@ namespace Engine.Core
                 Color = new Vector4(0.4f, 0.4f, 0.4f, 1.0f)
             };
             SceneItems.Add(CartesianCore);
-            CartesianCore.IsEnabled = true;
+            CartesianCore.IsEnabled = false;
 
-            Grid = new GridRenderer(PrimitiveObjectFactory.Grid(10, 10, 10, 1), Shader.Indicator)
+            Grid = new GridRenderer(PrimitiveObjectFactory.Grid(10, 0, 10, 1), Shader.Indicator)
             {
                 EnableBlend = true,
                 Color = new Vector4(0.4f, 0.4f, 0.4f, 0.5f)
             };
             SceneItems.Add(Grid);
             Grid.IsEnabled = true;
+
+            DirectLight = new GridRenderer(PrimitiveObjectFactory.ConeForLighting(0.1f, 1, 16), Shader.Indicator)
+            {
+                Rotation = Quaternion.FromEulerAngles(DirectLightDir),
+                Position = Vector3.One * 2,
+                Color = new Vector4(0.8f, 0.8f, 0.2f, 1.0f),
+                EnableCull = false
+            };
+            SceneItems.Add(DirectLight);
+            DirectLight.IsEnabled = true;
         }
 
         public void Clean()
@@ -84,22 +129,13 @@ namespace Engine.Core
             SceneItems.Clear();
         }
 
-        public void AddObject(Transform item)
-        {
-            SceneItems.Add(item);
-        }
-
-        public void DeleteObject(Transform item)
-        {
-            foreach (var child in item.Children)
-            {
-                DeleteObject(child);
-            }
-            SceneItems.Remove(item);
-        }
-
         public void RenderAll(Camera cam)
         {
+            Grid.ShowGrid = ShowGrid;
+            SetCartesianScale(0.01f * Vector3.Distance(CartesianCore.Position, cam.Position));
+            DirectLight.Rotation = Quaternion.FromEulerAngles(DirectLightDir);
+            DirectLight.IsEnabled = ShowDirectLightGizmo;
+
             foreach (var item in SceneItems)
             {
                 if (item.IsEnabled)
@@ -107,7 +143,6 @@ namespace Engine.Core
                     if (item is IRenderable)
                     {
                         var renderable = item as IRenderable;
-                        SetDirectLight(renderable, cam);
                         renderable.Render(cam, eRenderMode.shaded);
                     }
                 }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
+﻿using Engine.Core;
 using OpenTK;
-using Engine.Core;
+using OpenTK.Graphics.OpenGL4;
+using System;
+using System.Collections.Generic;
 
 namespace Engine.GLApi
 {
@@ -20,21 +17,25 @@ namespace Engine.GLApi
         private int _VAO;
         private int _VBO;
 
+        public bool EnableCull { get; set; }
+
         public Vector3[] _vertices;
 
         public Vector4 Color { get; set; }
 
-        public LineRenderer(List<Vector3> vertices, string name = "") 
+        public bool ShowBoundingBox { get; set; }
+
+        public LineRenderer(List<Vector3> vertices, string name = "")
             : base(name)
         {
             _vertices = vertices.ToArray();
             Setup();
             Shader = Shader.Unlit;
             Color = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-            IsEnabled = true;   
+            IsEnabled = true;
         }
 
-        public LineRenderer(List<Vector3> vertices, Shader shader, string name = "") 
+        public LineRenderer(List<Vector3> vertices, Shader shader, string name = "")
             : this(vertices, name)
         {
             Shader = shader;

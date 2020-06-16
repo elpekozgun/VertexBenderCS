@@ -50,11 +50,11 @@ namespace VertexBenderCS
 
         public override Color GripLight => base.GripLight;
 
-        public override Color ImageMarginGradientBegin => Color.FromArgb(255,50,50,50);
+        public override Color ImageMarginGradientBegin => Color.FromArgb(255, 50, 50, 50);
 
         public override Color ImageMarginGradientMiddle => Color.FromArgb(255, 50, 50, 50);
 
-        public override Color ImageMarginGradientEnd => Color.FromArgb(255,50,50,50);
+        public override Color ImageMarginGradientEnd => Color.FromArgb(255, 50, 50, 50);
 
         public override Color ImageMarginRevealedGradientBegin => base.ImageMarginRevealedGradientBegin;
 
@@ -88,7 +88,7 @@ namespace VertexBenderCS
 
         public override Color SeparatorDark => Color.FromArgb(255, 50, 50, 50);
 
-        public override Color SeparatorLight => Color.FromArgb(255, 50,50,50);
+        public override Color SeparatorLight => Color.FromArgb(255, 50, 50, 50);
 
         public override Color StatusStripGradientBegin => base.StatusStripGradientBegin;
 

@@ -45,7 +45,7 @@
             this.btnProcede.Name = "btnProcede";
             this.btnProcede.Size = new System.Drawing.Size(75, 23);
             this.btnProcede.TabIndex = 0;
-            this.btnProcede.Text = "Procede";
+            this.btnProcede.Text = "Proceed";
             this.btnProcede.UseVisualStyleBackColor = true;
             // 
             // chkIsland

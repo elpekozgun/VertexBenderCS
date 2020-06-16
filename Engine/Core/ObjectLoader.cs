@@ -1,11 +1,10 @@
-﻿using OpenTK;
+﻿using Nifti.NET;
+using OpenTK;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Nifti.NET;
-using MathNet.Numerics.LinearAlgebra.Complex;
 
 namespace Engine.Core
 {
@@ -20,7 +19,7 @@ namespace Engine.Core
         public short MaxIntensity;
         public Matrix3 ImportMatrix;
 
-        public VolOutput(int xCount, int yCount, int zCount, KeyValuePair<Vector3,short>[] intensityMap, Matrix3 mat, float spacing, short maxIntensity)
+        public VolOutput(int xCount, int yCount, int zCount, KeyValuePair<Vector3, short>[] intensityMap, Matrix3 mat, float spacing, short maxIntensity)
         {
             XCount = xCount;
             YCount = yCount;
@@ -61,18 +60,18 @@ namespace Engine.Core
             {
                 throw new FileLoadException("Incorrect OFF format");
             }
-            var line = a[1].Split(new char[]{ ' '}, StringSplitOptions.RemoveEmptyEntries);
+            var line = a[1].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             Mesh mesh = new Mesh();
 
-            int nVerts =  int.Parse(line[0]);
-            int nTris =  int.Parse(line[1]);
+            int nVerts = int.Parse(line[0]);
+            int nTris = int.Parse(line[1]);
             int useless = int.Parse(line[2]);
             int i = 2;
 
             while (i < nVerts + 2)
             {
-                line = a[i].Split(new char[]{ ' '}, StringSplitOptions.RemoveEmptyEntries);
+                line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 var v1 = float.Parse(line[0]);
                 var v2 = float.Parse(line[2]);
@@ -114,7 +113,7 @@ namespace Engine.Core
             string expectedHeader = "KRETZFILE 1.0";
 
             var firstLine = File.ReadLines(path).First();
-            var headerTexts = firstLine.Split(new char[] {' '},StringSplitOptions.RemoveEmptyEntries);
+            var headerTexts = firstLine.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var header = $"{headerTexts[0]} {headerTexts[1]}";
 
             //colorBuffer = new List<int>();
@@ -126,20 +125,20 @@ namespace Engine.Core
                 //spacing = 0;
                 //return null;
             }
-            
+
 
             // KretzFile 1.0 Specific Tags in binary
-            KretzTag patientTag             = new KretzTag(0x0110, 0x0002);
-            KretzTag dimensionXTag          = new KretzTag(0xc000, 0x0001);
-            KretzTag dimensionYTag          = new KretzTag(0xc000, 0x0002);
-            KretzTag dimensionZTag          = new KretzTag(0xc000, 0x0003);
-            KretzTag resolutionTag          = new KretzTag(0xc100, 0x0001);
-            KretzTag offset1Tag             = new KretzTag(0xc200, 0x0001);
-            KretzTag offset2Tag             = new KretzTag(0xc200, 0x0002);
-            KretzTag anglesPhiTag           = new KretzTag(0xc300, 0x0001);
-            KretzTag anglesThetaTag         = new KretzTag(0xc300, 0x0002);
-            KretzTag cartesianSpacingTag    = new KretzTag(0x0010, 0x0022);
-            KretzTag voxelTag               = new KretzTag(0xd000, 0x0001);
+            KretzTag patientTag = new KretzTag(0x0110, 0x0002);
+            KretzTag dimensionXTag = new KretzTag(0xc000, 0x0001);
+            KretzTag dimensionYTag = new KretzTag(0xc000, 0x0002);
+            KretzTag dimensionZTag = new KretzTag(0xc000, 0x0003);
+            KretzTag resolutionTag = new KretzTag(0xc100, 0x0001);
+            KretzTag offset1Tag = new KretzTag(0xc200, 0x0001);
+            KretzTag offset2Tag = new KretzTag(0xc200, 0x0002);
+            KretzTag anglesPhiTag = new KretzTag(0xc300, 0x0001);
+            KretzTag anglesThetaTag = new KretzTag(0xc300, 0x0002);
+            KretzTag cartesianSpacingTag = new KretzTag(0x0010, 0x0022);
+            KretzTag voxelTag = new KretzTag(0xd000, 0x0001);
             //KretzTag imageTag           = new KretzTag(0xd000, 0x0001);
             //KretzTag image4dTag = new KretzTag(0xd600, 0x0001);
             //KretzTag cineFramesTag = new KretzTag(0xd400, 0x0001);
@@ -161,7 +160,7 @@ namespace Engine.Core
                 var endofTag = b.BaseStream.Position;
                 b.BaseStream.Seek(16, SeekOrigin.Begin);
 
-                
+
                 List<double> thetaAngles = new List<double>();
                 List<double> phiAngles = new List<double>();
                 KeyValuePair<Vector3, short>[] intensities = null;
@@ -250,7 +249,7 @@ namespace Engine.Core
 
                         Logger.Log($"offset2 : {offset2}");
                     }
-                    else if(tag.Equals(anglesPhiTag))
+                    else if (tag.Equals(anglesPhiTag))
                     {
                         int len = (int)(tagLength / sizeof(double));
                         b.BaseStream.Read(buffer, (int)b.BaseStream.Position, (int)tagLength);
@@ -319,6 +318,47 @@ namespace Engine.Core
                 return mesh;
             }
         }
+
+        public static Mesh LoadNifti(string path, out VolOutput output)
+        {
+            var nifti = NiftiFile.Read(path);
+
+            var dimensionX = nifti.Dimensions[0];
+            var dimensionY = nifti.Dimensions[1];
+            var dimensionZ = nifti.Dimensions[2];
+
+            KeyValuePair<Vector3, short>[] intensities = new KeyValuePair<Vector3, short>[dimensionX * dimensionY * dimensionZ];
+
+            Matrix3 rot = Matrix3.CreateRotationX(MathHelper.PiOver2);
+
+            for (int z = 0; z < dimensionZ; z++)
+            {
+                for (int y = 0; y < dimensionY; y++)
+                {
+                    for (int x = 0; x < dimensionX; x++)
+                    {
+                        int id = (z * dimensionX * dimensionY) + (y * dimensionX) + x;
+                        var intensity = nifti.Data[id];
+                        {
+                            intensities[id] = new KeyValuePair<Vector3, short>(rot * new Vector3(x, y, z), intensity);
+                        }
+                    }
+                }
+            }
+
+            output = new VolOutput(dimensionX, dimensionY, dimensionZ, intensities, rot, 0.004f, (nifti.Data as short[]).Max());
+
+            Mesh mesh = new Mesh();
+
+            for (int i = 0; i < intensities.Length; i++)
+            {
+                mesh.AddVertex(new Vertex(i, intensities[i].Key * 0.004f));
+                //colorBuffer.Add(intensities[i].Value);
+            }
+
+            return mesh;
+        }
+
 
         public static VolOutput LoadVol(string path)
         {
@@ -491,7 +531,7 @@ namespace Engine.Core
                                     var id = (z * dimensionX * dimensionY) + (y * dimensionX) + x;
                                     var intensity = buffer[startIndex + id];
                                     {
-                                        intensities[id] =new KeyValuePair<Vector3, short>(scale * new Vector3(x, y, z) , intensity);
+                                        intensities[id] = new KeyValuePair<Vector3, short>(scale * new Vector3(x, y, z), intensity);
                                     }
                                 }
                             }
@@ -511,26 +551,28 @@ namespace Engine.Core
 
                 }
 
-                
+
 
                 var spacing = (float)resolution / (float)cartesianSpacing;
-                
-                return new VolOutput(dimensionX, dimensionY, dimensionZ,  intensities, scale, spacing, 255);
-                               
+
+                return new VolOutput(dimensionX, dimensionY, dimensionZ, intensities, scale, spacing, 255);
+
             }
         }
 
         public static VolOutput LoadNifti(string path)
         {
             var nifti = NiftiFile.Read(path);
-            
+
             var dimensionX = nifti.Dimensions[0];
             var dimensionY = nifti.Dimensions[1];
             var dimensionZ = nifti.Dimensions[2];
 
             KeyValuePair<Vector3, short>[] intensities = new KeyValuePair<Vector3, short>[dimensionX * dimensionY * dimensionZ];
 
-            Matrix3 rot = Matrix3.CreateRotationX(MathHelper.PiOver2);
+            //Matrix3 rot = Matrix3.CreateRotationX(MathHelper.PiOver2);
+
+            var rot = Matrix3.Identity;
 
             for (int z = 0; z < dimensionZ; z++)
             {
@@ -541,13 +583,13 @@ namespace Engine.Core
                         int id = (z * dimensionX * dimensionY) + (y * dimensionX) + x;
                         var intensity = nifti.Data[id];
                         {
-                            intensities[id] = new KeyValuePair<Vector3, short>(rot *  new Vector3(x, y, z), intensity);
+                            intensities[id] = new KeyValuePair<Vector3, short>(rot * new Vector3(x, y, z), intensity);
                         }
                     }
                 }
             }
 
-            return new VolOutput(dimensionX, dimensionY, dimensionZ, intensities, rot, 0.004f, (nifti.Data as short[]).Max());
+            return new VolOutput(dimensionX, dimensionY, dimensionZ,  intensities, rot, 0.004f, (nifti.Data as short[]).Max());
         }
 
 

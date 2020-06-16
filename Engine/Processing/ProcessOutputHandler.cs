@@ -38,7 +38,7 @@ namespace Engine.Processing
 
             if (ratio < 0.25f)
             {
-                return new Vector3(0.0f, ratio , 1.0f);
+                return new Vector3(0.0f, ratio, 1.0f);
             }
             if (ratio < 0.5f)
             {
@@ -46,7 +46,7 @@ namespace Engine.Processing
             }
             if (ratio < 0.75f)
             {
-                return new Vector3(ratio , 1.0f, 0.0f);
+                return new Vector3(ratio, 1.0f, 0.0f);
             }
             if (ratio <= 1.0f)
             {
@@ -142,7 +142,7 @@ namespace Engine.Processing
             bitmap.Save(file);
             return bitmap;
         }
-       
+
         public static void SaveGeodesicDistanceToFile(float[][] matrix, string file)
         {
             var n = matrix.GetLength(0);
@@ -233,7 +233,7 @@ namespace Engine.Processing
                     var v1 = mesh.Vertices[tri.Value.V1];
                     var v2 = mesh.Vertices[tri.Value.V2];
                     var v3 = mesh.Vertices[tri.Value.V3];
-                    
+
                     writer.WriteLine($"\tfacet normal {normal.X} {normal.Y} {normal.Z}");
                     writer.WriteLine("\touter loop");
                     writer.WriteLine($"\t\tvertex {v1.Coord.X} {v1.Coord.Y} {v1.Coord.Z}");
@@ -248,8 +248,8 @@ namespace Engine.Processing
         }
 
         public static void SaveSTLBinaryFile(Mesh mesh, string file)
-        { 
-        
+        {
+
         }
     }
 

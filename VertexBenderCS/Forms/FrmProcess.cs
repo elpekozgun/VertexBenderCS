@@ -1,11 +1,7 @@
 ﻿using Engine.Core;
-using Engine.GLApi;
 using Engine.Processing;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Numerics;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace VertexBenderCS.Forms
@@ -15,7 +11,8 @@ namespace VertexBenderCS.Forms
     {
         ShortestPath,
         Descriptor,
-        Parametrization
+        Parametrization,
+        PostProcessing
     }
 
     public partial class FrmProcess : Form
@@ -59,24 +56,35 @@ namespace VertexBenderCS.Forms
             {
                 tabProcess.TabPages.Remove(tabDescriptor);
                 tabProcess.TabPages.Remove(tabParametrization);
+                tabProcess.TabPages.Remove(tabPostProcess);
             }
             else if (type == eProcessCoreType.Descriptor)
             {
                 tabProcess.TabPages.Remove(tabSPH);
                 tabProcess.TabPages.Remove(tabGm);
                 tabProcess.TabPages.Remove(tabParametrization);
+                tabProcess.TabPages.Remove(tabPostProcess);
+
             }
             else if (type == eProcessCoreType.Parametrization)
             {
                 tabProcess.TabPages.Remove(tabSPH);
                 tabProcess.TabPages.Remove(tabGm);
                 tabProcess.TabPages.Remove(tabDescriptor);
+                tabProcess.TabPages.Remove(tabPostProcess);
+            }
+            else if(type == eProcessCoreType.PostProcessing)
+            {
+                tabProcess.TabPages.Remove(tabSPH);
+                tabProcess.TabPages.Remove(tabGm);
+                tabProcess.TabPages.Remove(tabDescriptor);
+                tabProcess.TabPages.Remove(tabParametrization);
             }
 
             numericSource.Controls[0].Visible = false;
             numericTarget.Controls[0].Visible = false;
             numericStartIndex.Controls[0].Visible = false;
-            numericSampleCount.Controls[0].Visible  = false;
+            numericSampleCount.Controls[0].Visible = false;
             numericWeight.Controls[0].Visible = false;
 
         }
@@ -191,6 +199,24 @@ namespace VertexBenderCS.Forms
                         checkUseCenter.Checked
                     );
                 }
+            }
+            else if(tab == tabPostProcess)
+            {
+                var newMesh = _mesh.Copy();
+                if (chkIsland.Checked)
+                {
+                    Algorithm.RemoveIslands(ref newMesh);
+                }
+                if(chkFill.Checked)
+                {
+                    HoleFiller filler = new HoleFiller(newMesh);
+                    filler.FillHoles((int)numericFill.Value);
+                }
+                if (chkSmoothen.Checked)
+                {
+                    Algorithm.Smoothen(ref newMesh, (int)numericSmoothen.Value);
+                }
+                e.Result = new PostProcessOutput(newMesh);
             }
         }
 
