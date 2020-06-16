@@ -224,8 +224,6 @@ namespace Engine.Processing
             using (StreamWriter writer = new StreamWriter(file))
             {
                 writer.WriteLine("solid");
-                writer.WriteLine("\tVertex Bender Framework");
-                writer.WriteLine("\tÖzgün Elpek");
 
                 foreach (var tri in mesh.Triangles)
                 {
