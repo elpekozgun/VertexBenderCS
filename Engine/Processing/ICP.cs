@@ -1,10 +1,14 @@
 ﻿using Engine.Core;
+using Engine.GLApi;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Complex;
 using MathNet.Numerics.Optimization;
+using MathNet.Numerics.Statistics;
 using OpenTK;
+using OpenTK.Platform.Windows;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 /// <summary>
@@ -15,12 +19,14 @@ namespace Engine.Processing
 {
     public class ICP
     {
-        private const float ERROR_THRESHOLD = 0.00001f;
-        private const float MAX_ITER = 400;
-        private const int RND_SAMPLE_COUNT = 50;
+        private const float ErrorThreshold = 0.0000001f;
+        private const float MaxIter = 1000;
+        private const int RandomSampleCount = 200;
 
         private List<Vector<float>> _constant;
         private List<Vector<float>> _addition;
+        private Stopwatch _watch = new Stopwatch();
+
 
         public Matrix4 Transformation { get; private set; }
         public List<Vector3> Result
@@ -54,7 +60,6 @@ namespace Engine.Processing
             Transformation = Matrix4.Identity;
         }
 
-
         private Vector<float> GetMean(List<Vector<float>> vector)
         {
             Vector<float> sum = Vector<float>.Build.Dense(3, 0);
@@ -67,79 +72,68 @@ namespace Engine.Processing
 
         public void Align()
         {
+            _watch.Reset();
+            _watch.Start();
+
             KdTree.KdTree<float, float> constantTree = new KdTree.KdTree<float, float>(3, new KdTree.Math.FloatMath());
+            Matrix<float> rotation = Matrix<float>.Build.Dense(3, 3, 0);
+            Vector<float> translation = Vector<float>.Build.Dense(3, 0);
+            
+            var constantCenter = GetMean(_constant);
+            var rng = new Random();
 
             for (int i = 0; i < _constant.Count; i++)
             {
                 constantTree.Add(_constant[i].ToArray(), 100);
             }
 
-            var constantCenter = GetMean(_constant);
-
-            var rng = new Random();
-
             int it = 0;
             float error = float.PositiveInfinity;
-            while (it++ < MAX_ITER && error > ERROR_THRESHOLD)
+            while (it++ < MaxIter && error > ErrorThreshold)
             {
-                
-
-
-                // Random Sampling.
-                List<Vector<float>> correspondence = new List<Vector<float>>();
-
-                for (int i = 0; i < _addition.Count; i++)
-                {
-                    var n = constantTree.GetNearestNeighbours(_addition[i].AsArray(), 1);
-
-                    if (n.Length > 0 /* && maxDistance < maxDistanceThreshold */)
-                    {
-                        correspondence.Add(Vector<float>.Build.Dense(new float[] { n[0].Point[0], n[0].Point[1], n[0].Point[2] }));
-                    }
-                }
-
-                var additionCenter = GetMean(_addition);
-
-                for (int i = 0; i < _addition.Count; i++)
-                {
-                    correspondence[i] -= additionCenter;
-                }
-
-
-
-
-
-
-
 
                 Matrix<float> W = Matrix<float>.Build.Dense(3, 3, 0);
+                
+                var additionCenter = GetMean(_addition);
 
-                for (int i = 0; i < _addition.Count; i++)
+                error = 0;
+                for (int i = 0; i < RandomSampleCount; i++)
                 {
-                    W += correspondence[i].OuterProduct(_constant[i]);
+                    var rn = rng.Next(_addition.Count);
+
+                    var n = constantTree.GetNearestNeighbours(_addition[rn].AsArray(), 1);
+
+                    if (n.Length > 0)
+                    {
+                        var p = Vector<float>.Build.Dense(n[0].Point);
+                        var qs = p - constantCenter;
+                        var qd = _addition[rn] - additionCenter;
+
+                        W += qs.OuterProduct(qd);
+
+                        var v = _constant[rn] - rotation * _addition[rn] - translation;
+                        error += v.DotProduct(v);
+                    }
                 }
+                error /= RandomSampleCount;
+
                 var svd = W.Svd(true);
-
-                var rotation = svd.U * svd.VT;
-                var translation = constantCenter - rotation * additionCenter;
-
-                float err = 0;
-                for (int i = 0; i < _addition.Count; i++)
-                {
-                    var v = _constant[i] - rotation * _addition[i] - translation;
-                    err += v.DotProduct(v);
-                }
-                err /= _addition.Count;
+                rotation = svd.U * svd.VT;
+                translation = constantCenter - rotation * additionCenter;
 
                 for (int i = 0; i < _addition.Count; i++)
                 {
                     _addition[i] = rotation * _addition[i] + translation;
                 }
 
-                error = err;
             }
-        }
 
+            Logger.Log($"sample count {RandomSampleCount}");
+            Logger.Log($"iteration count {it}");
+            Logger.Log($"error: {error}");
+            _watch.Stop();
+            Logger.Log($"ellapsed: {_watch.ElapsedMilliseconds} ms");
+        }
 
     }
 }

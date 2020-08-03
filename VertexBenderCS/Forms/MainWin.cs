@@ -552,7 +552,12 @@ namespace VertexBenderCS.Forms
             
             for (int i = 0; i < target.Count; i++)
             {
-                pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>(Matrix3.CreateRotationY(MathHelper.PiOver2) * source[i] + new Vector3(0.5f, 0, 0), pcSource.IntensityMap[i].Value);
+                pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
+                (
+                    Matrix3.CreateRotationZ(MathHelper.PiOver4) * 
+                    Matrix3.CreateRotationY(MathHelper.PiOver2) * source[i] +
+                    new Vector3(0.5f, 0, 0), pcSource.IntensityMap[i].Value
+                );
             }
 
             source = pcSource.IntensityMap.Select(x => x.Key).ToList();
