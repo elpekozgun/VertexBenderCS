@@ -676,7 +676,7 @@ namespace Engine.Core
             return output;
         }
 
-        public static ScanInput LoadSamsungData(string path, float scaleFactor = 1.0f)
+        public static ScanInput LoadSamsungData(string path, float scaleFactor = 1.0f, int r = 255, int g = 122, int b = 0)
         {
             string[] a = new string[1];
             try
@@ -740,7 +740,8 @@ namespace Engine.Core
 
                 var v = rotation * new Vector4(v1 + deltaX, v2 + deltaY, v3, 1);
 
-                output.IntensityMap[i - 1] = new KeyValuePair<Vector3, Vector4>(v.Xyz, new Vector4(v3 * 255.0f, 0.5f * v3 * 255.0f, v3 * 255.0f, intensity));
+                //output.IntensityMap[i - 1] = new KeyValuePair<Vector3, Vector4>(v.Xyz, new Vector4(v3 * 255.0f, 0.5f * v3 * 255.0f, v3 * 255.0f, intensity));
+                output.IntensityMap[i - 1] = new KeyValuePair<Vector3, Vector4>(v.Xyz, new Vector4(r, g, b, intensity));
                 i++;
             }
 

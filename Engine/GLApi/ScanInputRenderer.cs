@@ -91,7 +91,8 @@ namespace Engine.GLApi
                 {
                     Coord = item.Key,
                     Normal = Vector3.Zero,
-                    Color = new Vector4(item.Value.Z / (255.0f * (max - min)), item.Value.Z / (255.0f * 2 * (max - min)), 0, 1.0f)
+                    Color = new Vector4(item.Value.X, item.Value.Y, item.Value.Z,  1.0f)
+                    //Color = new Vector4(item.Value.Z / (255.0f * (max - min)), item.Value.Z / (255.0f * 2 * (max - min)), 0, 1.0f)
                 };
                 i++;
             }

@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Class for URoom, ICP implementation
@@ -19,9 +20,9 @@ namespace Engine.Processing
 {
     public class ICP
     {
-        private const float ErrorThreshold = 0.0000001f;
-        private const float MaxIter = 1000;
-        private const int RandomSampleCount = 200;
+        private const float ErrorThreshold = 0.0001f;
+        private const float MaxIter = 100;
+        private const int RandomSampleCount = 100;
 
         private List<Vector<float>> _constant;
         private List<Vector<float>> _addition;
@@ -99,7 +100,7 @@ namespace Engine.Processing
                 error = 0;
                 for (int i = 0; i < RandomSampleCount; i++)
                 {
-                    var rn = rng.Next(_addition.Count);
+                    var rn = rng.Next(Math.Min(_addition.Count, _constant.Count));
 
                     var n = constantTree.GetNearestNeighbours(_addition[rn].AsArray(), 1);
 
@@ -119,6 +120,20 @@ namespace Engine.Processing
 
                 var svd = W.Svd(true);
                 rotation = svd.U * svd.VT;
+
+                if (rotation.Determinant() < 0)
+                {
+                    Logger.Log("reflection needed");
+                    var v = svd.VT.Transpose();
+                    var col = v.Column(2).AsArray();
+                    col[0] *= -1;
+                    col[1] *= -1;
+                    col[2] *= -1;
+                    v.SetColumn(2, col);
+
+                    rotation = v * svd.U.Transpose();
+                }
+
                 translation = constantCenter - rotation * additionCenter;
 
                 for (int i = 0; i < _addition.Count; i++)
