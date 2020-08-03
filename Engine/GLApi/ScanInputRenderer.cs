@@ -4,11 +4,13 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace Engine.GLApi
 {
 
-    public class PointCloudRenderer : Transform, IDisposable, IRenderable
+    public class ScanInputRenderer : Transform, IDisposable, IRenderable
     {
         public Shader Shader { get; set; }
         public Vector3 Center { get; private set; }
@@ -25,22 +27,15 @@ namespace Engine.GLApi
         public bool EnableCull { get; set; }
         public int Intensity { get; set; }
 
-        private PointCloud rawVolData;
-        private PointCloud subVolData;
+        private ScanInput rawVolData;
 
         public Vector4 Color { get; set; }
+        public bool ShowBoundingBox { get ; set ; }
 
-        public bool ShowBoundingBox { get; set; }
-
-        public int DownSample { get; set; }
-
-        private int _currentDownSample;
-
-        public PointCloudRenderer(PointCloud vol, string name = "")
+        public ScanInputRenderer(ScanInput vol, string name = "")
             : base(name)
         {
             rawVolData = vol;
-            subVolData = vol;
 
             Shader = Shader.PointCloud;
             UpdateInputFromVol(rawVolData);
@@ -49,11 +44,10 @@ namespace Engine.GLApi
             _initialized = true;
             IsCuberille = false;
 
-            DownSample = 4;
             Intensity = 60;
         }
 
-        public PointCloudRenderer(PointCloud vol, Shader shader, string name = "") : this(vol, name)
+        public ScanInputRenderer(ScanInput vol, Shader shader, string name = "") : this(vol, name)
         {
             Shader = shader;
         }
@@ -79,35 +73,27 @@ namespace Engine.GLApi
 
             //color
             GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
 
             GL.BindVertexArray(0);
 
         }
 
-        public void SetColorBuffer(Vector4[] color)
-        {
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i].Color = color[i];
-            }
-            Setup();
-        }
-
-        private void UpdateInputFromVol(PointCloud vol)
+        private void UpdateInputFromVol(ScanInput vol)
         {
             vertices = new GpuVertex[vol.IntensityMap.Length];
             int i = 0;
+            var max = vol.IntensityMap.Max(x => x.Key.Z);
+            var min = vol.IntensityMap.Min(x => x.Key.Z);
             foreach (var item in vol.IntensityMap)
             {
                 vertices[i] = new GpuVertex()
                 {
-                    Coord = item.Key * vol.Spacing,
+                    Coord = item.Key,
                     Normal = Vector3.Zero,
-                    Color = new Vector4((float)item.Value / vol.MaxIntensity , 0.5f * (float)item.Value / vol.MaxIntensity, 0.0f, 1)
+                    Color = new Vector4(item.Value.Z / (255.0f * (max - min)), item.Value.Z / (255.0f * 2 * (max - min)), 0, 1.0f)
                 };
                 i++;
-
             }
             Setup();
         }
@@ -115,12 +101,6 @@ namespace Engine.GLApi
 
         public void Render(Camera cam, eRenderMode mode = eRenderMode.shaded)
         {
-            if (_currentDownSample != DownSample)
-            {
-                subVolData = Algorithm.Downsample(rawVolData, DownSample);
-                UpdateInputFromVol(subVolData);
-                _currentDownSample = DownSample;
-            }
 
             if (EnableCull)
             {
@@ -128,25 +108,17 @@ namespace Engine.GLApi
             }
 
             GL.BindVertexArray(_VAO);
-            if (IsCuberille)
-            {
-                Shader = Shader.CuberilleGeometry;
-            }
-            else
-            {
-                Shader = Shader.PointCloud;
-            }
+
+            Shader = Shader.PointCloud;
 
             Shader.Use();
             Shader.SetMat4("Model", ModelMatrix);
             Shader.SetMat4("View", cam.View);
             Shader.SetMat4("Projection", cam.Projection);
-            Shader.SetVec4("OutColor", Color);
-            Shader.SetFloat("Intensity", (float)Intensity / subVolData.MaxIntensity);
-            Shader.SetFloat("Spacing", subVolData.Spacing);
+            Shader.SetFloat("Intensity", (float)Intensity / 255.0f);
 
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
-            GL.PointSize(2);
+            GL.PointSize(4);
 
             GL.DrawArrays(PrimitiveType.Points, 0, vertices.Length);
 

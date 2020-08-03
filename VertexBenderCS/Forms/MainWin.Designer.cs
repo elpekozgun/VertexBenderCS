@@ -32,7 +32,7 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWin));
-            this.GLControl = new OpenTK.GLControl();
+            this.GLControl = new OpenTK.GLControl(new OpenTK.Graphics.GraphicsMode(new OpenTK.Graphics.ColorFormat(8, 8, 8, 8), 24, 8, 8));
             this.sceneGraphTree = new System.Windows.Forms.TreeView();
             this.Log = new System.Windows.Forms.TextBox();
             this.chartIsoCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -60,8 +60,9 @@
             this.menuImportObj = new System.Windows.Forms.ToolStripMenuItem();
             this.menuImportDae = new System.Windows.Forms.ToolStripMenuItem();
             this.menuImportVol = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuImportVolAsPC = new System.Windows.Forms.ToolStripMenuItem();
             this.menuImportNifti = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuImportVolAsPC = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuImportPTS = new System.Windows.Forms.ToolStripMenuItem();
             this.menuExport = new System.Windows.Forms.ToolStripMenuItem();
             this.menuIsoCurveExport = new System.Windows.Forms.ToolStripMenuItem();
             this.menuOffExport = new System.Windows.Forms.ToolStripMenuItem();
@@ -123,6 +124,9 @@
             this.label7 = new System.Windows.Forms.Label();
             this.sliderPointCloud = new System.Windows.Forms.TrackBar();
             this.pointCloudPanel = new System.Windows.Forms.Panel();
+            this.chkIsCuberille = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.numericPCDownSample = new System.Windows.Forms.NumericUpDown();
             this.sliderMinText = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -156,9 +160,7 @@
             this.labelDirLightY = new System.Windows.Forms.Label();
             this.labelDirLightZ = new System.Windows.Forms.Label();
             this.labelDirLightX = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.numericPCDownSample = new System.Windows.Forms.NumericUpDown();
-            this.chkIsCuberille = new System.Windows.Forms.CheckBox();
+            this.menuImportSamsung = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.chartIsoCurve)).BeginInit();
             this.toolBar.SuspendLayout();
             this.mainMenu.SuspendLayout();
@@ -178,6 +180,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sliderPointCloud)).BeginInit();
             this.pointCloudPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPCDownSample)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).BeginInit();
             this.volumeRendererPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericPressure)).BeginInit();
@@ -188,7 +191,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.directLightX)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightZ)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericPCDownSample)).BeginInit();
             this.SuspendLayout();
             // 
             // GLControl
@@ -497,7 +499,9 @@
             this.menuImportDae,
             this.menuImportVol,
             this.menuImportNifti,
-            this.menuImportVolAsPC});
+            this.menuImportVolAsPC,
+            this.menuImportSamsung,
+            this.menuImportPTS});
             this.menuImport.ForeColor = System.Drawing.Color.MediumAquamarine;
             this.menuImport.Image = ((System.Drawing.Image)(resources.GetObject("menuImport.Image")));
             this.menuImport.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -536,6 +540,13 @@
             this.menuImportVol.Size = new System.Drawing.Size(199, 22);
             this.menuImportVol.Text = "Volume (.vol)";
             // 
+            // menuImportNifti
+            // 
+            this.menuImportNifti.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuImportNifti.Name = "menuImportNifti";
+            this.menuImportNifti.Size = new System.Drawing.Size(199, 22);
+            this.menuImportNifti.Text = "Nifti (.nii)";
+            // 
             // menuImportVolAsPC
             // 
             this.menuImportVolAsPC.ForeColor = System.Drawing.Color.MediumAquamarine;
@@ -543,12 +554,12 @@
             this.menuImportVolAsPC.Size = new System.Drawing.Size(199, 22);
             this.menuImportVolAsPC.Text = "Point Cloud(.vol, .nii)";
             // 
-            // menuImportNifti
+            // menuImportPTS
             // 
-            this.menuImportNifti.ForeColor = System.Drawing.Color.MediumAquamarine;
-            this.menuImportNifti.Name = "menuImportNifti";
-            this.menuImportNifti.Size = new System.Drawing.Size(199, 22);
-            this.menuImportNifti.Text = "Nifti (.nii)";
+            this.menuImportPTS.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuImportPTS.Name = "menuImportPTS";
+            this.menuImportPTS.Size = new System.Drawing.Size(199, 22);
+            this.menuImportPTS.Text = "Laser Scan(.pts)";
             // 
             // menuExport
             // 
@@ -1249,6 +1260,49 @@
             this.pointCloudPanel.TabIndex = 24;
             this.pointCloudPanel.Visible = false;
             // 
+            // chkIsCuberille
+            // 
+            this.chkIsCuberille.AutoSize = true;
+            this.chkIsCuberille.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.chkIsCuberille.Location = new System.Drawing.Point(18, 84);
+            this.chkIsCuberille.Name = "chkIsCuberille";
+            this.chkIsCuberille.Size = new System.Drawing.Size(83, 19);
+            this.chkIsCuberille.TabIndex = 37;
+            this.chkIsCuberille.Text = "Is Cuberille";
+            this.chkIsCuberille.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(8, 56);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(77, 15);
+            this.label1.TabIndex = 29;
+            this.label1.Text = "down sample";
+            // 
+            // numericPCDownSample
+            // 
+            this.numericPCDownSample.Location = new System.Drawing.Point(89, 54);
+            this.numericPCDownSample.Maximum = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            this.numericPCDownSample.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericPCDownSample.Name = "numericPCDownSample";
+            this.numericPCDownSample.ReadOnly = true;
+            this.numericPCDownSample.Size = new System.Drawing.Size(120, 24);
+            this.numericPCDownSample.TabIndex = 28;
+            this.numericPCDownSample.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
             // sliderMinText
             // 
             this.sliderMinText.AutoSize = true;
@@ -1617,48 +1671,12 @@
             this.labelDirLightX.Size = new System.Drawing.Size(0, 15);
             this.labelDirLightX.TabIndex = 37;
             // 
-            // label1
+            // menuImportSamsung
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 56);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(77, 15);
-            this.label1.TabIndex = 29;
-            this.label1.Text = "down sample";
-            // 
-            // numericPCDownSample
-            // 
-            this.numericPCDownSample.Location = new System.Drawing.Point(89, 54);
-            this.numericPCDownSample.Maximum = new decimal(new int[] {
-            15,
-            0,
-            0,
-            0});
-            this.numericPCDownSample.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericPCDownSample.Name = "numericPCDownSample";
-            this.numericPCDownSample.ReadOnly = true;
-            this.numericPCDownSample.Size = new System.Drawing.Size(120, 24);
-            this.numericPCDownSample.TabIndex = 28;
-            this.numericPCDownSample.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // chkIsCuberille
-            // 
-            this.chkIsCuberille.AutoSize = true;
-            this.chkIsCuberille.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chkIsCuberille.Location = new System.Drawing.Point(18, 84);
-            this.chkIsCuberille.Name = "chkIsCuberille";
-            this.chkIsCuberille.Size = new System.Drawing.Size(83, 19);
-            this.chkIsCuberille.TabIndex = 37;
-            this.chkIsCuberille.Text = "Is Cuberille";
-            this.chkIsCuberille.UseVisualStyleBackColor = true;
+            this.menuImportSamsung.ForeColor = System.Drawing.Color.MediumAquamarine;
+            this.menuImportSamsung.Name = "menuImportSamsung";
+            this.menuImportSamsung.Size = new System.Drawing.Size(199, 22);
+            this.menuImportSamsung.Text = "Samsung";
             // 
             // MainWin
             // 
@@ -1716,6 +1734,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.sliderPointCloud)).EndInit();
             this.pointCloudPanel.ResumeLayout(false);
             this.pointCloudPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericPCDownSample)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericMarch)).EndInit();
             this.volumeRendererPanel.ResumeLayout(false);
             this.volumeRendererPanel.PerformLayout();
@@ -1728,7 +1747,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.directLightX)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.directLightZ)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericPCDownSample)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1863,6 +1881,8 @@
         private System.Windows.Forms.CheckBox chkIsCuberille;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.NumericUpDown numericPCDownSample;
+        private System.Windows.Forms.ToolStripMenuItem menuImportPTS;
+        private System.Windows.Forms.ToolStripMenuItem menuImportSamsung;
     }
 }
 

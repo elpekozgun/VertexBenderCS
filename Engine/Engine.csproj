@@ -38,6 +38,9 @@
     <Reference Include="KdTreeLib, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\KdTree.1.4.1\lib\net471\KdTreeLib.dll</HintPath>
     </Reference>
+    <Reference Include="knearest">
+      <HintPath>C:\Users\ozgun\Desktop\pointmatcher.net-master\pointmatcher.net\bin\Debug\knearest.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics, Version=4.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.4.9.0\lib\net461\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -89,6 +92,7 @@
     <Compile Include="GLApi\MeshRenderer.cs" />
     <Compile Include="GLApi\PointCloudRenderer.cs" />
     <Compile Include="GLApi\PrimitiveRenderer.cs" />
+    <Compile Include="GLApi\ScanInputRenderer.cs" />
     <Compile Include="GLApi\Shader.cs" />
     <Compile Include="GLApi\ShaderBuilder.cs" />
     <Compile Include="GLApi\Texture.cs" />
@@ -97,6 +101,7 @@
     <Compile Include="Processing\Graph.cs" />
     <Compile Include="Processing\HeapNode.cs" />
     <Compile Include="Processing\HoleFiller.cs" />
+    <Compile Include="Processing\ICP.cs" />
     <Compile Include="Processing\MarchingCubesTables.cs" />
     <Compile Include="Processing\ProcessOutputHandler.cs" />
     <Compile Include="Processing\OutputStructures.cs" />

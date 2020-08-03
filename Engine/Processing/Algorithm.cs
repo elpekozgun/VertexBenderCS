@@ -1379,7 +1379,7 @@ namespace Engine.Processing
 
         #region Volume Processing, Marching Cubes, Smoothing, Remeshing, Repairing
 
-        private static List<CubicCell> MakeGrid(VolOutput output)
+        private static List<CubicCell> MakeGrid(PointCloud output)
         {
             if (output.ImportMatrix[1,0] == -1)
             {
@@ -1549,7 +1549,7 @@ namespace Engine.Processing
 
         }
 
-        public static VolOutput Downsample(VolOutput volumeInfo, int sampleSize)
+        public static PointCloud Downsample(PointCloud volumeInfo, int sampleSize)
         {
             if (sampleSize <= 1)
             {
@@ -1585,10 +1585,10 @@ namespace Engine.Processing
                 }
             }
 
-            return new VolOutput((int)Math.Ceiling((double)dimX / sampleSize), (int)Math.Ceiling((double)dimY / sampleSize), (int)Math.Ceiling((double)dimZ / sampleSize), intensityMap.ToArray(), volumeInfo.ImportMatrix, volumeInfo.Spacing * sampleSize, volumeInfo.MaxIntensity);
+            return new PointCloud((int)Math.Ceiling((double)dimX / sampleSize), (int)Math.Ceiling((double)dimY / sampleSize), (int)Math.Ceiling((double)dimZ / sampleSize), intensityMap.ToArray(), volumeInfo.ImportMatrix, volumeInfo.Spacing * sampleSize, volumeInfo.MaxIntensity);
         }
 
-        public static List<Vector3[]> MarchCubesUnindexed(VolOutput output, float intensity, bool interpolate, bool isIndexed)
+        public static List<Vector3[]> MarchCubesUnindexed(PointCloud output, float intensity, bool interpolate, bool isIndexed)
         {
             var grid = MakeGrid(output);
 

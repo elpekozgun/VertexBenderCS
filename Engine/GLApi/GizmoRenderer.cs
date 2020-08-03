@@ -49,7 +49,7 @@ namespace Engine.GLApi
                 {
                     Coord = vertex.Value.Coord,
                     Normal = vertex.Value.Normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f),
+                    Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f),
                     TexCoord = new Vector2(0.0f, 0.0f)
                 };
                 i++;
@@ -114,7 +114,7 @@ namespace Engine.GLApi
             GL.PolygonOffset(1.0f, 2);
         }
 
-        public void SetColorBuffer(Vector3[] color)
+        public void SetColorBuffer(Vector4[] color)
         {
             for (int i = 0; i < vertices.Length; i++)
             {

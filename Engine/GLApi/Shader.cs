@@ -103,6 +103,13 @@ namespace Engine.GLApi
             ShaderBuilder.CreateShaderSource(@"Resources\Shader\normal.frag", ShaderType.FragmentShader)
         );
 
+        //private static readonly Shader _scanInput = ShaderBuilder.CreateShader
+        //(
+        //    "scanInput",
+        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\scanInputVertex.glsl", ShaderType.VertexShader),
+        //    ShaderBuilder.CreateShaderSource(@"Resources\Shader\scanInputFragment.glsl", ShaderType.FragmentShader)
+        //);
+
         public static Shader Standard => _standard;
         public static Shader Gouraud => _gouraud;
         public static Shader Unlit => _unlit;
@@ -117,6 +124,8 @@ namespace Engine.GLApi
         public static Shader EditorSphere => _EditorSphere;
         public static Shader NormalShader => _normalShader;
         public static Shader Indicator => _indicator;
+        //public static Shader ScanInput => _scanInput;
+        
 
         #endregion
 
