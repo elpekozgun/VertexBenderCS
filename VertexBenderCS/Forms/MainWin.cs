@@ -2,6 +2,7 @@
 using Engine.GLApi;
 using Engine.Processing;
 using OpenTK;
+using OpenTK.Audio.OpenAL;
 using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
@@ -236,6 +237,8 @@ namespace VertexBenderCS.Forms
             menuImportVol.Click += MenuImportVol_Click;
             menuImportNifti.Click += MenuImportNifti_Click;
             menuImportVolAsPC.Click += MenuImportVolAsPC_Click;
+            menuImportPTS.Click += MenuImportPTS_Click;
+            menuImportSamsung.Click += MenuImportSamsungPts_Click;
 
             menuProcessSP.Click += MenuProcessSP_Click;
             menuProcessGC.Click += MenuProcessGC_Click;
@@ -325,6 +328,23 @@ namespace VertexBenderCS.Forms
             //HoleFillTestBasic();
             //CoarseTri();
             //PointCloudTest();
+            //SamsungTest("tof test\\tofDepth0.txt");
+            //SamsungTest("tof test\\tofDepth1.txt");
+            //SamsungTest("tof test\\tofDepth2.txt");
+            //SamsungTest("tof test\\tofDepth3.txt");
+            //SamsungTest("tof test\\tofDepth4.txt");
+            //SamsungTest("tof test\\tofDepth5.txt");
+            //SamsungTest("tof test\\tofDepth6.txt");
+            //SamsungTest("tof test\\tofDepth7.txt");
+            //SamsungTest("tof test\\tofDepth8.txt");
+            //SamsungTest("tof test\\tofDepth9.txt");
+
+
+            //SamsungTest("tofDepth0.txt");
+            //SamsungTest("tofDepth1.txt");
+            //SamsungTest("tofDepth2.txt");
+
+            ICPTest();
         }
 
         private void StarTest()
@@ -501,6 +521,84 @@ namespace VertexBenderCS.Forms
             
         }
 
+        private void SamsungTest(string s)
+        {
+            //var output = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\depth.txt");
+            var output = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\" + s);
+            var loaded = true;
+
+            sceneGraphTree.SelectedNode = null;
+            if (loaded)
+            {
+                var scanInput = new ScanInputRenderer(output, "samsung pts")
+                {
+                    IsEnabled = true,
+                    IsCuberille = false,
+                    Intensity = 0,
+                };
+                _SceneGraph.AddObject(scanInput);
+            }
+            sceneGraphTree.SelectedNode = null;
+        }
+
+        private void ICPTest()
+        {
+
+            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\target.txt", 10.0f);
+            var pcSource = pcTarget.Copy();
+            
+            var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
+            var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
+            
+            for (int i = 0; i < target.Count; i++)
+            {
+                pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>(Matrix3.CreateRotationY(MathHelper.PiOver2) * source[i] + new Vector3(0.5f, 0, 0), pcSource.IntensityMap[i].Value);
+            }
+
+            source = pcSource.IntensityMap.Select(x => x.Key).ToList();
+
+            ICP icp = new ICP(source, target);
+            icp.Align();
+
+            var result = icp.Result;
+
+            var pcResult = pcSource.Copy();
+
+            for (int i = 0; i < target.Count; i++)
+            {
+                pcResult.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>(result[i], pcSource.IntensityMap[i].Value);
+            }
+
+            sceneGraphTree.SelectedNode = null;
+            var targetInput = new ScanInputRenderer(pcTarget, "target")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(targetInput);
+
+            sceneGraphTree.SelectedNode = null;
+            var sourceInput = new ScanInputRenderer(pcSource, "source")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(sourceInput);
+
+            sceneGraphTree.SelectedNode = null;
+            var resultInput = new ScanInputRenderer(pcResult, "result")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(resultInput);
+
+
+        }
+
         #endregion
 
         #region Logger
@@ -656,10 +754,10 @@ namespace VertexBenderCS.Forms
             {
                 float max = output.Distances.Max();
 
-                var color = new Vector3[output.Distances.Length];
+                var color = new Vector4[output.Distances.Length];
                 for (int i = 0; i < color.Length; i++)
                 {
-                    color[i] = ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f;
+                    color[i] = new Vector4(ProcessOutputHandler.ColorPixelVector(output.Distances[i], max) * 0.5f, 1.0f);
                 }
                 var mesh = _selectedTransform as MeshRenderer;
 
@@ -1595,17 +1693,17 @@ namespace VertexBenderCS.Forms
                 var max = a.Max();
                 var min = a.Min();
                 max -= min;
-                var color = new Vector3[a.Count];
+                var color = new Vector4[a.Count];
                 for (int i = 0; i < color.Length; i++)
                 {
                     var val = MathHelper.Clamp(Math.Abs(a[i]), 0.0f, 0.4f);
                     if (a[i] < 0)
                     {
-                        color[i] = new Vector3(0.0f, 0.0f, val);
+                        color[i] = new Vector4(0.0f, 0.0f, val, 1.0f);
                     }
                     else
                     {
-                        color[i] = new Vector3(val, 0.0f, 0.0f);
+                        color[i] = new Vector4(val, 0.0f, 0.0f, 1.0f);
                     }
                 }
 
@@ -1805,7 +1903,7 @@ namespace VertexBenderCS.Forms
                 try
                 {
                     var v = d.FileName.Substring(d.FileName.Length - 4);
-                    var output = new VolOutput();
+                    var output = new PointCloud();
                     bool loaded = false;
                     if (v.ToLower() == ".vol")
                     {
@@ -1848,7 +1946,6 @@ namespace VertexBenderCS.Forms
             d.Dispose();
         }
 
-
         private void MenuImportNifti_Click(object sender, EventArgs e)
         {
             var d = new OpenFileDialog
@@ -1889,6 +1986,96 @@ namespace VertexBenderCS.Forms
             }
             d.Dispose();
         }
+
+        private void MenuImportPTS_Click(object sender, EventArgs e)
+        {
+            var d = new OpenFileDialog
+            {
+                ValidateNames = true,
+                Filter = "PTS files (*.pts)|*.pts|All Files(*.*)|*.* "
+            };
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var v = d.FileName.Substring(d.FileName.Length - 4);
+                    var output = new ScanInput();
+                    bool loaded = false;
+                    if (v.ToLower() == ".pts")
+                    {
+                        var split = d.FileName.Split(new char[] { '\\' });
+                        var name = split[split.Length - 1];
+
+                        output = ObjectLoader.LoadPts(d.FileName);
+                        loaded = true;
+                    }
+
+                    if (loaded)
+                    {
+                        var scanInput = new ScanInputRenderer(output, "lidar pts")
+                        {
+                            IsEnabled = true,
+                            IsCuberille = false,
+                            Intensity = 1,
+                        };
+                        _SceneGraph.AddObject(scanInput);
+                    }
+                    sceneGraphTree.SelectedNode = null;
+
+
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Logger.Log(ex.Message);
+                }
+            }
+            d.Dispose();
+        }
+
+        private void MenuImportSamsungPts_Click(object sender, EventArgs e)
+        {
+            var d = new OpenFileDialog
+            {
+                ValidateNames = true,
+                Filter = "txt files (*.txt)|*.txt|All Files(*.*)|*.* "
+            };
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var v = d.FileName.Substring(d.FileName.Length - 4);
+                    var output = new ScanInput();
+                    bool loaded = false;
+                    if (v.ToLower() == ".txt")
+                    {
+                        var split = d.FileName.Split(new char[] { '\\' });
+                        var name = split[split.Length - 1];
+
+                        output = ObjectLoader.LoadSamsungData(d.FileName);
+                        loaded = true;
+                    }
+
+                    if (loaded)
+                    {
+                        var scanInput = new ScanInputRenderer(output, "samsung pts")
+                        {
+                            IsEnabled = true,
+                            IsCuberille = false,
+                            Intensity = 0
+                        };
+                        _SceneGraph.AddObject(scanInput);
+                    }
+                    sceneGraphTree.SelectedNode = null;
+
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Logger.Log(ex.Message);
+                }
+            }
+            d.Dispose();
+        }
+
 
         private void MenuAddSphereTetra_Click(object sender, EventArgs e)
         {

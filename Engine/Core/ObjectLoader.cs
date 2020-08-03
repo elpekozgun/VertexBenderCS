@@ -1,14 +1,19 @@
-﻿using Nifti.NET;
+﻿using MathNet.Numerics.LinearAlgebra.Complex;
+using Nifti.NET;
 using OpenTK;
+using OpenTK.Graphics.ES11;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Forms;
 
 namespace Engine.Core
 {
-    public struct VolOutput
+
+    public struct PointCloud
     {
         public int XCount;
         public int YCount;
@@ -19,7 +24,7 @@ namespace Engine.Core
         public short MaxIntensity;
         public Matrix3 ImportMatrix;
 
-        public VolOutput(int xCount, int yCount, int zCount, KeyValuePair<Vector3, short>[] intensityMap, Matrix3 mat, float spacing, short maxIntensity)
+        public PointCloud(int xCount, int yCount, int zCount, KeyValuePair<Vector3, short>[] intensityMap, Matrix3 mat, float spacing, short maxIntensity)
         {
             XCount = xCount;
             YCount = yCount;
@@ -39,6 +44,27 @@ namespace Engine.Core
         {
             Corners = corners;
         }
+    }
+
+    public struct ScanInput
+    {
+        public KeyValuePair<Vector3, Vector4>[] IntensityMap;
+
+        public ScanInput(KeyValuePair<Vector3, Vector4>[] intensityMap)
+        {
+            IntensityMap = intensityMap;
+        }
+
+        public ScanInput Copy()
+        {
+            var copy = new ScanInput
+            {
+                IntensityMap = new KeyValuePair<Vector3, Vector4>[IntensityMap.Length]
+            };
+            IntensityMap.CopyTo(copy.IntensityMap, 0);
+            return copy;
+        }
+
     }
 
 
@@ -108,7 +134,7 @@ namespace Engine.Core
             return null;
         }
 
-        public static Mesh LoadVol(string path, out VolOutput output)
+        public static Mesh LoadVol(string path, out PointCloud output)
         {
             string expectedHeader = "KRETZFILE 1.0";
 
@@ -120,7 +146,7 @@ namespace Engine.Core
             if (expectedHeader != header)
             {
                 Logger.Log("Not a kretzfile");
-                output = new VolOutput();
+                output = new PointCloud();
                 return null;
                 //spacing = 0;
                 //return null;
@@ -313,13 +339,13 @@ namespace Engine.Core
                     mesh.AddVertex(new Vertex(i, intensities[i].Key * spacing));
                     //colorBuffer.Add(intensities[i].Value);
                 }
-                output = new VolOutput(dimensionX, dimensionY, dimensionZ, intensities.ToArray(), scale, spacing, 255);
+                output = new PointCloud(dimensionX, dimensionY, dimensionZ, intensities.ToArray(), scale, spacing, 255);
 
                 return mesh;
             }
         }
 
-        public static Mesh LoadNifti(string path, out VolOutput output)
+        public static Mesh LoadNifti(string path, out PointCloud output)
         {
             var nifti = NiftiFile.Read(path);
 
@@ -346,7 +372,7 @@ namespace Engine.Core
                 }
             }
 
-            output = new VolOutput(dimensionX, dimensionY, dimensionZ, intensities, rot, 0.004f, (nifti.Data as short[]).Max());
+            output = new PointCloud(dimensionX, dimensionY, dimensionZ, intensities, rot, 0.004f, (nifti.Data as short[]).Max());
 
             Mesh mesh = new Mesh();
 
@@ -360,7 +386,7 @@ namespace Engine.Core
         }
 
 
-        public static VolOutput LoadVol(string path)
+        public static PointCloud LoadVol(string path)
         {
             string expectedHeader = "KRETZFILE 1.0";
 
@@ -372,7 +398,7 @@ namespace Engine.Core
             if (expectedHeader != header)
             {
                 Logger.Log("Not a kretzfile");
-                return new VolOutput();
+                return new PointCloud();
             }
 
             // KretzFile 1.0 Specific Tags in binary
@@ -555,12 +581,12 @@ namespace Engine.Core
 
                 var spacing = (float)resolution / (float)cartesianSpacing;
 
-                return new VolOutput(dimensionX, dimensionY, dimensionZ, intensities, scale, spacing, 255);
+                return new PointCloud(dimensionX, dimensionY, dimensionZ, intensities, scale, spacing, 255);
 
             }
         }
 
-        public static VolOutput LoadNifti(string path)
+        public static PointCloud LoadNifti(string path)
         {
             var nifti = NiftiFile.Read(path);
 
@@ -589,9 +615,137 @@ namespace Engine.Core
                 }
             }
 
-            return new VolOutput(dimensionX, dimensionY, dimensionZ,  intensities, rot, 0.004f, (nifti.Data as short[]).Max());
+            return new PointCloud(dimensionX, dimensionY, dimensionZ,  intensities, rot, 0.004f, (nifti.Data as short[]).Max());
         }
 
+        public static ScanInput LoadPts(string path)
+        {
+            string[] a = new string[1];
+            try
+            {
+                a = File.ReadLines(path).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new FileNotFoundException("file not found");
+            }
+
+            int nPoints = int.Parse(a[0]);
+            
+            int i = 1;
+
+            ScanInput output = new ScanInput()
+            {
+                IntensityMap = new KeyValuePair<Vector3, Vector4>[nPoints],
+            };
+
+            HashSet<float> soupX = new HashSet<float>();
+            HashSet<float> soupY = new HashSet<float>();
+            HashSet<float> soupZ = new HashSet<float>();
+
+            //while(i < nPoints + 1)
+            //{
+            //    var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            //    soupX.Add(float.Parse(line[0]));
+            //    soupY.Add(float.Parse(line[2]));
+            //    soupZ.Add(float.Parse(line[1]));
+
+            //    i++;
+            //}
+
+            //i = 1;
+            while (i < nPoints + 1)
+            {
+                var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                var v1 = float.Parse(line[0]);
+                var v2 = float.Parse(line[2]);
+                var v3 = float.Parse(line[1]);
+
+                var intensity = float.Parse(line[3]);
+
+                var r = float.Parse(line[4]);
+                var g = float.Parse(line[5]);
+                var b = float.Parse(line[6]);
+
+                output.IntensityMap[i - 1] = new KeyValuePair<Vector3, Vector4>(new Vector3(v1,v2,v3), new Vector4(r, g, b, intensity));
+                i++;
+            }
+
+            return output;
+        }
+
+        public static ScanInput LoadSamsungData(string path, float scaleFactor = 1.0f)
+        {
+            string[] a = new string[1];
+            try
+            {
+                a = File.ReadLines(path).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new FileNotFoundException("file not found");
+            }
+
+            int nPoints = int.Parse(a[0]);
+
+            //var offset = a[1].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            //var deltaX = float.Parse(offset[0]);
+            //var deltaY = float.Parse(offset[1]);
+
+            var deltaX = 0;
+            var deltaY = 0;
+
+            var quat = a[1].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // x in vbf is the rotated version of acquired data.
+
+            var x = -float.Parse(quat[1]);
+            var y = float.Parse(quat[0]);
+            var z = -float.Parse(quat[2]);
+
+            //x = 0;
+            //y = 0;
+            //z = 0;
+
+            Quaternion q = Quaternion.FromEulerAngles(MathHelper.DegreesToRadians(x), MathHelper.DegreesToRadians(y), MathHelper.DegreesToRadians(z));
+            Matrix4 rotation = Matrix4.CreateFromQuaternion(q);
+
+            int i = 2;
+            
+            ScanInput output = new ScanInput()
+            {
+                IntensityMap = new KeyValuePair<Vector3, Vector4>[nPoints],
+            };
+
+            while (i < nPoints + 1)
+            {
+                var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                //var v1 = float.Parse(line[1]) / 90.0f;
+                //var v2 = -float.Parse(line[0]) / 90.0f;
+                //var v3 = float.Parse(line[2]) / 1000.0f;
+                var v1 = float.Parse(line[0]) * scaleFactor;
+                var v2 = float.Parse(line[1]) * scaleFactor;
+                var v3 = float.Parse(line[2]) * scaleFactor;
+
+                float intensity = 100.0f;
+                if (line.Length > 3)
+                {
+                    intensity = (7 - float.Parse(line[3])) / 7.0f * 255.0f;
+                }
+
+                v3 = (float)Math.Abs(v3);
+
+                var v = rotation * new Vector4(v1 + deltaX, v2 + deltaY, v3, 1);
+
+                output.IntensityMap[i - 1] = new KeyValuePair<Vector3, Vector4>(v.Xyz, new Vector4(v3 * 255.0f, 0.5f * v3 * 255.0f, v3 * 255.0f, intensity));
+                i++;
+            }
+
+            return output;
+        }
 
     }
 }

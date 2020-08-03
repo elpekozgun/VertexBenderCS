@@ -37,7 +37,7 @@ namespace Engine.GLApi
                 {
                     Coord = vertex.Value.Coord,
                     Normal = vertex.Value.Normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)
                 };
                 i++;
             }
@@ -80,13 +80,13 @@ namespace Engine.GLApi
 
             //color
             GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
 
             GL.BindVertexArray(0);
 
         }
 
-        public void SetColorBuffer(Vector3[] color)
+        public void SetColorBuffer(Vector4[] color)
         {
             for (int i = 0; i < vertices.Length; i++)
             {

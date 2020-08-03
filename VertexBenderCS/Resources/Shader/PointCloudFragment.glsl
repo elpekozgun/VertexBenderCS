@@ -1,15 +1,15 @@
 #version 420 core
 
 out vec4 FragColor;
-in vec3 OutColor;
+in vec4 OutColor;
 
 uniform float Intensity;
 
 void main()
 {
-	if(OutColor.x < Intensity)
+	if(OutColor.r < Intensity)
 	{
 		discard;
 	}
-	FragColor = vec4(OutColor,1.0f); 
+	FragColor = vec4(OutColor.xyz,1.0f); 
 }

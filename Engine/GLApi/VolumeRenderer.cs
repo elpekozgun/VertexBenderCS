@@ -33,8 +33,8 @@ namespace Engine.GLApi
         public short MaxIntensity => rawVolData.MaxIntensity;
 
         private GpuVertex[] vertices;
-        private VolOutput rawVolData;
-        private VolOutput subVolData;
+        private PointCloud rawVolData;
+        private PointCloud subVolData;
         private Vector4[] input;
 
         private int _vertexCount = 0;
@@ -60,7 +60,7 @@ namespace Engine.GLApi
         public bool ShowBoundingBox { get; set; }
 
 
-        public VolumeRenderer(VolOutput vol, string name = "")
+        public VolumeRenderer(PointCloud vol, string name = "")
             : base(name)
         {
             rawVolData = vol;
@@ -84,7 +84,7 @@ namespace Engine.GLApi
             _initialized = true;
         }
 
-        public VolumeRenderer(VolOutput output, Shader shader, string name = "") : this(output, name)
+        public VolumeRenderer(PointCloud output, Shader shader, string name = "") : this(output, name)
         {
             Shader = shader;
         }
@@ -108,7 +108,7 @@ namespace Engine.GLApi
 
         }
 
-        private void UpdateInputFromVol(VolOutput vol)
+        private void UpdateInputFromVol(PointCloud vol)
         {
             input = new Vector4[vol.IntensityMap.Length];
             int i = 0;
@@ -384,21 +384,21 @@ namespace Engine.GLApi
                 {
                     Coord = tris[i].v0.Xyz * subVolData.Spacing,
                     Normal = normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = new Vector4(0.0f, 0.0f, 0.0f,1.0f)
                 };
 
                 vertices[3 * i + 1] = new GpuVertex()
                 {
                     Coord = tris[i].v1.Xyz * subVolData.Spacing,
                     Normal = normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)
                 };
 
                 vertices[3 * i + 2] = new GpuVertex()
                 {
                     Coord = tris[i].v2.Xyz * subVolData.Spacing,
                     Normal = normal,
-                    Color = new Vector3(0.0f, 0.0f, 0.0f)
+                    Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)
                 };
             }
 
@@ -428,7 +428,7 @@ namespace Engine.GLApi
                     {
                         Coord = tris[i][j] * subVolData.Spacing,
                         Normal = normal,
-                        Color = new Vector3(0.0f, 0.0f, 0.0f)
+                        Color = new Vector4(0.0f, 0.0f, 0.0f, 1.0f)
                     };
                 }
             }
@@ -456,13 +456,13 @@ namespace Engine.GLApi
 
             //color
             GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, GpuVertex.Size, 24);
 
             GL.BindVertexArray(0);
 
         }
 
-        public void SetColorBuffer(Vector3[] color)
+        public void SetColorBuffer(Vector4[] color)
         {
             for (int i = 0; i < vertices.Length; i++)
             {
