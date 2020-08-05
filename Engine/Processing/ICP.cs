@@ -80,7 +80,7 @@ namespace Engine.Processing
             return sum / vector.Count;
         }
 
-        public void Align(int maxIter)
+        public int Align(int maxIter)
         {
             KdTree.KdTree<float, float> targetTree = new KdTree.KdTree<float, float>(3, new KdTree.Math.FloatMath());
             Matrix<float> rotation = Matrix<float>.Build.Dense(3, 3, 0);
@@ -153,6 +153,7 @@ namespace Engine.Processing
             Logger.Log($"sample count {RandomSampleCount}");
             Logger.Log($"iteration count {it}");
             Logger.Log($"error: {error}");
+            return 0;
         }
 
     }
