@@ -727,8 +727,8 @@ namespace Engine.Core
                 //var v2 = -float.Parse(line[0]) / 90.0f;
                 //var v3 = float.Parse(line[2]) / 1000.0f;
                 var v1 = float.Parse(line[0]) * scaleFactor;
-                var v2 = float.Parse(line[1]) * scaleFactor;
-                var v3 = float.Parse(line[2]) * scaleFactor;
+                var v2 = float.Parse(line[2]) * scaleFactor;
+                var v3 = float.Parse(line[1]) * scaleFactor;
 
                 float intensity = 100.0f;
                 if (line.Length > 3)

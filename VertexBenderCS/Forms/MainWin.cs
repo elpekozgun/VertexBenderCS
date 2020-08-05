@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -346,7 +347,8 @@ namespace VertexBenderCS.Forms
             //SamsungTest("tofDepth2.txt");
 
             //ICPTestCompleteShape();
-            ICPTestPartialShape();
+            //ICPTestPartialShape();
+            SparseICP();
         }
 
         private void StarTest()
@@ -565,7 +567,7 @@ namespace VertexBenderCS.Forms
             source = pcSource.IntensityMap.Select(x => x.Key).ToList();
 
             ICP icp = new ICP(source, target);
-            icp.Align();
+            icp.Align(40);
 
             var result = icp.Result;
 
@@ -608,8 +610,8 @@ namespace VertexBenderCS.Forms
 
         private void ICPTestPartialShape()
         {
-            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\red_pepper.txt", 0.10f, 255, 0, 0);
-            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\red_pepper.txt", 0.10f, 255, 255, 0);
+            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny2.txt", 100 *0.10f, 255, 0, 0);
+            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny4.txt", 100 *0.10f, 255, 255, 0);
 
             var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
             var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
@@ -627,7 +629,7 @@ namespace VertexBenderCS.Forms
             source = pcSource.IntensityMap.Select(x => x.Key).ToList();
 
             ICP icp = new ICP(source, target);
-            icp.Align();
+            icp.Align(40);
 
             var result = icp.Result;
 
@@ -675,6 +677,102 @@ namespace VertexBenderCS.Forms
 
 
         }
+
+        private void SparseICP()
+        {
+            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny2.txt",100 * 0.10f, 255, 0, 0);
+            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny4.txt",100 * 0.10f, 255, 255, 0);
+
+            var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
+            var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
+                (
+                    //Matrix3.CreateRotationZ(MathHelper.Pi / 4) *
+                    Matrix3.CreateRotationY(MathHelper.Pi / 5) * source[i] +
+                    new Vector3(0.0f, 0, 0), pcSource.IntensityMap[i].Value
+                );
+            }
+
+            //for (int i = 0; i < source.Count; i++)
+            //{
+            //    pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
+            //    (
+            //        Matrix3.CreateRotationZ(MathHelper.Pi / 4) *
+            //        Matrix3.CreateRotationY(MathHelper.Pi / 5) * source[i] +
+            //        new Vector3(1.0f, 0, 0), pcSource.IntensityMap[i].Value
+            //    );
+            //}
+
+            //source = pcSource.IntensityMap.Select(x => x.Key).ToList();
+
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            SICP icp = new SICP(source, target);
+            icp.Align(new SicpParameters(false, 0.4, 30));
+
+            //ICP icp = new ICP(source, target);
+            //icp.Align(40);
+
+            watch.Stop();
+            Logger.Log($"ellapes: {watch.ElapsedMilliseconds} ms");
+
+
+
+
+
+
+            var result = icp.Result;
+
+            var pcResult = new ScanInput
+            {
+                IntensityMap = new KeyValuePair<Vector3, Vector4>[source.Count + target.Count]
+            };
+
+            for (int i = 0; i < target.Count; i++)
+            {
+                pcResult.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>(target[i], pcTarget.IntensityMap[i].Value);
+            }
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                pcResult.IntensityMap[i + target.Count] = new KeyValuePair<Vector3, Vector4>(result[i], pcSource.IntensityMap[i].Value);
+            }
+
+            sceneGraphTree.SelectedNode = null;
+            var targetInput = new ScanInputRenderer(pcTarget, "target")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(targetInput);
+
+            sceneGraphTree.SelectedNode = null;
+            var sourceInput = new ScanInputRenderer(pcSource, "source")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(sourceInput);
+
+            sceneGraphTree.SelectedNode = null;
+            var resultInput = new ScanInputRenderer(pcResult, "result")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(resultInput);
+
+
+        }
+
 
 
         #endregion
