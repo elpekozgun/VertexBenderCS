@@ -77,5 +77,9 @@
   <ItemGroup>
     <None Include="Resources\bunny4.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\owl_clean3.txt" />
+    <Content Include="Resources\owl_clean4.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

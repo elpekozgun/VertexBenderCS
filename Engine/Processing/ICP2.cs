@@ -380,6 +380,7 @@ namespace Engine.Processing
             int icp = 0;
             for (; icp < par.MaxIcp; icp++)
             {
+                Logger.Log($"iteration: {icp + 1}");
                 //for (int i = 0; i < _source.ColumnCount; i++)
                 //{
                 //    double[,] nn = new double[1, 3];

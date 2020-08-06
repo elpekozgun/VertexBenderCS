@@ -680,8 +680,8 @@ namespace VertexBenderCS.Forms
 
         private void SparseICP()
         {
-            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny2.txt",100 * 0.10f, 255, 0, 0);
-            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny4.txt",100 * 0.10f, 255, 255, 0);
+            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny2.txt", 100 * 0.10f, 255, 0, 0);
+            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny4.txt", 100 * 0.10f, 255, 255, 0);
 
             var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
             var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
@@ -711,9 +711,9 @@ namespace VertexBenderCS.Forms
 
             Stopwatch watch = new Stopwatch();
             watch.Start();
-
-            SICP icp = new SICP(source, target);
-            icp.Align(new SicpParameters(false, 0.4, 30));
+            
+            SICP2 icp = new SICP2(source, target);
+            icp.AlignSum(new SicpParameters(false, 0.4, 30));
 
             //ICP icp = new ICP(source, target);
             //icp.Align(40);

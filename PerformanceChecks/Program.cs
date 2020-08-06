@@ -17,17 +17,17 @@ namespace PerformanceChecks
         static void Main(string[] args)
         {
             Func<TimeSpan> icp = () => TestICP(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
-
             Func<TimeSpan> sicp = () => TestSICP(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
-
             Func<TimeSpan> sicp2 = () => TestSICPAbs(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
             Func<TimeSpan> sicp3 = () => TestSICPManhattan(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
             Func<TimeSpan> sicp4 = () => TestSICPSumSq(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
+            
             CheckPerformance(3, "ICP", icp);
             CheckPerformance(3, "SICP", sicp);
             CheckPerformance(3, "SICP using Absolute", sicp2);
             CheckPerformance(3, "SICP using Manhattan", sicp3);
             CheckPerformance(3, "SICP using Sum Squares", sicp4);
+            
             Console.WriteLine("Press any key to exit...");
             Console.ReadLine();
         }
@@ -49,7 +49,7 @@ namespace PerformanceChecks
             foreach (var line in lines)
             {
                 var coords = line.Split(' ').Select(v => float.TryParse(v, out float f) ? f : 0).ToArray();
-                if (coords.Length == 3)
+                if (coords.Length >= 3)
                 {
                     result.Add(new Vector3(coords[0], coords[1], coords[2]));
                 }
@@ -66,7 +66,7 @@ namespace PerformanceChecks
                 {
                     var line = fs.ReadLine();
                     var coords = line.Split(' ').Select(v=>float.TryParse(v, out float f)? f : 0).ToArray();
-                    if (coords.Length == 3)
+                    if (coords.Length >= 3)
                     {
                         result.Add(new Vector3(coords[0], coords[1], coords[2]));
                     }
