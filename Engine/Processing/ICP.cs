@@ -315,7 +315,7 @@ namespace Engine.Processing
 
         }
 
-        public void Align(SicpParameters par)
+        public int Align(SicpParameters par)
         {
 
             // Build the tree
@@ -393,6 +393,7 @@ namespace Engine.Processing
                     }
 
                     double primal = P.NormalizeColumns(2.0).Enumerate().Max();
+
                     if (primal < par.Stop && dual < par.Stop)
                     {
                         break;
@@ -409,7 +410,7 @@ namespace Engine.Processing
 
             }
             Logger.Log($"iteration count {icp}");
-
+            return 0;
         }
 
     }

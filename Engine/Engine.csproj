@@ -104,6 +104,7 @@
     <Compile Include="Processing\Graph.cs" />
     <Compile Include="Processing\HeapNode.cs" />
     <Compile Include="Processing\HoleFiller.cs" />
+    <Compile Include="Processing\ICP2.cs" />
     <Compile Include="Processing\ICP.cs" />
     <Compile Include="Processing\MarchingCubesTables.cs" />
     <Compile Include="Processing\ProcessOutputHandler.cs" />
