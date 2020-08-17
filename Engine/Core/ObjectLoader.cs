@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace Engine.Core
 {
@@ -746,6 +747,72 @@ namespace Engine.Core
             }
 
             return output;
+        }
+
+        public static PointCloud LoadTof(string path)
+        {
+            string[] a = new string[1];
+            try
+            {
+                a = File.ReadLines(path).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new FileNotFoundException("file not found");
+            }
+
+            string[] first = a[0].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            int x = int.Parse(first[0]);
+            int y = int.Parse(first[1]);
+            int z = int.Parse(first[2]);
+            float spacing = float.Parse(first[3]);
+            int count = int.Parse(first[4]);
+
+            int totalCount = x * y * z;
+
+
+            var intensityMap = new KeyValuePair<Vector3, short>[totalCount];
+
+            var list = new List<Vector3>();
+
+            int i = 1;
+            while (i < count + 1)
+            {
+                var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var v1 = float.Parse(line[0]);
+                var v2 = float.Parse(line[2]);
+                var v3 = float.Parse(line[1]);
+                list.Add(new Vector3(v1, v2, v3));
+                i++;
+            }
+            list = list.OrderBy(xx=>xx.X).OrderBy(xx=>xx.Y).OrderBy(xx=>xx.Z).ToList();
+
+            i = 0;
+            int j = 0;
+            while (i < totalCount )
+            {
+                Vector3 v = list[j];
+                int idz = i / (x * y);
+                int xy = i % (x * y);
+                int idy = xy / x;
+                int idx = xy % x;
+
+
+                if (v.X == idx && v.Y == idy && v.Z == idz)
+                {
+                    intensityMap[i] = new KeyValuePair<Vector3, short>(v, 100);
+                    j++;
+                }
+                else
+                {
+                    intensityMap[i] = new KeyValuePair<Vector3, short>(Matrix3.CreateRotationX(-MathHelper.PiOver2) * new Vector3(idx, idy, idz), 0);
+                }
+                
+                i++;
+            }
+
+            return new PointCloud(x, y, z, intensityMap, Matrix3.CreateRotationX(-MathHelper.PiOver2), spacing, 200);
         }
 
     }

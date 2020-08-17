@@ -348,7 +348,8 @@ namespace VertexBenderCS.Forms
 
             //ICPTestCompleteShape();
             //ICPTestPartialShape();
-            SparseICP();
+            //SparseICP();
+            VoxelGridFilter();
         }
 
         private void StarTest()
@@ -426,12 +427,12 @@ namespace VertexBenderCS.Forms
 
             sceneGraphTree.SelectedNode = null;
 
-            var volRenderer = new VolumeRenderer(output, "Compute")
+            var volRenderer = new VolumeRenderer(output, "tahsin")
             {
                 Intensity = 60,
-                DownSample = 6,
+                DownSample = 2,
                 Method = eMarchMethod.GpuBoost,
-                SmoothenRadius = 0.01f
+                SmoothenRadius = 0.0001f
             };
             volRenderer.Compute();
             _SceneGraph.AddObject(volRenderer);
@@ -680,8 +681,8 @@ namespace VertexBenderCS.Forms
 
         private void SparseICP()
         {
-            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny2.txt", 100 * 0.10f, 255, 0, 0);
-            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\bunny4.txt", 100 * 0.10f, 255, 255, 0);
+            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\Transform test Backpack filtered\TofDepth1.txt",  0.10f, 255, 0, 0);
+            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\Transform test Backpack filtered\TofDepth9.txt",  0.10f, 255, 255, 0);
 
             var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
             var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
@@ -712,11 +713,11 @@ namespace VertexBenderCS.Forms
             Stopwatch watch = new Stopwatch();
             watch.Start();
             
-            SICP2 icp = new SICP2(source, target);
-            icp.AlignSum(new SicpParameters(false, 0.4, 30));
+            //SICP2 icp = new SICP2(source, target);
+            //icp.AlignSum(new SicpParameters(false, 0.4, 30));
 
-            //ICP icp = new ICP(source, target);
-            //icp.Align(40);
+            ICP icp = new ICP(source, target);
+            icp.Align(40);
 
             watch.Stop();
             Logger.Log($"ellapes: {watch.ElapsedMilliseconds} ms");
@@ -773,7 +774,26 @@ namespace VertexBenderCS.Forms
 
         }
 
+        private void VoxelGridFilter()
+        {
+            var output = ObjectLoader.LoadTof(@"C:\Users\ozgun\Desktop\voxelGrid.txt");
+            //var output2 = ObjectLoader.LoadNifti(@"C:\Users\ozgun\Desktop\ceng599 project\CT\4821\4823\20130118_0933183DHEADs002a002.nii", out VolOutput volOutput2);
 
+
+            output.MaxIntensity = 255;
+
+            var volRenderer = new VolumeRenderer(output, "tahsin")
+            {
+                Intensity = 80,
+                DownSample = 1,
+                Method = eMarchMethod.GpuBoost,
+                SmoothenRadius = 0.0001f,
+            };
+            volRenderer.Compute();
+            _SceneGraph.AddObject(volRenderer);
+            sceneGraphTree.SelectedNode = null;
+            //_SceneGraph.AddObject(pointRenderer2);
+        }
 
         #endregion
 
