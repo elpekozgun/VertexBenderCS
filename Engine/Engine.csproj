@@ -59,6 +59,9 @@
     <Reference Include="PriorityQueues, Version=2.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\PriorityQueues_boraaros.2.0.1\lib\netstandard2.0\PriorityQueues.dll</HintPath>
     </Reference>
+    <Reference Include="Supercluster.KDTree, Version=1.0.4.0, Culture=neutral, PublicKeyToken=4423da5f8ba350cf, processorArchitecture=MSIL">
+      <HintPath>..\packages\Supercluster.KDTree.1.0.4\lib\Supercluster.KDTree.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -77,6 +80,7 @@
     <Compile Include="Core\Box3.cs" />
     <Compile Include="Core\Camera.cs" />
     <Compile Include="Core\CameraController.cs" />
+    <Compile Include="Core\KDTree.cs" />
     <Compile Include="Core\KretzTag.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\Mesh.cs" />

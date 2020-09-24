@@ -170,6 +170,7 @@ namespace Engine.GLApi
             }
             if (smoothen)
                 Algorithm.Smoothen(ref mesh, smoothIt);
+
             return mesh;
         }
 

@@ -161,16 +161,16 @@ namespace Engine.Processing
     public struct SicpParameters
     {
         public bool UsePenalty;
-        public double P;
-        public double Mu;
-        public double Alpha;
-        public double MaxMu;
+        public float P;
+        public float Mu;
+        public float Alpha;
+        public float MaxMu;
         public int MaxIcp;
         public int MaxInner;
         public int MaxOuter;
-        public double Stop;
+        public float Stop;
 
-        public SicpParameters(bool usePenalty = false, double p = 1.0, int maxIcp = 100, double mu = 10.0, double alpha = 1.2, double maxMu = 1e5, int maxInner = 1, int maxOuter = 100, double stop = 1e-5)
+        public SicpParameters(bool usePenalty = false, float p = 2.0f, int maxIcp = 100, float mu = 10.0f, float alpha = 1.2f, float maxMu = 1e5f, int maxInner = 1, int maxOuter = 100, float stop = 1e-4f)
         {
             UsePenalty = usePenalty;
             P = p;
@@ -189,8 +189,8 @@ namespace Engine.Processing
     /// </summary>
     public class SICP
     {
-        private Matrix<double> _target;
-        private Matrix<double> _source;
+        private Matrix<float> _target;
+        private Matrix<float> _source;
 
         public List<Vector3> Result
         {
@@ -210,64 +210,64 @@ namespace Engine.Processing
         {
             Logger.Log($"Can use blas { MathNet.Numerics.Control.TryUseNativeOpenBLAS()}");
 
-            _target = Matrix<double>.Build.Dense(3, target.Count, 0);
-            _source = Matrix<double>.Build.Dense(3, source.Count, 0);
+            _target = Matrix<float>.Build.Dense(3, target.Count, 0);
+            _source = Matrix<float>.Build.Dense(3, source.Count, 0);
 
             
             for (int i = 0; i < target.Count; i++)
             {
-                _target.SetColumn(i, new double[] { target[i].X, target[i].Y, target[i].Z });
+                _target.SetColumn(i, new float[] { target[i].X, target[i].Y, target[i].Z });
             }
 
             for (int i = 0; i < source.Count; i++)
             {
-                _source.SetColumn(i, new double[] { source[i].X, source[i].Y, source[i].Z });
+                _source.SetColumn(i, new float[] { source[i].X, source[i].Y, source[i].Z });
             }
 
         }
 
-        private Matrix<double> Shrink(int k, Matrix<double> Q, double mu, double p)
+        private Matrix<float> Shrink(int k, Matrix<float> Q, float mu, float p)
         {
-            double ba = Math.Pow((2.0 / mu) * (1.0 - p), 1.0 / (2.0 - p));
-            double ha = ba + (p / mu) * Math.Pow(ba, p - 1.0);
+            float ba = (float)Math.Pow((2.0 / mu) * (1.0 - p), 1.0 / (2.0 - p));
+            float ha = ba + (p / mu) * (float)Math.Pow(ba, p - 1.0);
 
             Parallel.For(0, Q.ColumnCount, (i) => 
             {
-                double n = Q.Column(i).Norm(2.0);
-                double w = 0.0;
+                float n = (float)Q.Column(i).Norm(2.0);
+                float w = 0.0f;
                 if (n > ha)
                 {
-                    w = Shrinkage(k, mu, n, p, (ba / n + 1.0) / 2.0);
+                    w = Shrinkage(k, mu, n, p, (ba / n + 1.0f) / 2.0f);
                 }
                 Q.SetColumn(i, Q.Column(i) * w);
             });
             return Q;
         }
 
-        private double Shrinkage(int i, double mu, double n, double p, double s)
+        private float Shrinkage(int i, float mu, float n, float p, float s)
         {
             if (i > 0)
             {
-                return Shrinkage(i - 1, mu, n, p, 1.0 - (p / mu) * Math.Pow(n, p - 2.0) * Math.Pow(s, p - 1.0));
+                return Shrinkage(i - 1, mu, n, p, (float)(1.0- (p / mu) * Math.Pow(n, p - 2.0) * Math.Pow(s, p - 1.0)));
             }
             return s;
         }
 
         
 
-        private void Transform(ref Matrix<double> X, ref Matrix<double> Y, Vector<double> w)
+        private void Transform(ref Matrix<float> X, ref Matrix<float> Y, Vector<float> w)
         {
         
             var xMean = X.RowSums() / X.ColumnCount;
             var yMean = Y.RowSums() / Y.ColumnCount;
 
-            Func<Vector<double>, Vector<double>> addX = x => x + xMean;
-            Func<Vector<double>, Vector<double>> addY = x => x + yMean;
-            Func<Vector<double>, Vector<double>> subX = x => x - xMean;
-            Func<Vector<double>, Vector<double>> subY = x => x - yMean;
+            Func<Vector<float>, Vector<float>> addX = x => x + xMean;
+            Func<Vector<float>, Vector<float>> addY = x => x + yMean;
+            Func<Vector<float>, Vector<float>> subX = x => x - xMean;
+            Func<Vector<float>, Vector<float>> subY = x => x - yMean;
 
 
-            Vector<double> r = Vector<double>.Build.Dense(3, 0);
+            Vector<float> r = Vector<float>.Build.Dense(3, 0);
             for (int i = 0; i < X.ColumnCount; i++)
             {
                 X.Column(i, r);
@@ -282,8 +282,8 @@ namespace Engine.Processing
                 Y.SetColumn(i, outV);
             }
 
-            Matrix<double> rotation;
-            Matrix<double> sigma = (X * w[0] / w.Sum())  * Y.Transpose();
+            Matrix<float> rotation;
+            Matrix<float> sigma = (X * w[0] / w.Sum())  * Y.Transpose();
 
             var svd = sigma.Svd(true);
 
@@ -323,18 +323,24 @@ namespace Engine.Processing
             //alglib.kdtreebuild(_target.ToArray(), 3, 0, 2, out alglib.kdtree kdtree);
             //alglib.kdtreeserialize(kdtree, out string asd);
 
-            KdTree.KdTree<double, double> tree = new KdTree.KdTree<double, double>(3, new KdTree.Math.DoubleMath());
+            //KdTree.KdTree<float, float> tree = new KdTree.KdTree<float, float>(3, new KdTree.Math.floatMath());
+            //for (int i = 0; i < _target.ColumnCount; i++)
+            //{
+            //    tree.Add(_target.Column(i).AsArray(), 100);
+            //}
+
+            KdTree<int> tree = new SqrEuclid<int>(3, _target.ColumnCount);
             for (int i = 0; i < _target.ColumnCount; i++)
             {
-                tree.Add(_target.Column(i).AsArray(), 100);
+                tree.AddPoint(_target.Column(i).AsArray(), i);
             }
 
-            Matrix<double> Q = Matrix<double>.Build.Dense(3, _source.ColumnCount, 0);
-            Matrix<double> Z = Matrix<double>.Build.Dense(3, _source.ColumnCount, 0);
-            Matrix<double> C = Matrix<double>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> Q = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> Z = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> C = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
 
-            Matrix<double> Xo1 = Matrix<double>.Build.Dense(3, _source.ColumnCount, 0);
-            Matrix<double> Xo2 = Matrix<double>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> Xo1 = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> Xo2 = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
             _source.CopyTo(Xo1);
             _source.CopyTo(Xo2);
 
@@ -343,36 +349,47 @@ namespace Engine.Processing
             {
                 //for (int i = 0; i < _source.ColumnCount; i++)
                 //{
-                //    double[,] nn = new double[1, 3];
+                //    float[,] nn = new float[1, 3];
                 //    alglib.kdtreequeryknn(kdtree, _source.Column(i).AsArray(), 1);
                 //    alglib.kdtreequeryresultsx(kdtree, ref nn);
-                //    Q.SetColumn(i, new double[] { nn[0, 0], nn[0, 1], nn[0, 2] });
+                //    Q.SetColumn(i, new float[] { nn[0, 0], nn[0, 1], nn[0, 2] });
                 //}
 
-                Parallel.For(0, _source.ColumnCount, (i) =>
-                 {
-                     var n = tree.GetNearestNeighbours(_source.Column(i).AsArray(), 1);
-                     if (n.Length > 0)
-                     {
-                         Q.SetColumn(i, n[0].Point);
-                     }
-                 });
+                var src = _source.AsColumnMajorArray();
 
-                double mu = par.Mu;
+                //Parallel.For(0, _source.ColumnCount, (i) =>
+                for (int i = 0; i < _source.ColumnCount; i++)
+                {
+                     //var n = tree.GetNearestNeighbours(_source.Column(i).AsArray(), 1);
+                     //if (n.Length > 0)
+                     //{
+                     //    Q.SetColumn(i, n[0].Point);
+                     //}
+                    // var n = tree.NearestNeighbor(_source.Column(i).AsArray(), 0, 1, true);
+                    var n = tree.NearestNeighbor(src, i * 3, 1, false);
+                     if (n.Count > 0)
+                     {
+                         Q.SetColumn(i, _target.Column(n[0].value));
+                     }
+
+                 }
+
+                float mu = par.Mu;
 
                 for (int outer = 0; outer < par.MaxOuter; outer++)
                 {
-                    double dual = 0.0;
+                    float dual = 0.0f;
                     for (int inner = 0; inner < par.MaxInner; inner++)
                     {
                         Z = _source - Q + C / mu;
 
                         Z = Shrink(3, Z, mu, par.P);
 
-                        Matrix<double> U = Q + Z - C / mu;
-                        Transform(ref _source, ref U, Vector<double>.Build.Dense(_source.ColumnCount,1.0));
+                        Matrix<float> U = Q + Z - C / mu;
+                        Transform(ref _source, ref U, Vector<float>.Build.Dense(_source.ColumnCount,1.0f));
 
-                        dual = (_source - Xo1).NormalizeColumns(2.0).Enumerate().Max();
+                        //dual = (_source - Xo1).NormalizeColumns(2.0).Enumerate().Max();
+                        dual = (float)(_source - Xo1).EnumerateColumns().Select(x => x.Norm(2)).Max();
                         _source.CopyTo(Xo1);
 
                         if (dual < par.Stop)
@@ -381,7 +398,7 @@ namespace Engine.Processing
                         }
                     }
 
-                    Matrix<double> P = _source - Q - Z;
+                    Matrix<float> P = _source - Q - Z;
                     if (!par.UsePenalty)
                     {
                         C += (mu * P);
@@ -392,7 +409,9 @@ namespace Engine.Processing
                         mu *= par.Alpha;
                     }
 
-                    double primal = P.NormalizeColumns(2.0).Enumerate().Max();
+                    //float primal = P.NormalizeColumns(2.0).Enumerate().Max();
+                    float primal = (float)P.EnumerateColumns().Select(x => x.Norm(2)).Max();
+
 
                     if (primal < par.Stop && dual < par.Stop)
                     {
@@ -400,7 +419,8 @@ namespace Engine.Processing
                     }
                 }
 
-                double stop = (_source - Xo2).NormalizeColumns(2.0).Enumerate().Max();
+                //float stop = (_source - Xo2).NormalizeColumns(2.0).Enumerate().Max();
+                float stop = (float)(_source - Xo2).EnumerateColumns().Select(x => x.Norm(2)).Max();
                 _source.CopyTo(Xo2);
                 
                 if (stop < par.Stop)
@@ -412,6 +432,125 @@ namespace Engine.Processing
             Logger.Log($"iteration count {icp}");
             return 0;
         }
+
+        public int AlignSC(SicpParameters par)
+        {
+
+            float[][] points = new float[_target.ColumnCount][];
+            int[] nodes = new int[_target.ColumnCount];
+            for (int i = 0; i < points.Length; i++)
+            {
+                points[i] = _target.Column(i).AsArray();
+                nodes[i] = i;
+            }
+
+
+            Supercluster.KDTree.KDTree<float, int> ktree = new Supercluster.KDTree.KDTree<float, int>(3, points, nodes, (a, b)=> { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; });
+
+            //KdTree<int> tree = new SqrEuclid<int>(3, _target.ColumnCount);
+            //for (int i = 0; i < _target.ColumnCount; i++)
+            //{
+            //    tree.AddPoint(_target.Column(i).AsArray(), i);
+            //}
+
+            Matrix<float> Q = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> Z = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> C = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+
+            Matrix<float> Xo1 = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            Matrix<float> Xo2 = Matrix<float>.Build.Dense(3, _source.ColumnCount, 0);
+            _source.CopyTo(Xo1);
+            _source.CopyTo(Xo2);
+
+            int icp = 0;
+            for (; icp < par.MaxIcp; icp++)
+            {
+                //for (int i = 0; i < _source.ColumnCount; i++)
+                //{
+                //    float[,] nn = new float[1, 3];
+                //    alglib.kdtreequeryknn(kdtree, _source.Column(i).AsArray(), 1);
+                //    alglib.kdtreequeryresultsx(kdtree, ref nn);
+                //    Q.SetColumn(i, new float[] { nn[0, 0], nn[0, 1], nn[0, 2] });
+                //}
+
+                var src = _source.AsColumnMajorArray();
+
+                //Parallel.For(0, _source.ColumnCount, (i) =>
+                for (int i = 0; i < _source.ColumnCount; i++)
+                {
+                    //var n = tree.NearestNeighbor(src, i * 3, 1, true);
+                    //if (n.Count > 0)
+                    //{
+                    //    Q.SetColumn(i, _target.Column(n[0].value));
+                    //}
+
+                    var n = ktree.NearestNeighbors(_source.Column(i).AsArray(), 1);
+                    if (n != null)
+                    {
+                        Q.SetColumn(i, _target.Column(n[0].Item2));
+                    }
+
+                }
+
+                float mu = par.Mu;
+
+                for (int outer = 0; outer < par.MaxOuter; outer++)
+                {
+                    float dual = 0.0f;
+                    for (int inner = 0; inner < par.MaxInner; inner++)
+                    {
+                        Z = _source - Q + C / mu;
+
+                        Z = Shrink(3, Z, mu, par.P);
+
+                        Matrix<float> U = Q + Z - C / mu;
+                        Transform(ref _source, ref U, Vector<float>.Build.Dense(_source.ColumnCount, 1.0f));
+
+                        //dual = (_source - Xo1).NormalizeColumns(2.0).Enumerate().Max();
+                        dual = (float)(_source - Xo1).EnumerateColumns().Select(x => x.Norm(2)).Max();
+                        _source.CopyTo(Xo1);
+
+                        if (dual < par.Stop)
+                        {
+                            break;
+                        }
+                    }
+
+                    Matrix<float> P = _source - Q - Z;
+                    if (!par.UsePenalty)
+                    {
+                        C += (mu * P);
+                    }
+
+                    if (mu < par.MaxMu)
+                    {
+                        mu *= par.Alpha;
+                    }
+
+                    //float primal = P.NormalizeColumns(2.0).Enumerate().Max();
+                    float primal = (float)P.EnumerateColumns().Select(x => x.Norm(2)).Max();
+
+
+                    if (primal < par.Stop && dual < par.Stop)
+                    {
+                        break;
+                    }
+                }
+
+                //float stop = (_source - Xo2).NormalizeColumns(2.0).Enumerate().Max();
+                float stop = (float)(_source - Xo2).EnumerateColumns().Select(x => x.Norm(2)).Max();
+                _source.CopyTo(Xo2);
+
+                if (stop < par.Stop)
+                {
+                    break;
+                }
+
+            }
+            Logger.Log($"iteration count {icp}");
+            return 0;
+        }
+
 
     }
 

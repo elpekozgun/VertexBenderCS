@@ -4,12 +4,15 @@ using OpenTK;
 using OpenTK.Graphics.ES11;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
+using System.Xml.Xsl;
 
 namespace Engine.Core
 {
@@ -749,6 +752,88 @@ namespace Engine.Core
             return output;
         }
 
+        public static PointCloud LoadTofWithZeros(string path)
+        {
+            string[] a = new string[1];
+            try
+            {
+                a = File.ReadLines(path).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new FileNotFoundException("file not found");
+            }
+
+            string[] first = a[0].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            int xCount = int.Parse(first[0]);
+            int yCount = int.Parse(first[1]);
+            int zCount = int.Parse(first[2]);
+            float spacing = float.Parse(first[3]);
+            int count = int.Parse(first[4]);
+
+            int totalCount = xCount * yCount * zCount;
+
+
+            var intensityMap = new KeyValuePair<Vector3, short>[totalCount];
+
+            Matrix3 importMat = Matrix3.Identity; //Matrix3.CreateRotationX(MathHelper.PiOver2);
+
+            int i = 1;
+            while (i < count)
+            {
+                var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var v1 = float.Parse(line[0]);
+                var v2 = float.Parse(line[1]);
+                var v3 = float.Parse(line[2]);
+                var intensity = short.Parse(line[3]);
+
+                intensityMap[i] = new KeyValuePair<Vector3, short>(new Vector3(v1, v2, v3), intensity);
+                i++;
+            }
+
+
+
+            //int i = 1;
+            //while (i < count + 1)
+            //{
+            //    var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            //    var v1 = float.Parse(line[0]);
+            //    var v2 = float.Parse(line[1]);
+            //    var v3 = float.Parse(line[2]);
+            //    list.Add(new Vector3(v1, v2, v3));
+            //    i++;
+            //}
+            //list = list.OrderBy(xx=>xx.X).OrderBy(xx=>xx.Y).OrderBy(xx=>xx.Z).ToList();
+
+
+            //i = 0;
+            //int j = 0;
+
+            //for (int z = 0; z < zCount; z++)
+            //{
+            //    for (int y = 0; y < yCount; y++)
+            //    {
+            //        for (int x = 0; x < xCount; x++)
+            //        {
+            //            Vector3 v = list[j];
+            //            if (v.X == x && v.Y == y && v.Z == z)
+            //            {
+            //                intensityMap[z * yCount * xCount + y * xCount + x] = new KeyValuePair<Vector3, short>(importMat * v, 100);
+            //                j++;
+            //            }
+            //            else
+            //            {
+            //                intensityMap[z * yCount * xCount + y * xCount + x] = new KeyValuePair<Vector3, short>(importMat * new Vector3(x, y, z), 0);
+            //            }
+            //        }
+            //    }
+            //}
+
+
+            return new PointCloud(xCount, yCount, zCount, intensityMap, importMat, spacing, 200);
+        }
+
         public static PointCloud LoadTof(string path)
         {
             string[] a = new string[1];
@@ -763,56 +848,92 @@ namespace Engine.Core
 
             string[] first = a[0].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            int x = int.Parse(first[0]);
-            int y = int.Parse(first[1]);
-            int z = int.Parse(first[2]);
+            int xCount = int.Parse(first[0]);
+            int yCount = int.Parse(first[1]);
+            int zCount = int.Parse(first[2]);
             float spacing = float.Parse(first[3]);
             int count = int.Parse(first[4]);
 
-            int totalCount = x * y * z;
+            int totalCount = xCount * yCount * zCount;
 
 
             var intensityMap = new KeyValuePair<Vector3, short>[totalCount];
-
-            var list = new List<Vector3>();
-
-            int i = 1;
-            while (i < count + 1)
+            for (int z = 0; z < zCount; z++)
             {
-                var line = a[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                var v1 = float.Parse(line[0]);
-                var v2 = float.Parse(line[2]);
-                var v3 = float.Parse(line[1]);
-                list.Add(new Vector3(v1, v2, v3));
-                i++;
+                for (int y = 0; y < yCount; y++)
+                {
+                    for (int x = 0; x < xCount; x++)
+                    {
+                        intensityMap[z * xCount * yCount + y * xCount + x] = new KeyValuePair<Vector3, short>(new Vector3(x,y,z), 0);
+                    }
+                }
             }
-            list = list.OrderBy(xx=>xx.X).OrderBy(xx=>xx.Y).OrderBy(xx=>xx.Z).ToList();
 
-            i = 0;
-            int j = 0;
-            while (i < totalCount )
+            Matrix3 importMat = Matrix3.Identity; //Matrix3.CreateRotationX(MathHelper.PiOver2);
+
+            int it = 1;
+            while (it < count)
             {
-                Vector3 v = list[j];
-                int idz = i / (x * y);
-                int xy = i % (x * y);
-                int idy = xy / x;
-                int idx = xy % x;
+                var line = a[it].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var x = int.Parse(line[0]);
+                var y = int.Parse(line[1]);
+                var z = int.Parse(line[2]);
+                var intensity = short.Parse(line[3]);
 
+                intensityMap[z * xCount * yCount + y * xCount + x] = new KeyValuePair<Vector3, short>(new Vector3(x, y, z), (short)intensity);
 
-                if (v.X == idx && v.Y == idy && v.Z == idz)
-                {
-                    intensityMap[i] = new KeyValuePair<Vector3, short>(v, 100);
-                    j++;
-                }
-                else
-                {
-                    intensityMap[i] = new KeyValuePair<Vector3, short>(Matrix3.CreateRotationX(-MathHelper.PiOver2) * new Vector3(idx, idy, idz), 0);
-                }
+                it++;
+            }
+
+            return new PointCloud(xCount, yCount, zCount, intensityMap, importMat, spacing, 200);
+        }
+
+        public static List<Tuple<Vector3, Vector3, Vector3>> LoadPly(string path)
+        {
+            List<Tuple<Vector3, Vector3, Vector3>> list = new List<Tuple<Vector3, Vector3, Vector3>>();
+
+            int pointer = 0;
+            string[] a = new string[1];
+            try
+            {
+                a = File.ReadLines(path).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new FileNotFoundException("file not found");
+            }
+
+            if (a[pointer].ToLower() != "ply")
+            {
+                throw new FileLoadException("Incorrect OFF format");
+            }
+
+            char[] splitter = new char[] { ' ' };
+
+            pointer += 2;
+            int count = int.Parse(a[pointer].Split(splitter, StringSplitOptions.RemoveEmptyEntries)[2]);
+
+            while (a[++pointer] != "end_header")
+            {
+                continue;
+            }
+
+            int pointStart = pointer + 1;
+            while (++pointer < count + pointStart)
+            {
+                var line = a[pointer].Split(splitter, StringSplitOptions.RemoveEmptyEntries);
+
+                Tuple<Vector3, Vector3, Vector3> tuple = new Tuple<Vector3, Vector3, Vector3>
+                (
+                    new Vector3(float.Parse(line[0]), float.Parse(line[1]), float.Parse(line[2])),
+                    new Vector3(float.Parse(line[3]), float.Parse(line[4]), float.Parse(line[5])),
+                    new Vector3(float.Parse(line[6]), float.Parse(line[7]), float.Parse(line[8]))
+                );
                 
-                i++;
+                list.Add(tuple);
             }
 
-            return new PointCloud(x, y, z, intensityMap, Matrix3.CreateRotationX(-MathHelper.PiOver2), spacing, 200);
+            return list;
         }
 
     }

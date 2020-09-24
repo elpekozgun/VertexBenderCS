@@ -1399,8 +1399,6 @@ namespace Engine.Processing
             for (int i = 0; i < output.IntensityMap.Length; i++)
             {
 
-
-
                 var val = output.IntensityMap[i].Key;
                 if (Math.Abs(val.X) == x - 1 || Math.Abs(val.Y) == y - 1 || Math.Abs(val.Z) == z - 1)
                 {

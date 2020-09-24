@@ -17,16 +17,18 @@ namespace PerformanceChecks
         static void Main(string[] args)
         {
             Func<TimeSpan> icp = () => TestICP(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
+            Func<TimeSpan> icpCluster = () => TestICP(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
             Func<TimeSpan> sicp = () => TestSICP(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
-            Func<TimeSpan> sicp2 = () => TestSICPAbs(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
-            Func<TimeSpan> sicp3 = () => TestSICPManhattan(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
-            Func<TimeSpan> sicp4 = () => TestSICPSumSq(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
+            //Func<TimeSpan> sicp2 = () => TestSICPAbs(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
+            //Func<TimeSpan> sicp3 = () => TestSICPManhattan(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
+            //Func<TimeSpan> sicp4 = () => TestSICPSumSq(ReadFromString(Properties.Resources.bunny2), ReadFromString(Properties.Resources.bunny4));
             
-            CheckPerformance(3, "ICP", icp);
-            CheckPerformance(3, "SICP", sicp);
-            CheckPerformance(3, "SICP using Absolute", sicp2);
-            CheckPerformance(3, "SICP using Manhattan", sicp3);
-            CheckPerformance(3, "SICP using Sum Squares", sicp4);
+            CheckPerformance(10, "ICP", icp);
+            CheckPerformance(10, "SICP", sicp);
+            CheckPerformance(10, "SICP CLuster", icpCluster);
+            //CheckPerformance(10, "SICP using Absolute", sicp2);
+            //CheckPerformance(10, "SICP using Manhattan", sicp3);
+            //CheckPerformance(10, "SICP using Sum Squares", sicp4);
             
             Console.WriteLine("Press any key to exit...");
             Console.ReadLine();
@@ -77,6 +79,14 @@ namespace PerformanceChecks
             return result;
         }
 
+        public static TimeSpan TestICPCluster(List<Vector3> v1, List<Vector3> v2)
+        {
+            var icp = new SICP(v1, v2);
+            var r = RunFunction(() => icp.AlignSC(new SicpParameters(false)));
+            Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
+            return r;
+        }
+
 
         public static TimeSpan TestICP(List<Vector3> v1, List<Vector3> v2)
         {
@@ -94,30 +104,30 @@ namespace PerformanceChecks
             return r;
         }
 
-        public static TimeSpan TestSICPAbs(List<Vector3> v1, List<Vector3> v2)
-        {
-            var icp = new SICP2(v1, v2);
-            var r = RunFunction(() => icp.AlignAbs(new SicpParameters(false)));
-            Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
-            return r;
-        }
+        //public static TimeSpan TestSICPAbs(List<Vector3> v1, List<Vector3> v2)
+        //{
+        //    var icp = new SICP2(v1, v2);
+        //    var r = RunFunction(() => icp.AlignAbs(new SicpParameters(false)));
+        //    Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
+        //    return r;
+        //}
 
-        public static TimeSpan TestSICPManhattan(List<Vector3> v1, List<Vector3> v2)
-        {
-            var icp = new SICP2(v1, v2);
-            var r = RunFunction(() => icp.AlignSum(new SicpParameters(false)));
-            Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
-            return r;
-        }
+        //public static TimeSpan TestSICPManhattan(List<Vector3> v1, List<Vector3> v2)
+        //{
+        //    var icp = new SICP2(v1, v2);
+        //    var r = RunFunction(() => icp.AlignSum(new SicpParameters(false)));
+        //    Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
+        //    return r;
+        //}
 
-        public static TimeSpan TestSICPSumSq(List<Vector3> v1, List<Vector3> v2)
-        {
-            var icp = new SICP2(v1, v2);
+        //public static TimeSpan TestSICPSumSq(List<Vector3> v1, List<Vector3> v2)
+        //{
+        //    var icp = new SICP2(v1, v2);
 
-            var r = RunFunction(() => icp.AlignSumSq(new SicpParameters(false)));
-            Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
-            return r;
-        }
+        //    var r = RunFunction(() => icp.AlignSumSq(new SicpParameters(false)));
+        //    Console.WriteLine("First Point Location: {0}", icp.Result.First().ToString());
+        //    return r;
+        //}
 
 
         static void CheckPerformance(int count, string name, Func<TimeSpan> test)

@@ -12,6 +12,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Web.WebSockets;
 using System.Windows.Forms;
 
 namespace VertexBenderCS.Forms
@@ -350,7 +351,117 @@ namespace VertexBenderCS.Forms
             //ICPTestPartialShape();
             //SparseICP();
             VoxelGridFilter();
+            
+            
+            //SparseICP();
+            //LoadPly();
         }
+
+        private void LoadPly()
+        {
+            var ply = ObjectLoader.LoadPly(@"C:\Users\ozgun\Desktop\outputnormal.ply");
+            var vertices = ply.Select(x => x.Item1).ToList();
+            var colors = ply.Select(x => x.Item3).ToList();
+
+            KeyValuePair<Vector3, Vector4>[] pairs = new KeyValuePair<Vector3, Vector4>[ply.Count];
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                pairs[i] = new KeyValuePair<Vector3, Vector4>(vertices[i], new Vector4(colors[i] / 255, 1));
+            }
+            ScanInput input = new ScanInput(pairs);
+
+            var resultInput = new ScanInputRenderer(input, "result")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(resultInput);
+        }
+
+        private void SparseICP()
+        {
+            //var pcTarget = ObjectLoader.LoadPly(@"C:\Users\ozgun\Desktop\URoom\3 person sofa\tofDepth02.ply");
+            //var pcSource = ObjectLoader.LoadPly(@"C:\Users\ozgun\Desktop\URoom\3 person sofa\tofDepth03.ply");
+
+            var pcTarget = ObjectLoader.LoadPly(@"C:\Users\ozgun\Desktop\cal test\dog monitor 2.ply");
+            var pcSource = ObjectLoader.LoadPly(@"C:\Users\ozgun\Desktop\cal test\dog monitor.ply");
+
+            var source = pcSource.Select(x => x.Item1).ToList();
+            var target = pcTarget.Select(x => x.Item1).ToList();
+
+            var resultColor = pcSource.Select(x => x.Item3).ToList();
+            var targetColor = pcTarget.Select(x => x.Item3).ToList();
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            //SICP2 icp2 = new SICP2(source, target);
+            //icp2.AlignSumSq(new SicpParameters(false, 2.0, 100));
+
+            SICP icp = new SICP(source, target);
+            icp.Align(new SicpParameters(false, 2.0f, 100));
+
+
+            watch.Stop();
+            Logger.Log($"ellapes: {watch.ElapsedMilliseconds} ms");
+            var result = icp.Result;
+
+            sceneGraphTree.SelectedNode = null;
+
+            KeyValuePair<Vector3, Vector4>[] pairs = new KeyValuePair<Vector3, Vector4>[icp.Result.Count];
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                pairs[i] = new KeyValuePair<Vector3, Vector4>(result[i], new Vector4(1, 1, 1, 0));
+            }
+            ScanInput input = new ScanInput(pairs);
+
+            var resultInput = new ScanInputRenderer(input, "result")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(resultInput);
+
+            sceneGraphTree.SelectedNode = null;
+
+            KeyValuePair<Vector3, Vector4>[] pairsSource = new KeyValuePair<Vector3, Vector4>[icp.Result.Count];
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                pairsSource[i] = new KeyValuePair<Vector3, Vector4>(source[i], new Vector4(resultColor[i].X / 255.0f, resultColor[i].Y / 255.0f, resultColor[i].Z / 255.0f, 0));
+            }
+            ScanInput inputSource = new ScanInput(pairsSource);
+
+            var sourceInput = new ScanInputRenderer(inputSource, "source")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(sourceInput);
+
+
+            sceneGraphTree.SelectedNode = null;
+
+            KeyValuePair<Vector3, Vector4>[] pairsTarget = new KeyValuePair<Vector3, Vector4>[target.Count];
+            for (int i = 0; i < pairsTarget.Length; i++)
+            {
+                pairsTarget[i] = new KeyValuePair<Vector3, Vector4>(target[i], new Vector4(targetColor[i].X / 255.0f, targetColor[i].Y / 255.0f, targetColor[i].Z / 255.0f, 0));
+            }
+            ScanInput inputTarget = new ScanInput(pairsTarget);
+
+            var targetInput = new ScanInputRenderer(inputTarget, "target")
+            {
+                IsEnabled = true,
+                IsCuberille = false,
+                Intensity = 0,
+            };
+            _SceneGraph.AddObject(targetInput);
+
+
+        }
+
 
         private void StarTest()
         {
@@ -679,113 +790,112 @@ namespace VertexBenderCS.Forms
 
         }
 
-        private void SparseICP()
-        {
-            var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\Transform test Backpack filtered\TofDepth1.txt",  0.10f, 255, 0, 0);
-            var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\Transform test Backpack filtered\TofDepth9.txt",  0.10f, 255, 255, 0);
+        //private void SparseICPOld()
+        //{
+        //    var pcTarget = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\Transform test Backpack filtered\TofDepth1.txt",  0.10f, 255, 0, 0);
+        //    var pcSource = ObjectLoader.LoadSamsungData(@"C:\Users\ozgun\Desktop\Transform test Backpack filtered\TofDepth9.txt",  0.10f, 255, 255, 0);
 
-            var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
-            var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
+        //    var target = pcTarget.IntensityMap.Select(x => x.Key).ToList();
+        //    var source = pcSource.IntensityMap.Select(x => x.Key).ToList();
 
-            for (int i = 0; i < source.Count; i++)
-            {
-                pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
-                (
-                    //Matrix3.CreateRotationZ(MathHelper.Pi / 4) *
-                    Matrix3.CreateRotationY(MathHelper.Pi / 5) * source[i] +
-                    new Vector3(0.0f, 0, 0), pcSource.IntensityMap[i].Value
-                );
-            }
+        //    for (int i = 0; i < source.Count; i++)
+        //    {
+        //        pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
+        //        (
+        //            //Matrix3.CreateRotationZ(MathHelper.Pi / 4) *
+        //            Matrix3.CreateRotationY(MathHelper.Pi / 5) * source[i] +
+        //            new Vector3(0.0f, 0, 0), pcSource.IntensityMap[i].Value
+        //        );
+        //    }
 
-            //for (int i = 0; i < source.Count; i++)
-            //{
-            //    pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
-            //    (
-            //        Matrix3.CreateRotationZ(MathHelper.Pi / 4) *
-            //        Matrix3.CreateRotationY(MathHelper.Pi / 5) * source[i] +
-            //        new Vector3(1.0f, 0, 0), pcSource.IntensityMap[i].Value
-            //    );
-            //}
+        //    //for (int i = 0; i < source.Count; i++)
+        //    //{
+        //    //    pcSource.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>
+        //    //    (
+        //    //        Matrix3.CreateRotationZ(MathHelper.Pi / 4) *
+        //    //        Matrix3.CreateRotationY(MathHelper.Pi / 5) * source[i] +
+        //    //        new Vector3(1.0f, 0, 0), pcSource.IntensityMap[i].Value
+        //    //    );
+        //    //}
 
-            //source = pcSource.IntensityMap.Select(x => x.Key).ToList();
+        //    //source = pcSource.IntensityMap.Select(x => x.Key).ToList();
 
 
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
+        //    Stopwatch watch = new Stopwatch();
+        //    watch.Start();
             
-            //SICP2 icp = new SICP2(source, target);
-            //icp.AlignSum(new SicpParameters(false, 0.4, 30));
+        //    //SICP2 icp = new SICP2(source, target);
+        //    //icp.AlignAbs(new SicpParameters(false, 2.0, 100));
 
-            ICP icp = new ICP(source, target);
-            icp.Align(40);
+        //    //ICP icp = new ICP(source, target);
+        //    //icp.Align(40);
 
-            watch.Stop();
-            Logger.Log($"ellapes: {watch.ElapsedMilliseconds} ms");
-
-
+        //    watch.Stop();
+        //    Logger.Log($"ellapes: {watch.ElapsedMilliseconds} ms");
 
 
 
 
-            var result = icp.Result;
-
-            var pcResult = new ScanInput
-            {
-                IntensityMap = new KeyValuePair<Vector3, Vector4>[source.Count + target.Count]
-            };
-
-            for (int i = 0; i < target.Count; i++)
-            {
-                pcResult.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>(target[i], pcTarget.IntensityMap[i].Value);
-            }
-
-            for (int i = 0; i < source.Count; i++)
-            {
-                pcResult.IntensityMap[i + target.Count] = new KeyValuePair<Vector3, Vector4>(result[i], pcSource.IntensityMap[i].Value);
-            }
-
-            sceneGraphTree.SelectedNode = null;
-            var targetInput = new ScanInputRenderer(pcTarget, "target")
-            {
-                IsEnabled = true,
-                IsCuberille = false,
-                Intensity = 0,
-            };
-            _SceneGraph.AddObject(targetInput);
-
-            sceneGraphTree.SelectedNode = null;
-            var sourceInput = new ScanInputRenderer(pcSource, "source")
-            {
-                IsEnabled = true,
-                IsCuberille = false,
-                Intensity = 0,
-            };
-            _SceneGraph.AddObject(sourceInput);
-
-            sceneGraphTree.SelectedNode = null;
-            var resultInput = new ScanInputRenderer(pcResult, "result")
-            {
-                IsEnabled = true,
-                IsCuberille = false,
-                Intensity = 0,
-            };
-            _SceneGraph.AddObject(resultInput);
 
 
-        }
+        //    //var result = icp.Result;
+
+        //    var pcResult = new ScanInput
+        //    {
+        //        IntensityMap = new KeyValuePair<Vector3, Vector4>[source.Count + target.Count]
+        //    };
+
+        //    for (int i = 0; i < target.Count; i++)
+        //    {
+        //        pcResult.IntensityMap[i] = new KeyValuePair<Vector3, Vector4>(target[i], pcTarget.IntensityMap[i].Value);
+        //    }
+
+        //    for (int i = 0; i < source.Count; i++)
+        //    {
+        //        pcResult.IntensityMap[i + target.Count] = new KeyValuePair<Vector3, Vector4>(result[i], pcSource.IntensityMap[i].Value);
+        //    }
+
+        //    sceneGraphTree.SelectedNode = null;
+        //    var targetInput = new ScanInputRenderer(pcTarget, "target")
+        //    {
+        //        IsEnabled = true,
+        //        IsCuberille = false,
+        //        Intensity = 0,
+        //    };
+        //    _SceneGraph.AddObject(targetInput);
+
+        //    sceneGraphTree.SelectedNode = null;
+        //    var sourceInput = new ScanInputRenderer(pcSource, "source")
+        //    {
+        //        IsEnabled = true,
+        //        IsCuberille = false,
+        //        Intensity = 0,
+        //    };
+        //    _SceneGraph.AddObject(sourceInput);
+
+        //    sceneGraphTree.SelectedNode = null;
+        //    var resultInput = new ScanInputRenderer(pcResult, "result")
+        //    {
+        //        IsEnabled = true,
+        //        IsCuberille = false,
+        //        Intensity = 0,
+        //    };
+        //    _SceneGraph.AddObject(resultInput);
+
+
+        //}
 
         private void VoxelGridFilter()
         {
-            var output = ObjectLoader.LoadTof(@"C:\Users\ozgun\Desktop\voxelGrid.txt");
-            //var output2 = ObjectLoader.LoadNifti(@"C:\Users\ozgun\Desktop\ceng599 project\CT\4821\4823\20130118_0933183DHEADs002a002.nii", out VolOutput volOutput2);
+            //var output = ObjectLoader.LoadTof(@"C:\Users\ozgun\Desktop\voxel grid demo\voxel grid sofa complete.txt");
+            var output = ObjectLoader.LoadTof(@"C:\Users\ozgun\Desktop\cal test\voxelgrid.txt");
 
+            output.MaxIntensity = 100;
 
-            output.MaxIntensity = 255;
-
-            var volRenderer = new VolumeRenderer(output, "tahsin")
+            var volRenderer = new VolumeRenderer(output, "voxel grid filtered")
             {
-                Intensity = 80,
-                DownSample = 1,
+                Intensity = 99,
+                DownSample = 2,
                 Method = eMarchMethod.GpuBoost,
                 SmoothenRadius = 0.0001f,
             };
