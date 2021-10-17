@@ -39,7 +39,7 @@ namespace Engine.GLApi
 
         private int _vertexCount = 0;
         private bool _initialized;
-        private int _currentDownSample;
+        private int _currentDownSample = 1;
         private float _previousHitT = 0;
 
         private int _VAO;
