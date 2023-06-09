@@ -11,19 +11,19 @@
 - ICP/SICP shape registration
 
 <p align="center">
-  <img src="[https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/1.PNG](https://github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/1.png)" alt="drawing" width="720"/>
+  <img src="https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/1.PNG" alt="drawing" width="720"/>
 </p>
 
 <p align="center">
-  <img src="[https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/2.PNG](https://github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/1.png)" alt="drawing" width="720"/>
+  <img src="https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/2.PNG" alt="drawing" width="720"/>
 </p>
 
 <p align="center">
-  <img src="[https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/5.PNG](https://github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/1.png)" alt="drawing" width="720"/>
+  <img src="https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/5.PNG" alt="drawing" width="720"/>
 </p>
 
 <p align="center">
-  <img src="[https://github.com/elpekozgun/VertexBenderCS/blob/main/VertexBenderCS/7.PNG](https://github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/1.png)" alt="drawing" width="720"/>
+  <img src="https://github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/1.png" alt="drawing" width="720"/>
 </p>
 
 https://github.com/elpekozgun/ClockWork/blob/main/ClockWork/ultrasound.mp4
