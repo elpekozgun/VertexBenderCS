@@ -26,11 +26,5 @@
   <img src="https://github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/7.png" alt="drawing" width="720"/>
 </p>
 
-<p align="center">
-  <vid src="github.com/elpekozgun/VertexBenderCS/blob/master/VertexBenderCS/Resources/Image/ultrasound.mp4" alt="drawing" width="720"/>
-</p>
+https://github.com/elpekozgun/VertexBenderCS/assets/33135707/dae13fb0-0fdf-4642-a823-cde455907829
 
-
-
- 
-    
